@@ -25,7 +25,7 @@ const menuItems = [
   {
     label: "Dashboard",
     icon: Home,
-    route: "/dashboard",
+    route: "/",
   },
   {
     label: "Users",
@@ -98,10 +98,7 @@ const menuItems = [
   {
     label: "Reports & Analytics",
     icon: BarChart,
-    children: [
-      { label: "Daily Reports", route: "/reports/daily" },
-      { label: "Export Reports", route: "/reports/export" },
-    ],
+    route: "/Reports",
   },
   {
     label: "Categories",

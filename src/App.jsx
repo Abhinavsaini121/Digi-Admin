@@ -10,6 +10,7 @@ import ReportsAnalytics from "./pages/Reports & Analytics/Reports";
 import LocalNeeds from "./pages/LocalNeeds/LocalNeeds";
 import PartTimeJobs from "./pages/Jobs/PartTimeJobs";
 import FullTimeJobs from "./pages/Jobs/FullTimeJobs";
+import Marketplace from "./pages/Marketplace/Marketplace";
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
         <Route path="/needsManagement" element={<LocalNeeds />} />
         <Route path="/PartTimeJobs" element={<PartTimeJobs />} />
         <Route path="/FullTimeJobs" element={<FullTimeJobs />} />
+        <Route path="/Marketplace" element={<Marketplace />} />
       </Route>
       
     </Routes>

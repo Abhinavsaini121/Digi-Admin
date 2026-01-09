@@ -28,12 +28,9 @@ const menuItems = [
     route: "/",
   },
   {
-    label: "Users",
+    label: "Manage Users",
     icon: Users,
-    children: [
-      { label: "All Users", route: "/users/all" },
-      { label: "User Activity", route: "/users/activity" },
-    ],
+    route: "/usersmanagement",
   },
   {
     label: "Local Needs",

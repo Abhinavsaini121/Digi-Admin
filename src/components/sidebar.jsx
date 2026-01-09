@@ -43,7 +43,6 @@ const menuItems = [
     children: [
       { label: "Part-Time Jobs", route: "/PartTimeJobs" },
       { label: "Full-Time Jobs", route: "/FullTimeJobs" },
-      { label: "Applications", route: "/Applications" },
     ],
   },
   {
@@ -200,12 +199,12 @@ export default function Sidebar({ sidebarOpen, closeSidebar }) {
       {sidebarOpen && (
         <div
           onClick={closeSidebar}
-          className="fixed inset-0 bg-black/40 z-30 lg:hidden"
+          className="fixed inset-0 bg-black/40 z-40 lg:hidden"
         />
       )}
 
       <aside
-        className={`fixed top-16 left-0 z-40 w-64 h-[calc(100vh-64px)]
+        className={`fixed top-16 left-0 z-40 w-68 h-[calc(100vh-64px)]
         bg-white border-r shadow-lg p-4 overflow-y-auto
         transition-transform duration-300 lg:translate-x-0
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}

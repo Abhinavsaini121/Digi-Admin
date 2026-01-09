@@ -48,10 +48,7 @@ const menuItems = [
   {
     label: "Marketplace",
     icon: ShoppingBag,
-    children: [
-      { label: "All Listings", route: "/marketplace/listings" },
-      { label: "Featured Listings", route: "/marketplace/featured" },
-    ],
+    route: "/Marketplace",
   },
   {
     label: "Shops",

@@ -7,6 +7,10 @@ import Dashboard from "./pages/Dashboard/Dashboard";
 import Login from "./Authentication/Login";
 import ManageUsers from "./pages/User_Management/ManageUsers";
 import ReportsAnalytics from "./pages/Reports & Analytics/Reports";
+import LocalNeeds from "./pages/LocalNeeds/LocalNeeds";
+import PartTimeJobs from "./pages/Jobs/PartTimeJobs";
+import FullTimeJobs from "./pages/Jobs/FullTimeJobs";
+import Applications from "./pages/Jobs/Applications";
 
 function App() {
   return (
@@ -22,6 +26,10 @@ function App() {
         <Route index element={<Dashboard />} />
         <Route path="/usersmanagement" element={<ManageUsers />} />
         <Route path="/Reports" element={<ReportsAnalytics />} />
+        <Route path="/needsManagement" element={<LocalNeeds />} />
+        <Route path="/PartTimeJobs" element={<PartTimeJobs />} />
+        <Route path="/FullTimeJobs" element={<FullTimeJobs />} />
+        <Route path="/Applications" element={<Applications />} />
       </Route>
       
     </Routes>

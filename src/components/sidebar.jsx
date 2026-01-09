@@ -35,18 +35,15 @@ const menuItems = [
   {
     label: "Local Needs",
     icon: MapPin,
-    children: [
-      { label: "All Tasks", route: "/local-needs/tasks" },
-      { label: "Categories Stats", route: "/local-needs/categories-stats" },
-    ],
+    route: "/needsManagement",
   },
   {
     label: "Jobs",
     icon: Briefcase,
     children: [
-      { label: "Part-Time Jobs", route: "/jobs/part-time" },
-      { label: "Full-Time Jobs", route: "/jobs/full-time" },
-      { label: "Applications", route: "/jobs/applications" },
+      { label: "Part-Time Jobs", route: "/PartTimeJobs" },
+      { label: "Full-Time Jobs", route: "/FullTimeJobs" },
+      { label: "Applications", route: "/Applications" },
     ],
   },
   {

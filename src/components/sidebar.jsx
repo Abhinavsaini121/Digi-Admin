@@ -58,11 +58,7 @@ const menuItems = [
   {
     label: "Credits",
     icon: Coins,
-    children: [
-      { label: "Credits Dashboard", route: "/credits/dashboard" },
-      { label: "Credits History", route: "/credits/history" },
-      { label: "Coupons & Pricing", route: "/credits/coupons" },
-    ],
+    route: "/Credits",
   },
   {
     label: "Payments & Subscriptions",

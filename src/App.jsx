@@ -12,6 +12,9 @@ import PartTimeJobs from "./pages/Jobs/PartTimeJobs";
 import FullTimeJobs from "./pages/Jobs/FullTimeJobs";
 import Marketplace from "./pages/Marketplace/Marketplace";
 import ShopManagement from "./pages/ShopManagement/ShopManagement";
+import OwnerProfile from "./pages/ShopManagement/OwnerProfile";
+import ShopDetail from "./pages/ShopManagement/ShopDetail";
+import Credits from "./pages/Credits-Management/Credits";
 
 function App() {
   return (
@@ -32,6 +35,9 @@ function App() {
         <Route path="/FullTimeJobs" element={<FullTimeJobs />} />
         <Route path="/Marketplace" element={<Marketplace />} />
         <Route path="/ShopManagement" element={<ShopManagement />} />
+        <Route path="/shop/:id" element={<ShopDetail />} />
+        <Route path="/owner/profile/:id" element={<OwnerProfile />} />
+        <Route path="/Credits" element={<Credits />} />
       </Route>
       
     </Routes>

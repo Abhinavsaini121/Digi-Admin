@@ -53,12 +53,7 @@ const menuItems = [
   {
     label: "Shops",
     icon: Store,
-    children: [
-      { label: "All Shops", route: "/shops/all" },
-      { label: "Lite Subscriptions", route: "/shops/lite" },
-      { label: "Pro+ Subscriptions", route: "/shops/pro" },
-      { label: "Shop Analytics", route: "/shops/analytics" },
-    ],
+    route: "/ShopManagement",
   },
   {
     label: "Credits",

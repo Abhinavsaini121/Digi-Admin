@@ -11,6 +11,7 @@ import LocalNeeds from "./pages/LocalNeeds/LocalNeeds";
 import PartTimeJobs from "./pages/Jobs/PartTimeJobs";
 import FullTimeJobs from "./pages/Jobs/FullTimeJobs";
 import Marketplace from "./pages/Marketplace/Marketplace";
+import ShopManagement from "./pages/ShopManagement/ShopManagement";
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
         <Route path="/PartTimeJobs" element={<PartTimeJobs />} />
         <Route path="/FullTimeJobs" element={<FullTimeJobs />} />
         <Route path="/Marketplace" element={<Marketplace />} />
+        <Route path="/ShopManagement" element={<ShopManagement />} />
       </Route>
       
     </Routes>

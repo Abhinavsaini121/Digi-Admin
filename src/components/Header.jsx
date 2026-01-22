@@ -8,12 +8,19 @@ const Header = ({ toggleSidebar }) => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const navigate = useNavigate();
 
-  // 🔹 Static / frontend-only user name
-  const name = localStorage.getItem("email") || "User";
+  // Local storage se email/name fetch karna
+  const name = localStorage.getItem("email") || "Admin";
 
+  // Logout Functionality
   const handleLogout = () => {
-    localStorage.clear();
+    // 1. Local storage se token aur saara data delete karna
+    localStorage.clear(); 
+
+    // 2. User ko login page par redirect karna
     navigate("/login");
+
+    // 3. Page reload karna (Security ke liye taaki state reset ho jaye)
+    window.location.reload(); 
   };
 
   return (
@@ -24,7 +31,7 @@ const Header = ({ toggleSidebar }) => {
       px-3 sm:px-4 md:px-6 py-3 sm:py-4
       flex items-center justify-between"
     >
-      {/* LEFT */}
+      {/* LEFT SIDE */}
       <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
         <button
           onClick={toggleSidebar}
@@ -44,8 +51,9 @@ const Header = ({ toggleSidebar }) => {
         </div>
       </div>
 
-      {/* RIGHT */}
+      {/* RIGHT SIDE */}
       <div className="flex items-center gap-2 sm:gap-3">
+        {/* Notification Icon */}
         <button className="relative p-2 rounded-xl hover:bg-orange-100">
           <Bell size={20} />
           {notificationCount > 0 && (
@@ -55,6 +63,7 @@ const Header = ({ toggleSidebar }) => {
           )}
         </button>
 
+        {/* Profile Dropdown */}
         <div className="relative">
           <button
             onClick={() => setIsProfileOpen(!isProfileOpen)}
@@ -66,21 +75,21 @@ const Header = ({ toggleSidebar }) => {
           </button>
 
           {isProfileOpen && (
-            <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-orange-100">
-              <div className="p-4 border-b">
+            <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-orange-100 overflow-hidden">
+              <div className="p-4 border-b bg-orange-50/50">
                 <p className="text-sm font-semibold text-gray-800">
                   Welcome back!
                 </p>
-                <p className="text-xs text-gray-500">{name}</p>
+                <p className="text-xs text-gray-500 truncate">{name}</p>
               </div>
 
               <div className="p-2">
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-red-50"
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-red-600 hover:bg-red-50 transition-colors"
                 >
                   <LogOut size={18} />
-                  <span className="text-sm">Logout</span>
+                  <span className="text-sm font-medium">Logout</span>
                 </button>
               </div>
             </div>

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   AreaChart,
   Area,
@@ -21,16 +21,11 @@ import {
   CreditCard,
   IndianRupee,
   TrendingUp,
+  Loader2, // Loading icon ke liye
 } from "lucide-react";
+import {getDashboardStats} from "../../auth/adminLogin"
 
-/* -------------------- STATIC MOCK DATA -------------------- */
-const STATIC_STATS = {
-  totalUsers: "12,840",
-  newUsersToday: "145",
-  activeUsersNow: "42",
-  activeUsersToday: "850",
-  monthlyActiveUsers: "5,200",
-  totalDownloads: "25,000",
+const OTHER_STATIC_STATS = {
   shops: "184",
   partTimeJobs: "56",
   fullTimeJobs: "32",
@@ -53,7 +48,7 @@ const STATIC_CHART_DATA = [
 ];
 
 /* -------------------- STAT CARD COMPONENT -------------------- */
-const StatCard = ({ title, value, icon: Icon, color }) => (
+const StatCard = ({ title, value, icon: Icon, color, isLoading }) => (
   <div className="group p-5 bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1">
     <div className="flex items-center justify-between mb-3">
       <div className={`p-2 rounded-lg ${color} bg-opacity-10 text-orange-600`}>
@@ -67,9 +62,13 @@ const StatCard = ({ title, value, icon: Icon, color }) => (
       <p className="text-sm font-medium text-gray-500 uppercase tracking-wider">
         {title}
       </p>
-      <p className="text-2xl font-bold mt-1 text-gray-800 tracking-tight">
-        {value}
-      </p>
+      {isLoading ? (
+        <div className="h-8 w-16 bg-gray-100 animate-pulse rounded mt-1"></div>
+      ) : (
+        <p className="text-2xl font-bold mt-1 text-gray-800 tracking-tight">
+          {value.toLocaleString()}
+        </p>
+      )}
     </div>
   </div>
 );
@@ -81,6 +80,35 @@ const SectionTitle = ({ title }) => (
 );
 
 function Dashboard() {
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setLoading(true);
+        const data = await getDashboardStats();
+        setStats(data);
+      } catch (err) {
+        setError("Failed to load statistics");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen text-red-500">
+        <AlertCircle className="mr-2" /> {error}
+      </div>
+    );
+  }
+
   return (
     <div className="p-8 bg-[#F8FAFC] min-h-screen font-sans">
       {/* -------------------- HEADER -------------------- */}
@@ -95,7 +123,7 @@ function Dashboard() {
         </div>
         <div className="flex gap-3">
           <div className="px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-lg text-sm font-medium">
-            Static Preview Mode
+            {loading ? "Syncing..." : "Live Data Mode"}
           </div>
           <div className="px-4 py-2 bg-[#FE702E] text-white rounded-lg text-sm font-medium shadow-lg shadow-orange-200">
             {new Date().toDateString()}
@@ -103,94 +131,99 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* -------------------- USER ANALYTICS -------------------- */}
+      {/* -------------------- USER ANALYTICS (API DATA) -------------------- */}
       <SectionTitle title="User Analytics" />
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-5">
         <StatCard
           title="Total Users"
-          value={STATIC_STATS.totalUsers}
+          value={stats?.totalUsers || 0}
           icon={Users}
           color="bg-blue-500"
+          isLoading={loading}
         />
         <StatCard
           title="New Today"
-          value={STATIC_STATS.newUsersToday}
+          value={stats?.newToday || 0}
           icon={UserPlus}
           color="bg-green-500"
+          isLoading={loading}
         />
         <StatCard
           title="Active Now"
-          value={STATIC_STATS.activeUsersNow}
+          value={stats?.activeNow || 0}
           icon={Activity}
           color="bg-orange-500"
+          isLoading={loading}
         />
         <StatCard
           title="Monthly Active"
-          value={STATIC_STATS.monthlyActiveUsers}
+          value={stats?.monthlyActive || 0}
           icon={TrendingUp}
           color="bg-purple-500"
+          isLoading={loading}
         />
         <StatCard
           title="Total Downloads"
-          value={STATIC_STATS.totalDownloads}
+          value={stats?.totalDownloads || 0}
           icon={Download}
           color="bg-indigo-500"
+          isLoading={loading}
         />
       </div>
 
-      {/* -------------------- BUSINESS & JOBS -------------------- */}
+      {/* -------------------- BUSINESS & JOBS (STATIC) -------------------- */}
       <SectionTitle title="Business & Marketplace" />
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
         <StatCard
           title="Shops (Lite+Pro)"
-          value={STATIC_STATS.shops}
+          value={OTHER_STATIC_STATS.shops}
           icon={Store}
           color="bg-pink-500"
         />
         <StatCard
           title="Marketplace"
-          value={STATIC_STATS.marketplaceListings}
+          value={OTHER_STATIC_STATS.marketplaceListings}
           icon={ShoppingBag}
           color="bg-yellow-500"
         />
         <StatCard
           title="Part-time Jobs"
-          value={STATIC_STATS.partTimeJobs}
+          value={OTHER_STATIC_STATS.partTimeJobs}
           icon={Briefcase}
           color="bg-cyan-500"
         />
         <StatCard
           title="Full-time Jobs"
-          value={STATIC_STATS.fullTimeJobs}
+          value={OTHER_STATIC_STATS.fullTimeJobs}
           icon={Briefcase}
           color="bg-blue-600"
         />
       </div>
 
-      {/* -------------------- FINANCE & COMMUNITY -------------------- */}
+      {/* -------------------- FINANCE & COMMUNITY (STATIC) -------------------- */}
       <SectionTitle title="Finance & Community" />
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
         <StatCard
           title="Total Revenue"
-          value={`₹${STATIC_STATS.revenue}`}
+          value={`₹${OTHER_STATIC_STATS.revenue}`}
           icon={IndianRupee}
           color="bg-emerald-500"
         />
         <StatCard
           title="Credits Sold"
-          value={STATIC_STATS.creditsSold}
+          value={OTHER_STATIC_STATS.creditsSold}
           icon={CreditCard}
           color="bg-orange-600"
         />
         <StatCard
           title="SOS Alerts"
-          value={STATIC_STATS.sosAlertsToday}
+          value={OTHER_STATIC_STATS.sosAlertsToday}
           icon={AlertCircle}
           color="bg-red-500"
         />
         <StatCard
           title="Blood Requests"
-          value={STATIC_STATS.bloodRequestsToday}
+          value={OTHER_STATIC_STATS.bloodRequestsToday}
           icon={Droplets}
           color="bg-red-600"
         />
@@ -198,62 +231,28 @@ function Dashboard() {
 
       {/* -------------------- GRAPH & SUMMARY SECTION -------------------- */}
       <div className="mt-10 grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Graph Card */}
         <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-gray-800">
-              User Growth Trends
-            </h2>
+            <h2 className="text-xl font-bold text-gray-800">User Growth Trends</h2>
             <select className="text-sm border border-gray-100 bg-gray-50 rounded-md px-2 py-1 outline-none">
               <option>Last 30 Days</option>
-              <option>Last 6 Months</option>
             </select>
           </div>
 
           <div className="h-[350px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart
-                data={STATIC_CHART_DATA}
-                margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-              >
+              <AreaChart data={STATIC_CHART_DATA}>
                 <defs>
                   <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#FE702E" stopOpacity={0.3} />
                     <stop offset="95%" stopColor="#FE702E" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  vertical={false}
-                  stroke="#f0f0f0"
-                />
-                <XAxis
-                  dataKey="date"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: "#94a3b8", fontSize: 12 }}
-                  dy={10}
-                />
-                <YAxis
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: "#94a3b8", fontSize: 12 }}
-                />
-                <Tooltip
-                  contentStyle={{
-                    borderRadius: "12px",
-                    border: "none",
-                    boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
-                  }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="users"
-                  stroke="#FE702E"
-                  strokeWidth={3}
-                  fillOpacity={1}
-                  fill="url(#colorUsers)"
-                />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: "#94a3b8", fontSize: 12 }} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: "#94a3b8", fontSize: 12 }} />
+                <Tooltip />
+                <Area type="monotone" dataKey="users" stroke="#FE702E" strokeWidth={3} fill="url(#colorUsers)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -263,48 +262,28 @@ function Dashboard() {
         <div className="bg-[#1E293B] p-6 rounded-2xl shadow-sm text-white flex flex-col justify-between">
           <div>
             <h2 className="text-xl font-bold mb-2">Platform Summary</h2>
-            <p className="text-slate-400 text-sm mb-6">
-              Overview of daily performance.
-            </p>
+            <p className="text-slate-400 text-sm mb-6">Real-time indicators.</p>
 
             <div className="space-y-6">
               <div className="flex items-center justify-between border-b border-slate-700 pb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full bg-orange-500 shadow-[0_0_8px_rgba(254,112,46,0.8)]"></div>
+                  <div className="w-2 h-2 rounded-full bg-orange-500"></div>
                   <span className="text-slate-300">New Registrations</span>
                 </div>
-                <span className="font-bold text-lg">
-                  {STATIC_STATS.newRegistrations}
-                </span>
+                <span className="font-bold text-lg">{stats?.newToday || 0}</span>
               </div>
               <div className="flex items-center justify-between border-b border-slate-700 pb-4">
                 <div className="flex items-center gap-3">
                   <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                  <span className="text-slate-300">Active Sessions</span>
+                  <span className="text-slate-300">Active (Monthly)</span>
                 </div>
-                <span className="font-bold text-lg">
-                  {STATIC_STATS.activeUsersToday}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                  <span className="text-slate-300">Success Rate</span>
-                </div>
-                <span className="font-bold text-lg text-green-400">98.2%</span>
+                <span className="font-bold text-lg">{stats?.monthlyActive || 0}</span>
               </div>
             </div>
           </div>
-
-          <div className="mt-8 p-4 bg-slate-700/50 rounded-xl border border-slate-600">
-            <p className="text-xs text-slate-400 uppercase font-bold mb-1 tracking-wider">
-              Growth Update
-            </p>
-            <p className="text-sm text-slate-200 leading-relaxed">
-              Platform engagement is up by{" "}
-              <span className="text-green-400 font-bold">12%</span> this week.
-              Keep up the good work!
-            </p>
+          <div className="mt-8 p-4 bg-slate-700/50 rounded-xl border border-slate-600 text-sm">
+            <p className="text-slate-400 uppercase font-bold text-[10px] mb-1">Status</p>
+            System is running smoothly. Total of {stats?.totalUsers || 0} users onboarded.
           </div>
         </div>
       </div>

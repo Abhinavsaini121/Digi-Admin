@@ -53,86 +53,46 @@ const menuItems = [
   {
     label: "Shops",
     icon: Store,
-    route: "/ShopManagement",
+    route: "/shop-management",
   },
   {
     label: "Credits",
     icon: Coins,
-    route: "/Credits",
-  },
-  {
-    label: "Payments & Subscriptions",
-    icon: CreditCard,
-    children: [
-      { label: "Transactions", route: "/payments/transactions" },
-      { label: "Revenue Analytics", route: "/payments/revenue" },
-    ],
+    route: "/credit",
   },
   {
     label: "Safety",
     icon: Shield,
     children: [
-      { label: "SOS Alerts", route: "/safety/sos" },
-      { label: "Blood Requests", route: "/safety/blood" },
+      { label: "SOS Alerts", route: "/sosAlert" },
+      { label: "BloodRequest", route: "/blood-request" },
     ],
   },
   {
-    label: "Reports & Analytics",
+    label: "Reports & Export",
     icon: BarChart,
-    route: "/Reports",
+    route: "/report",
   },
   {
     label: "Categories",
     icon: Layers,
-    children: [
-      { label: "Categories", route: "/categories/main" },
-      { label: "Subcategories", route: "/categories/sub" },
-    ],
+     route: "/category" ,
   },
   {
     label: "Content Moderation",
     icon: AlertTriangle,
-    children: [
-      { label: "Reported Posts", route: "/moderation/reports" },
-      { label: "Blocked Users", route: "/moderation/blocked" },
-    ],
+    route: "/moderationblocking",
   },
   {
-    label: "Push Notifications",
+    label: "Notifications",
     icon: Bell,
-    children: [
-      { label: "Send Notification", route: "/notifications/send" },
-      { label: "Scheduled Notifications", route: "/notifications/scheduled" },
-    ],
+       route: "/notifications" ,   
   },
-  {
-    label: "Home Banners",
-    icon: Image,
-    children: [
-      { label: "Banner List", route: "/banners/list" },
-      { label: "Add Banner", route: "/banners/add" },
-    ],
-  },
-  {
-    label: "Support & Help",
-    icon: HelpCircle,
-    children: [
-      { label: "Support Tickets", route: "/support/tickets" },
-      { label: "Resolved Tickets", route: "/support/resolved" },
-    ],
-  },
-  {
-    label: "Activity Tracker",
-    icon: Activity,
-    children: [
-      { label: "Platform Activity", route: "/activity/platform" },
-      { label: "User Activity", route: "/activity/users" },
-    ],
-  },
+  
   {
     label: "Settings",
     icon: Settings,
-    route: "/settings",
+    route: "/systemsetting",
   },
   
 ];
@@ -192,7 +152,7 @@ export default function Sidebar({ sidebarOpen, closeSidebar }) {
       )}
 
       <aside
-        className={`fixed top-16 left-0 z-40 w-68 h-[calc(100vh-64px)]
+        className={`fixed top-21 left-0 z-40 w-68 h-[calc(100vh-64px)]
         bg-white border-r shadow-lg p-4 overflow-y-auto
         transition-transform duration-300 lg:translate-x-0
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}

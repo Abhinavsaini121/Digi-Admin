@@ -30,7 +30,6 @@ export const getDashboardStats = async () => {
 // --- Get All Jobs ---
 export const getAllJobs = async () => {
     try {
-        // Usually fetch GET hota hai, agar aapka backend POST mangta hai to ise .post karein
         const response = await apiClient.get("/admin/part-time/jobs"); 
         return response.data; 
     } catch (error) {
@@ -55,6 +54,85 @@ export const updateJob = async (id, jobData) => {
         const response = await apiClient.put(`/admin/part-time/job/update/${id}`, jobData);
         return response.data;
     } catch (error) {
+        throw error.response ? error.response.data : new Error("Network Error");
+    }
+};
+
+// --- DELETE JOB ---
+export const deleteJob = async (id) => {
+    try {
+        const response = await apiClient.delete(`/admin/part-time/job/delete/${id}`);
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : new Error("Network Error");
+    }
+};
+
+export const createNewJob = async (jobData) => {
+    try {
+        // Aapka apiClient ya axios instance yahan use hoga
+        const response = await apiClient.post(`/admin/part-time/job/create`, jobData);
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : new Error("Network Error");
+    }
+};
+
+// export const createNewFullTimeJob = async (jobData) => {
+//     try {
+//         const token = localStorage.getItem("token");
+//         const response = await apiClient.post(`/admin/full-time/job/create`, jobData, {
+//              headers: {
+//                 Authorization: `Bearer ${token}`,
+//             },
+//         });
+//         return response.data;
+//     } catch (error) {
+//         throw error.response ? error.response.data : new Error("Network Error: Could not create full-time job.");
+//     }
+// };
+
+// --- Get All Full-Time Jobs ---
+export const getAllFullTimeJobs = async () => {
+    try {
+        // API Endpoint: GET /admin/full-time/all 
+        const response = await apiClient.get("/admin/full-time/all"); 
+        
+        // Response structure expected: { success: true, data: [...] }
+        return response.data; 
+    } catch (error) {
+        // Throw an error with the response data (for better error messages in the component)
+        throw error.response ? error.response.data : new Error("Network Error or Server Unreachable");
+    }
+};
+
+export const addCategory = async (formData) => {
+    // API Endpoint: POST /admin/category/add
+    const response = await apiClient.post("/admin/category/add", formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    return response.data;
+};
+// API Endpoint: GET /user/categories
+export const getAllCategories = async () => {
+    try {
+        // GET request to fetch category list
+        const response = await apiClient.get("/admin/category/all"); 
+        return response.data; // Return fetched categories array
+    } catch (error) {
+        // Handle API error
+        throw error.response ? error.response.data : new Error("Network Error");
+    }
+};
+
+// --- NEW API Endpoint: DELETE /api/admin/category/delete/:id ---
+export const deleteCategory = async (categoryId) => {
+    try {
+        // DELETE request to delete a category by ID
+        const response = await apiClient.delete(`/admin/category/delete/${categoryId}`); 
+        return response.data; 
+    } catch (error) {
+        // Handle API error
         throw error.response ? error.response.data : new Error("Network Error");
     }
 };

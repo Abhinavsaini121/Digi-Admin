@@ -1,106 +1,89 @@
-import React, { useState, useEffect } from "react";
-import { Loader2, AlertCircle, X, Star, Lock, EyeOff, CheckCircle } from "lucide-react";
+import React, { useState, useEffect, useCallback } from "react";
+import { Loader2, AlertCircle, X, Star, Lock, CheckCircle } from "lucide-react";
 
-// --- DUMMY DATA FOR FULL-TIME JOBS (Based on your screenshot) ---
-const DUMMY_FULL_TIME_JOBS = [
-  {
-    _id: "ft-001",
-    title: "Flutter Developer (Full-Time)",
-    companyName: "Time2Cash Technologies Pvt Ltd",
-    location: "Doctorate (Ph.D.)", // Using this field for the tag shown in screenshot
-    jobRole: "Flutter Developer",
-    budget: { min: 2000, max: 100000 },
-    isFeatured: false,
-    unlockCount: 0,
-    isActive: true,
-    images: ["https://cdn-icons-png.flaticon.com/512/5968/5968705.png"] // Flutter icon placeholder
-  },
-  {
-    _id: "ft-002",
-    title: "cfgg",
-    companyName: "Individual",
-    location: "Doctorate (Ph.D.)",
-    jobRole: "Not Specified",
-    budget: { min: 2, max: 89 },
-    isFeatured: false,
-    unlockCount: 0,
-    isActive: true,
-    images: ["https://via.placeholder.com/150/f0f0f0/cccccc?text=IMG"] 
-  },
-  {
-    _id: "ft-003",
-    title: "Senior Backend Engineer",
-    companyName: "TechFlow Systems",
-    location: "Bangalore, India",
-    jobRole: "Backend Dev",
-    budget: { min: 1200000, max: 2400000 },
-    isFeatured: true,
-    unlockCount: 15,
-    isActive: true,
-    images: ["https://cdn-icons-png.flaticon.com/512/919/919825.png"] // Node js icon
-  },
-  {
-    _id: "ft-004",
-    title: "cfgg",
-    companyName: "Individual",
-    location: "Doctorate (Ph.D.)",
-    jobRole: "Not Specified",
-    budget: { min: 2, max: 89 },
-    isFeatured: false,
-    unlockCount: 0,
-    isActive: true,
-    images: ["https://via.placeholder.com/150/f0f0f0/cccccc?text=IMG"] 
-  },
-  {
-    _id: "ft-005",
-    title: "Product Manager",
-    companyName: "Innovate Inc",
-    location: "Mumbai",
-    jobRole: "Manager",
-    budget: { min: 80000, max: 150000 },
-    isFeatured: false,
-    unlockCount: 3,
-    isActive: false, // Inactive example
-    images: ["https://cdn-icons-png.flaticon.com/512/3003/3003984.png"]
-  }
-];
+// 1. CORRECTED IMPORT: Only importing getAllFullTimeJobs as requested.
+import {getAllFullTimeJobs} from "../../auth/adminLogin";
+
+// --- Data Normalization Function (No Change) ---
+const normalizeJobData = (job) => {
+    // Determine the salary field (API uses 'salaryRange' for new jobs, 'budget' for old/other jobs)
+    const salaryField = job.salaryRange || job.budget;
+
+    return {
+        _id: job._id,
+        title: job.title,
+        // Use companyName if available, otherwise 'Individual' or check userId's companyName
+        companyName: job.companyName || (job.userId?.companyName || 'Individual'),
+        location: job.location, 
+        // Use jobRole if available, otherwise use workType, otherwise 'Not Specified'
+        jobRole: job.jobRole || job.workType || "Not Specified", 
+        
+        // Normalize salary to 'budget' property for UI and Modal consistency
+        budget: { 
+            min: salaryField?.min || 0, 
+            max: salaryField?.max || 0 
+        },
+        
+        isFeatured: job.isFeatured || false,
+        // unlockCount is missing in API, defaulting to 0
+        unlockCount: job.unlockCount || 0, 
+        // Map API status string to boolean isActive
+        isActive: job.status === 'active', 
+        images: job.images || [],
+    };
+};
 
 const FullTimeJobManagement = () => {
   const [allJobs, setAllJobs] = useState([]); 
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null); 
   
   // Modal States
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedJob, setSelectedJob] = useState(null);
+  // selectedJob state will now only be used for displaying details in the modal
+  const [selectedJob, setSelectedJob] = useState(null); 
+
+  // --- API Fetch Function (Only GET API is used) ---
+  const fetchJobs = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await getAllFullTimeJobs(); // API Call
+      
+      const jobsArray = Array.isArray(response.data) ? response.data : [];
+      setAllJobs(jobsArray.map(normalizeJobData)); 
+      
+    } catch (err) {
+      console.error("Failed to fetch full-time jobs:", err);
+      // Use the error message from the response if available
+      setError(err.message || err.error || "An error occurred while fetching jobs.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    // Simulate API Loading
-    setTimeout(() => {
-      setAllJobs(DUMMY_FULL_TIME_JOBS);
-      setLoading(false);
-    }, 800);
-  }, []);
+    fetchJobs();
+  }, [fetchJobs]);
 
   // --- Actions ---
 
+  // Kept handleEditClick to open the modal for viewing details
   const handleEditClick = (job) => {
-    setSelectedJob({ ...job });
+    setSelectedJob({ 
+        ...job,
+        budget: {
+            min: parseInt(job.budget?.min) || 0,
+            max: parseInt(job.budget?.max) || 0
+        }
+    });
     setIsModalOpen(true);
   };
+  
+  // REMOVED: handleSaveEdit function
+  // REMOVED: toggleFeature function
+  // REMOVED: toggleStatus function
 
-  const toggleFeature = (jobId) => {
-    const updatedJobs = allJobs.map(job => 
-      job._id === jobId ? { ...job, isFeatured: !job.isFeatured } : job
-    );
-    setAllJobs(updatedJobs);
-  };
-
-  const toggleStatus = (jobId) => {
-    const updatedJobs = allJobs.map(job => 
-      job._id === jobId ? { ...job, isActive: !job.isActive } : job
-    );
-    setAllJobs(updatedJobs);
-  };
 
   return (
     <div className="p-4 md:p-8 bg-[#f8fafc] min-h-screen font-sans relative">
@@ -121,6 +104,17 @@ const FullTimeJobManagement = () => {
         <div className="flex flex-col items-center justify-center h-64 bg-white rounded-2xl border border-slate-200">
           <Loader2 className="w-8 h-8 text-blue-600 animate-spin mb-2" />
           <span className="text-slate-400 text-sm">Loading jobs...</span>
+        </div>
+      ) : error ? ( 
+        <div className="flex flex-col items-center justify-center h-64 bg-white rounded-2xl border border-red-200 p-4">
+            <AlertCircle className="w-8 h-8 text-red-500 mb-2" />
+            <span className="text-red-700 text-center font-semibold">Error: {error}</span>
+            <button 
+                onClick={fetchJobs} 
+                className="mt-4 bg-red-500 hover:bg-red-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium transition-colors"
+            >
+                Try Again
+            </button>
         </div>
       ) : (
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
@@ -145,15 +139,17 @@ const FullTimeJobManagement = () => {
                       <div className="flex items-start gap-3">
                         <div className="w-10 h-10 rounded-lg border border-slate-100 bg-white p-1 flex-shrink-0 flex items-center justify-center">
                             <img 
-                            src={job.images?.[0]} 
+                            // Use first image URL or a placeholder
+                            src={job.images?.[0] || "https://via.placeholder.com/150/f0f0f0/cccccc?text=Logo"} 
                             alt="logo" 
                             className="w-full h-full object-contain" 
                             />
                         </div>
                         <div>
                           <p className="font-bold text-slate-800 text-sm leading-tight mb-1">{job.title}</p>
+                          {/* Company Name is now normalized by 'normalizeJobData' */}
                           <p className="text-xs text-slate-500 mb-1.5">{job.companyName}</p>
-                          {/* Badge matching screenshot style */}
+                          {/* Location/Tag is now normalized by 'normalizeJobData' */}
                           <span className="inline-block text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded border border-slate-200 font-medium">
                             {job.location}
                           </span>
@@ -164,29 +160,31 @@ const FullTimeJobManagement = () => {
                     {/* 2. Job Role */}
                     <td className="p-4 align-top">
                       <span className="inline-block text-xs font-semibold text-slate-600 bg-blue-50/80 px-2.5 py-1 rounded text-blue-800">
-                        {job.jobRole}
+                        {/* Job Role is now normalized by 'normalizeJobData' */}
+                        {job.jobRole} 
                       </span>
                     </td>
 
                     {/* 3. Salary Range */}
                     <td className="p-4 align-top font-bold text-slate-700 text-sm whitespace-nowrap">
+                      {/* Budget is now normalized to 'budget' property */}
                       ₹{job.budget?.min?.toLocaleString()} - ₹{job.budget?.max?.toLocaleString()}
                     </td>
 
-                    {/* 4. Featured Toggle */}
+                    {/* 4. Featured (Toggle functionality removed) */}
                     <td className="p-4 align-top text-center">
-                      <button 
-                        onClick={() => toggleFeature(job._id)}
-                        className={`transition-all duration-200 ${job.isFeatured ? 'text-amber-400 hover:text-amber-500' : 'text-slate-200 hover:text-slate-300'}`}
+                      <div // Changed button to div/span to remove interactive click
+                        className={`transition-all duration-200 cursor-default ${job.isFeatured ? 'text-amber-400' : 'text-slate-200'}`}
                       >
                         <Star size={18} fill={job.isFeatured ? "currentColor" : "none"} />
-                      </button>
+                      </div>
                     </td>
 
                     {/* 5. Unlock Count */}
                     <td className="p-4 align-top text-center">
                       <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-50 rounded-full border border-slate-100">
                         <Lock size={11} className="text-slate-400" />
+                        {/* Using normalized unlockCount with default 0 */}
                         <span className="text-xs font-bold text-slate-600">{job.unlockCount}</span>
                       </div>
                     </td>
@@ -204,24 +202,24 @@ const FullTimeJobManagement = () => {
                       )}
                     </td>
 
-                    {/* 7. Actions (Styled like screenshot) */}
+                    {/* 7. Actions */}
                     <td className="p-4 align-top">
                       <div className="flex flex-col items-center gap-2">
-                        {/* Edit Button - Yellow Outline */}
+                        {/* Edit Button - Opens Read-Only Modal */}
                         <button 
                             onClick={() => handleEditClick(job)}
                             className="w-24 py-1.5 text-[11px] font-bold text-amber-500 border border-amber-200 rounded hover:bg-amber-50 transition-colors"
                         >
-                            Edit
+                            View Details
                         </button>
                         
-                        {/* Deactivate Button - Red Outline */}
+                        {/* Status Button - Functionality Removed, now just a disabled-style placeholder */}
                         <button 
-                            onClick={() => toggleStatus(job._id)}
-                            className={`w-24 py-1.5 text-[11px] font-bold border rounded transition-colors flex items-center justify-center gap-1
+                            disabled // Disabled the button completely
+                            className={`w-24 py-1.5 text-[11px] font-bold border rounded transition-colors flex items-center justify-center gap-1 cursor-not-allowed
                                 ${job.isActive 
-                                    ? "text-red-500 border-red-200 hover:bg-red-50" 
-                                    : "text-emerald-600 border-emerald-200 hover:bg-emerald-50"
+                                    ? "text-red-300 border-red-100 bg-red-50/50" 
+                                    : "text-emerald-300 border-emerald-100 bg-emerald-50/50"
                                 }`}
                         >
                            {job.isActive ? <>Deactivate</> : <>Activate</>}
@@ -236,12 +234,12 @@ const FullTimeJobManagement = () => {
         </div>
       )}
 
-      {/* -------------------- EDIT MODAL -------------------- */}
+      {/* -------------------- UPDATED EDIT MODAL (Read-Only) -------------------- */}
       {isModalOpen && selectedJob && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-slate-900/20 backdrop-blur-sm">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-white sticky top-0">
-              <h2 className="text-lg font-bold text-slate-800">Edit Job Details</h2>
+              <h2 className="text-lg font-bold text-slate-800">Job Details (Read-Only)</h2>
               <button onClick={() => setIsModalOpen(false)} className="p-1 hover:bg-slate-100 rounded-full transition-colors">
                 <X size={20} className="text-slate-400" />
               </button>
@@ -253,8 +251,8 @@ const FullTimeJobManagement = () => {
                   <label className="label-text">Job Title</label>
                   <input 
                     type="text" 
-                    value={selectedJob.title} 
-                    onChange={(e) => setSelectedJob({...selectedJob, title: e.target.value})}
+                    value={selectedJob.title || ""} 
+                    readOnly // Made read-only
                     className="input-field" 
                   />
                 </div>
@@ -262,8 +260,8 @@ const FullTimeJobManagement = () => {
                   <label className="label-text">Tag / Location</label>
                   <input 
                     type="text" 
-                    value={selectedJob.location} 
-                    onChange={(e) => setSelectedJob({...selectedJob, location: e.target.value})}
+                    value={selectedJob.location || ""} 
+                    readOnly // Made read-only
                     className="input-field" 
                   />
                 </div>
@@ -273,19 +271,19 @@ const FullTimeJobManagement = () => {
                 <label className="label-text">Job Role</label>
                 <input 
                   type="text" 
-                  value={selectedJob.jobRole} 
-                  onChange={(e) => setSelectedJob({...selectedJob, jobRole: e.target.value})}
+                  value={selectedJob.jobRole || ""} 
+                  readOnly // Made read-only
                   className="input-field" 
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4"> 
                 <div>
                   <label className="label-text">Min Pay (₹)</label>
                   <input 
                     type="number" 
-                    value={selectedJob.budget?.min} 
-                    onChange={(e) => setSelectedJob({...selectedJob, budget: {...selectedJob.budget, min: e.target.value}})}
+                    value={selectedJob.budget?.min || 0} 
+                    readOnly // Made read-only
                     className="input-field" 
                   />
                 </div>
@@ -293,8 +291,8 @@ const FullTimeJobManagement = () => {
                   <label className="label-text">Max Pay (₹)</label>
                   <input 
                     type="number" 
-                    value={selectedJob.budget?.max} 
-                    onChange={(e) => setSelectedJob({...selectedJob, budget: {...selectedJob.budget, max: e.target.value}})}
+                    value={selectedJob.budget?.max || 0} 
+                    readOnly // Made read-only
                     className="input-field" 
                   />
                 </div>
@@ -302,12 +300,12 @@ const FullTimeJobManagement = () => {
 
               <div className="flex items-center justify-between pt-2 border-t border-slate-50 mt-2">
                  <div className="flex items-center gap-4">
-                    <label className="flex items-center gap-2 cursor-pointer select-none">
+                    <label className="flex items-center gap-2 cursor-default select-none">
                         <input 
                             type="checkbox" 
-                            checked={selectedJob.isFeatured}
-                            onChange={(e) => setSelectedJob({...selectedJob, isFeatured: e.target.checked})}
-                            className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                            checked={selectedJob.isFeatured || false}
+                            disabled // Disabled
+                            className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 cursor-not-allowed"
                         />
                         <span className="text-sm text-slate-700 font-semibold">Featured</span>
                     </label>
@@ -317,9 +315,9 @@ const FullTimeJobManagement = () => {
                     <span className="text-xs font-bold text-slate-400 uppercase">Unlock Count:</span>
                     <input 
                         type="number" 
-                        value={selectedJob.unlockCount} 
-                        onChange={(e) => setSelectedJob({...selectedJob, unlockCount: parseInt(e.target.value)})}
-                        className="w-16 px-2 py-1 text-sm border border-slate-200 rounded-md text-center font-bold text-slate-700" 
+                        value={selectedJob.unlockCount || 0} 
+                        readOnly // Made read-only
+                        className="w-16 px-2 py-1 text-sm border border-slate-200 rounded-md text-center font-bold text-slate-700 bg-slate-50 cursor-default" 
                     />
                  </div>
               </div>
@@ -330,13 +328,13 @@ const FullTimeJobManagement = () => {
                 onClick={() => setIsModalOpen(false)}
                 className="px-4 py-2 text-sm font-bold text-slate-500 hover:text-slate-700 transition-colors"
               >
-                Cancel
+                Close
               </button>
               <button 
-                onClick={() => setIsModalOpen(false)}
-                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold shadow-md transition-all active:scale-95"
+                disabled // Disabled the Save button
+                className="px-6 py-2 bg-slate-300 text-slate-500 rounded-lg text-sm font-bold shadow-md cursor-not-allowed"
               >
-                Save Changes
+                Save Changes (Disabled)
               </button>
             </div>
           </div>
@@ -365,9 +363,19 @@ const FullTimeJobManagement = () => {
             color: #334155;
             font-weight: 500;
         }
+        /* Style for read-only fields */
+        .input-field[readonly] {
+            background-color: #f8fafc; /* Lighter background for read-only */
+            border-color: #f0f4f8; 
+            cursor: default;
+        }
         .input-field:focus {
             border-color: #3b82f6;
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        .input-field[readonly]:focus {
+             box-shadow: none; /* Remove focus effect on read-only */
+             border-color: #f0f4f8; 
         }
       `}</style>
     </div>

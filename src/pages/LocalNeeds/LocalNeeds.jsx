@@ -189,7 +189,7 @@ const LocalNeeds = () => {
         </div>
       </div>
 
-      {/* --- THEMED MODAL (Modified with all required fields) --- */}
+      {/* --- COMPACT THEMED MODAL --- */}
       {(isEditModalOpen || isPostModalOpen) && (
         <ThemedTaskModal 
           mode={isEditModalOpen ? "Edit" : "Post"}
@@ -225,76 +225,65 @@ const ThemedTaskModal = ({ mode, task, onSave, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-[2px] flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-[600px] overflow-hidden border border-gray-100 animate-in fade-in zoom-in duration-200">
+    <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-[2px] flex items-center justify-center z-50 p-4">
+      {/* Modal width reduced to max-w-md for a compact look */}
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-100 animate-in fade-in zoom-in duration-200">
         
-        {/* Modal Header */}
-        <div className="px-8 py-5 border-b border-gray-100 flex justify-between items-center">
-          <h3 className="text-lg font-bold text-[#1e293b]">
-            {mode === "Edit" ? "Edit Task Details" : "Post New Need"}
+        {/* Compact Header */}
+        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-slate-50">
+          <h3 className="text-base font-bold text-slate-800">
+            {mode === "Edit" ? "Edit Task" : "Post New Need"}
           </h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition text-2xl leading-none">×</button>
+          <button onClick={onClose} className="text-gray-400 hover:text-red-500 transition text-xl leading-none">×</button>
         </div>
         
-        <form onSubmit={handleSubmit} className="p-8 space-y-5">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
           
-          {/* Section: Task Info */}
-          <div className="space-y-4">
-            <h4 className="text-[10px] font-black text-blue-600 uppercase tracking-[2px]">Task Information</h4>
-            <div className="grid grid-cols-1 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Title</label>
-                <input 
-                  name="title" value={formData.title} onChange={handleChange} required
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 outline-none text-slate-700 font-medium" 
-                  placeholder="e.g. Electrician Needed"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Task Details</label>
-                <textarea 
-                  name="details" value={formData.details} onChange={handleChange} required rows="2"
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 outline-none text-slate-700 font-medium"
-                  placeholder="Describe the requirement..."
-                />
-              </div>
-            </div>
+          {/* Row 1: Title */}
+          <div className="space-y-1">
+            <label className="text-[10px] font-bold text-slate-500 uppercase">Task Title</label>
+            <input 
+              name="title" value={formData.title} onChange={handleChange} required
+              className="w-full px-3 py-2 bg-slate-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 outline-none text-sm text-slate-700" 
+              placeholder="e.g. Electrician Needed"
+            />
           </div>
 
-          {/* Section: Category & Budget */}
-          <div className="grid grid-cols-2 gap-6 pt-2">
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Category</label>
+          {/* Row 2: Category & SubCategory */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-slate-500 uppercase">Category</label>
               <input 
                 name="category" value={formData.category} onChange={handleChange} required
-                className="w-full px-4 py-2.5 bg-slate-50 border border-gray-200 rounded-xl outline-none text-slate-700 font-medium"
+                className="w-full px-3 py-2 bg-slate-50 border border-gray-200 rounded-lg text-sm outline-none"
                 placeholder="Home Services"
               />
             </div>
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Sub-Category</label>
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-slate-500 uppercase">Sub-Category</label>
               <input 
                 name="subCategory" value={formData.subCategory} onChange={handleChange} required
-                className="w-full px-4 py-2.5 bg-slate-50 border border-gray-200 rounded-xl outline-none text-slate-700 font-medium"
+                className="w-full px-3 py-2 bg-slate-50 border border-gray-200 rounded-lg text-sm outline-none"
                 placeholder="Electrical"
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-6">
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Budget / Price</label>
+          {/* Row 3: Budget & Status */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-slate-500 uppercase">Budget</label>
               <input 
                 name="budget" value={formData.budget} onChange={handleChange} required
-                className="w-full px-4 py-2.5 bg-slate-50 border border-gray-200 rounded-xl outline-none text-slate-700 font-medium font-bold text-blue-600"
+                className="w-full px-3 py-2 bg-slate-50 border border-gray-200 rounded-lg text-sm outline-none font-semibold text-blue-600"
                 placeholder="₹500 - ₹2000"
               />
             </div>
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Status</label>
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-slate-500 uppercase">Status</label>
               <select 
                 name="status" value={formData.status} onChange={handleChange}
-                className="w-full px-4 py-2.5 bg-slate-50 border border-gray-200 rounded-xl outline-none text-slate-700 font-medium appearance-none cursor-pointer"
+                className="w-full px-3 py-2 bg-slate-50 border border-gray-200 rounded-lg text-sm outline-none cursor-pointer"
               >
                 <option value="Active">Active</option>
                 <option value="Expired">Expired</option>
@@ -303,39 +292,47 @@ const ThemedTaskModal = ({ mode, task, onSave, onClose }) => {
             </div>
           </div>
 
-          {/* Section: Admin Actions (Featured & Unlocks) */}
-          <div className="pt-4 border-t border-dashed border-gray-200 flex items-center justify-between">
-            <div className="flex items-center gap-6">
-               <div className="flex items-center gap-3">
-                <input 
-                  type="checkbox" name="featured" id="feat" checked={formData.featured} onChange={handleChange}
-                  className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                />
-                <label htmlFor="feat" className="text-sm font-bold text-slate-600 cursor-pointer">Featured Task</label>
-              </div>
+          {/* Row 4: Details */}
+          <div className="space-y-1">
+            <label className="text-[10px] font-bold text-slate-500 uppercase">Task Details</label>
+            <textarea 
+              name="details" value={formData.details} onChange={handleChange} required rows="2"
+              className="w-full px-3 py-2 bg-slate-50 border border-gray-200 rounded-lg text-sm outline-none"
+              placeholder="Requirement details..."
+            />
+          </div>
+
+          {/* Row 5: Admin Mini Actions */}
+          <div className="flex items-center justify-between py-2 px-1 bg-blue-50/50 rounded-lg">
+            <div className="flex items-center gap-2">
+              <input 
+                type="checkbox" name="featured" id="feat" checked={formData.featured} onChange={handleChange}
+                className="w-4 h-4 rounded border-gray-300 text-blue-600 cursor-pointer"
+              />
+              <label htmlFor="feat" className="text-xs font-bold text-slate-600 cursor-pointer">Featured</label>
             </div>
-            <div className="flex items-center gap-3">
-              <label className="text-[11px] font-bold text-slate-400 uppercase">Initial Unlocks:</label>
+            <div className="flex items-center gap-2">
+              <label className="text-[10px] font-bold text-slate-500 uppercase">Unlocks:</label>
               <input 
                 type="number" name="unlocks" value={formData.unlocks} onChange={handleChange}
-                className="w-20 px-3 py-1 bg-slate-100 border border-gray-200 rounded font-bold text-center outline-none"
+                className="w-14 px-2 py-1 bg-white border border-gray-200 rounded font-bold text-xs text-center outline-none"
               />
             </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-end items-center gap-6 pt-6 border-t border-gray-50">
+          <div className="flex justify-end items-center gap-3 pt-4">
             <button 
               type="button" onClick={onClose} 
-              className="text-sm font-bold text-slate-500 hover:text-slate-700 transition"
+              className="px-4 py-2 text-xs font-bold text-slate-400 hover:text-slate-600 transition"
             >
               Cancel
             </button>
             <button 
               type="submit" 
-              className="px-10 py-3 bg-[#2563eb] text-white rounded-xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition"
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg font-bold text-xs shadow-md hover:bg-blue-700 transition"
             >
-              {mode === "Edit" ? "Save Changes" : "Post New Need"}
+              {mode === "Edit" ? "Update Task" : "Post Need"}
             </button>
           </div>
         </form>

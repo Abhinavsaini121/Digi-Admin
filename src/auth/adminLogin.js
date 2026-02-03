@@ -78,20 +78,6 @@ export const createNewJob = async (jobData) => {
     }
 };
 
-// export const createNewFullTimeJob = async (jobData) => {
-//     try {
-//         const token = localStorage.getItem("token");
-//         const response = await apiClient.post(`/admin/full-time/job/create`, jobData, {
-//              headers: {
-//                 Authorization: `Bearer ${token}`,
-//             },
-//         });
-//         return response.data;
-//     } catch (error) {
-//         throw error.response ? error.response.data : new Error("Network Error: Could not create full-time job.");
-//     }
-// };
-
 // --- Get All Full-Time Jobs ---
 export const getAllFullTimeJobs = async () => {
     try {
@@ -135,4 +121,30 @@ export const deleteCategory = async (categoryId) => {
         // Handle API error
         throw error.response ? error.response.data : new Error("Network Error");
     }
+};
+
+
+
+// 1. Get Pending Businesses (GET)
+export const getPendingBusinesses = async () => {
+  try {
+    // URL becomes: https://digiapp-node-1.onrender.com/api/admin/business/pending
+    const response = await apiClient.get("/admin/business/pending");
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching pending businesses:", error);
+    throw error;
+  }
+};
+// 2. Verify/Approve/Reject Business (PUT)
+export const verifyBusiness = async (id, action) => {
+  try {
+    // API: /api/admin/business/verify/{id}
+    // Payload: { "action": "approve" } or { "action": "reject" }
+    const response = await apiClient.put(`/admin/business/verify/${id}`, { action });
+    return response.data;
+  } catch (error) {
+    console.error("Error verifying business:", error);
+    throw error;
+  }
 };

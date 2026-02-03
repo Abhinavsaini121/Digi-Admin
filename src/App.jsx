@@ -18,11 +18,11 @@ import ShopManage from "./pages/ShopManagement/shopmanage";
 import Moderation from "./pages/ModerationBlocking/Moderationblocking";
 import Setting from "./pages/SystemSetting/Systemsetting";
 import Reports from "./pages/Report_Export/Report_export";
-
+import Business from "./pages/Business_Varifies/business-verify";
 function App() {
   return (
     <Routes>
-  
+
       {/* Redirect Root to Login initially */}
       <Route path="/" element={<Navigate to="/login" replace />} />
 
@@ -30,8 +30,8 @@ function App() {
       <Route path="/login" element={<Login />} />
 
       {/* Protected Routes (Admin Panel) */}
-      <Route 
-        path="/" 
+      <Route
+        path="/"
         element={
           <ProtectedRoute>
             <Layout />
@@ -39,26 +39,27 @@ function App() {
         }
       >
         <Route index element={<Dashboard />} />
-        
+
         <Route path="/usersmanagement" element={<ManageUsers />} />
         <Route path="/needsManagement" element={<LocalNeeds />} />
         <Route path="/PartTimeJobs" element={<PartTimeJobs />} />
         <Route path="/FullTimeJobs" element={<FullTimeJobs />} />
         <Route path="/Marketplace" element={<Marketplace />} />
         <Route path="/shop-management" element={<ShopManage />} />
-        <Route path="/sosAlert" element={< SosAlert/>} />
+        <Route path="/sosAlert" element={< SosAlert />} />
         <Route path="/blood-request" element={<BloodRequest />} />
-        <Route path="/credit" element={<Credit/>} />
-        <Route path="/category" element={<Category/>} />
-        <Route path="/notifications" element={<Notification/>}/>
-       <Route path="/moderationblocking" element={<Moderation/>}/>
-       <Route path="/systemsetting" element={<Setting/>}/>
-       <Route path="/report" element={<Reports/>}/>
+        <Route path="/credit" element={<Credit />} />
+        <Route path="/category" element={<Category />} />
+        <Route path="/notifications" element={<Notification />} />
+        <Route path="/moderationblocking" element={<Moderation />} />
+        <Route path="/systemsetting" element={<Setting />} />
+        <Route path="/report" element={<Reports />} />
+        <Route path="/business" element={<Business />} />
 
       </Route>
-     
+
       <Route path="*" element={<Navigate to="/login" replace />} />
-      
+
     </Routes>
   );
 }

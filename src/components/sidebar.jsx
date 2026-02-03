@@ -73,6 +73,12 @@ const menuItems = [
     icon: BarChart,
     route: "/report",
   },
+{
+    label: "Business verifies",
+    icon: BarChart,
+    route: "/business",
+  },
+
   {
     label: "Categories",
     icon: Layers,

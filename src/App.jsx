@@ -8,10 +8,12 @@ import ManageUsers from "./pages/User_Management/ManageUsers";
 import LocalNeeds from "./pages/LocalNeeds/LocalNeeds";
 import PartTimeJobs from "./pages/Jobs/PartTimeJobs";
 import FullTimeJobs from "./pages/Jobs/FullTimeJobs";
+import AllAdmin from "./pages/All_Admin/Alladmin"
+import AllUsers from "./pages/All_Users/all_users";
+import BloodRequest from "./pages/Blood_Request/Blood-request";
 import Marketplace from "./pages/Marketplace/Marketplace";
 import Credit from "./pages/Credits-Management/Credits";
-import BloodRequest from "./pages/Safety/BloodRequest";
-import SosAlert from "./pages/Safety/SOS Alert";
+// import SosAlert from "./pages/Safety/SOS Alert";
 import Category from "./pages/Categories/Categories";
 import Notification from "./pages/Notifications/Notification";
 import ShopManage from "./pages/ShopManagement/shopmanage";
@@ -44,10 +46,12 @@ function App() {
         <Route path="/needsManagement" element={<LocalNeeds />} />
         <Route path="/PartTimeJobs" element={<PartTimeJobs />} />
         <Route path="/FullTimeJobs" element={<FullTimeJobs />} />
+        <Route path="/all-admin" element={<AllAdmin />} />
+        <Route path="/all-users" element={<AllUsers />} />
+        <Route path="/blood-request" element={<BloodRequest />} />
         <Route path="/Marketplace" element={<Marketplace />} />
         <Route path="/shop-management" element={<ShopManage />} />
-        <Route path="/sosAlert" element={< SosAlert />} />
-        <Route path="/blood-request" element={<BloodRequest />} />
+        {/* <Route path="/sosAlert" element={< SosAlert />} /> */}
         <Route path="/credit" element={<Credit />} />
         <Route path="/category" element={<Category />} />
         <Route path="/notifications" element={<Notification />} />

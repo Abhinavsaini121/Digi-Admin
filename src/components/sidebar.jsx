@@ -19,6 +19,7 @@ import {
   Activity,
   Settings,
   ChevronDown,
+   HeartPulse,
 } from "lucide-react";
 
 const menuItems = [
@@ -45,6 +46,22 @@ const menuItems = [
       { label: "Full-Time Jobs", route: "/FullTimeJobs" },
     ],
   },
+   {
+    label: "All Admin",
+    icon:  Users,
+    route: "/all-admin",
+  },
+  {
+    label: "All Users",
+    icon:  Users,
+    route: "/all-users",
+  },
+
+   {
+    label: "Blood Request",
+    icon: HeartPulse,
+    route: "/blood-request",
+  },
   {
     label: "Marketplace",
     icon: ShoppingBag,
@@ -60,14 +77,11 @@ const menuItems = [
     icon: Coins,
     route: "/credit",
   },
-  {
-    label: "Safety",
-    icon: Shield,
-    children: [
-      { label: "SOS Alerts", route: "/sosAlert" },
-      { label: "BloodRequest", route: "/blood-request" },
-    ],
-  },
+  // {
+  //   label: "Safety",
+  //   icon: Shield,
+  //     label: "SOS Alerts", route: "/sosAlert",
+  // },
   {
     label: "Reports & Export",
     icon: BarChart,

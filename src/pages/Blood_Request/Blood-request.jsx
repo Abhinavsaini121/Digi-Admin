@@ -1,0 +1,562 @@
+
+
+import React, { useEffect, useState, useCallback } from 'react';
+import { Table, Tag, Space, Button, Input, message, Avatar, Tooltip, Modal, Select, Row, Col } from 'antd';
+import { 
+    SearchOutlined, 
+    EyeOutlined, 
+    DeleteOutlined, 
+    UserOutlined,
+    EnvironmentOutlined,
+    PlusOutlined,
+    EditOutlined
+} from '@ant-design/icons';
+import dayjs from 'dayjs'; 
+
+import { 
+    getAllBloodRequestsAPI, 
+    updateBloodRequestAPI, 
+    deleteBloodRequestAPI,
+    getBloodRequestByIdAPI, 
+    createNewBloodRequestFromAdminAPI 
+} from '../../auth/adminLogin'; 
+
+const { Option } = Select;
+const { TextArea } = Input;
+
+// --- Helper function to reset form data ---
+const getInitialFormData = () => ({
+    patientName: '', age: '', gender: 'Male', bloodGroup: '', 
+    units: 1, hospitalName: '', location: '', contactNumber: '', 
+    urgency: 'Normal', description: '', whatsappNumber: '' 
+});
+
+const BloodRequests = () => {
+    const [data, setData] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [searchText, setSearchText] = useState('');
+
+    // Modal and Form States
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+    const [submitLoading, setSubmitLoading] = useState(false);
+    const [viewLoading, setViewLoading] = useState(false);
+    
+    const [editingRecord, setEditingRecord] = useState(null); 
+    const [viewingData, setViewingData] = useState(null);
+    const [formData, setFormData] = useState(getInitialFormData());
+
+    const currentAdminId = localStorage.getItem("id");
+
+    // --- Fetch Data ---
+    const fetchData = async () => {
+        setLoading(true);
+        try {
+            const result = await getAllBloodRequestsAPI();
+            if (result && result.data) {
+                setData(result.data);
+            } else if (Array.isArray(result)) {
+                setData(result);
+            } else {
+                setData([]);
+            }
+        } catch (error) {
+            message.error(error.message || "Failed to load blood requests");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchData();
+    }, []);
+
+    // --- Form Handlers ---
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleSelectChange = (name, value) => {
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    // --- POST (Add) Handler ---
+    const handlePostRequest = async () => {
+        if (!formData.patientName || !formData.bloodGroup || !formData.contactNumber || !formData.hospitalName) {
+            message.error("Please fill in all required fields: Name, Blood Group, Contact, and Hospital.");
+            return;
+        }
+        
+        if (!currentAdminId) {
+             message.error("Admin ID is missing or not set. Cannot create request.");
+             return;
+        }
+        
+        setSubmitLoading(true);
+        try {
+            const dataToSend = {
+                userId: currentAdminId, 
+                patientName: formData.patientName,
+                bloodGroup: formData.bloodGroup,
+                urgency: formData.urgency,
+                hospitalName: formData.hospitalName,
+                location: formData.location,
+                contactNumber: formData.contactNumber,
+                whatsappNumber: formData.whatsappNumber,
+                additionalInfo: formData.description, // Assuming API uses 'additionalInfo'
+            };
+
+            const response = await createNewBloodRequestFromAdminAPI(dataToSend); 
+            
+            if (response && (response.success || response._id)) {
+                message.success("Blood Request Posted Successfully!");
+                setIsAddModalOpen(false);
+                setFormData(getInitialFormData()); // Reset Form
+                fetchData(); 
+            } else {
+                message.error(response.message || "Failed to post request");
+            }
+        } catch (error) {
+            message.error(error.message || "Something went wrong");
+        } finally {
+            setSubmitLoading(false);
+        }
+    };
+    
+    // --- PUT (Edit) Handlers ---
+    const handleEditClick = (record) => {
+        setEditingRecord(record);
+        setIsEditModalOpen(true);
+        setFormData({
+            patientName: record.patientName || '', 
+            age: record.age || '', 
+            gender: record.gender || 'Male', 
+            bloodGroup: record.bloodGroup || '', 
+            units: record.units || 1, 
+            hospitalName: record.hospitalName || '', 
+            location: record.location || record.city || '', 
+            contactNumber: record.contactNumber || record.mobile || '', 
+            urgency: record.urgency || 'Normal', 
+            description: record.description || '',
+            whatsappNumber: record.whatsappNumber || record.contactNumber || '', 
+            userId: record.userId || '' 
+        });
+    };
+
+    const handleUpdateRequest = async () => {
+        if (!editingRecord || !editingRecord._id) return;
+
+        setSubmitLoading(true);
+        try {
+            const dataToSend = {
+                ...formData,
+                whatsappNumber: formData.whatsappNumber, 
+                userId: editingRecord.userId || formData.userId, 
+            };
+            
+            const response = await updateBloodRequestAPI(editingRecord._id, dataToSend); 
+            
+            if (response.success) {
+                message.success("Blood Request Updated Successfully!");
+                setIsEditModalOpen(false);
+                fetchData(); 
+            } else {
+                message.error(response.message || "Failed to update request");
+            }
+        } catch (error) {
+            message.error(error.message || "Error during update");
+        } finally {
+            setSubmitLoading(false);
+        }
+    };
+    
+    // --- DELETE Handler ---
+    const handleDeleteClick = (id) => {
+        Modal.confirm({
+            title: 'Confirm Deletion',
+            content: 'Are you sure you want to delete this blood request?',
+            okText: 'Delete',
+            okType: 'danger',
+            cancelText: 'Cancel',
+            onOk: async () => {
+                try {
+                    const response = await deleteBloodRequestAPI(id); 
+                    if (response.success) {
+                        message.success("Blood Request Deleted Successfully!");
+                        fetchData(); 
+                    } else {
+                        message.error(response.message || "Failed to delete request");
+                    }
+                } catch (error) {
+                    message.error(error.message || "Error during deletion");
+                }
+            },
+        });
+    };
+
+    // --- VIEW Handler ---
+    const handleViewClick = async (record) => {
+        setViewLoading(true);
+        setIsViewModalOpen(true);
+        try {
+            const fetchedData = await getBloodRequestByIdAPI(record._id);
+            
+            setViewingData({
+                ...fetchedData,
+                description: fetchedData.additionalInfo || fetchedData.description || 'N/A',
+                requester: record.requesterName || 'Admin/System',
+                datePosted: record.createdAt,
+            });
+
+        } catch (error) {
+            message.error(error.message || "Failed to load request details.");
+            setViewingData(null);
+        } finally {
+            setViewLoading(false);
+        }
+    };
+
+    // --- Filtering ---
+    const filteredData = data.filter(item => 
+        (item.patientName && item.patientName.toLowerCase().includes(searchText.toLowerCase())) ||
+        (item.hospitalName && item.hospitalName.toLowerCase().includes(searchText.toLowerCase())) ||
+        (item.bloodGroup && item.bloodGroup.toLowerCase().includes(searchText.toLowerCase()))
+    );
+
+    // --- Table Columns ---
+    const columns = [
+        {
+            title: 'REQUESTER INFO',
+            key: 'requester',
+            render: (_, record) => (
+                <Space>
+                    <Avatar style={{ backgroundColor: '#ff4d4f' }} icon={<UserOutlined />} />
+                    <div className="flex flex-col">
+                        <span className="font-semibold">{record.requesterName || "Admin/User"}</span>
+                        <span className="text-xs text-gray-500">{record.contactNumber}</span>
+                    </div>
+                </Space>
+            ),
+        },
+        {
+            title: 'PATIENT DETAILS',
+            key: 'patient',
+            render: (_, record) => (
+                <div className="flex flex-col">
+                    <span className="font-medium text-gray-800">{record.patientName}</span>
+                    <span className="text-xs text-gray-500">Age: {record.age || 'N/A'}</span>
+                </div>
+            ),
+        },
+        {
+            title: 'BLOOD GROUP',
+            dataIndex: 'bloodGroup',
+            key: 'bloodGroup',
+            render: (bloodGroup) => (
+                <Tag color="#cd201f" style={{ fontWeight: 'bold', fontSize: '13px' }}>
+                    {bloodGroup}
+                </Tag>
+            ),
+        },
+        {
+            title: 'LOCATION / HOSPITAL',
+            key: 'location',
+            render: (_, record) => (
+                <div className="flex flex-col">
+                    <span className="font-medium">{record.hospitalName}</span>
+                    <span className="text-xs text-gray-500 flex items-center gap-1">
+                        <EnvironmentOutlined /> {record.location || record.city}
+                    </span>
+                </div>
+            ),
+        },
+        {
+            title: 'STATUS',
+            dataIndex: 'status',
+            key: 'status',
+            render: (status) => {
+                let color = 'gold'; 
+                const s = status ? status.toLowerCase() : 'pending';
+                
+                if (s === 'fulfilled' || s === 'resolved') color = 'green';
+                if (s === 'expired') color = 'gray';
+                if (s === 'urgent') color = 'red';
+
+                return (
+                    <Tag color={color} style={{ borderRadius: '10px', padding: '0 10px' }}>
+                        {status ? status.toUpperCase() : 'PENDING'}
+                    </Tag>
+                );
+            },
+        },
+        {
+            title: 'DATE',
+            dataIndex: 'createdAt', 
+            key: 'date',
+            render: (date) => (
+                <div className="flex flex-col text-xs text-gray-500">
+                    <span>{dayjs(date).format('DD MMM YYYY')}</span>
+                    <span>{dayjs(date).format('hh:mm A')}</span>
+                </div>
+            ),
+        },
+        {
+            title: 'ACTIONS',
+            key: 'action',
+            render: (_, record) => (
+                <Space size="middle">
+                    <Tooltip title="View Details">
+                        <Button 
+                            type="text" 
+                            shape="circle"
+                            icon={<EyeOutlined style={{ color: '#1890ff' }} />}
+                            onClick={() => handleViewClick(record)}
+                        />
+                    </Tooltip>
+                    
+                    <Tooltip title="Edit Request">
+                        <Button 
+                            type="text" 
+                            shape="circle"
+                            icon={<EditOutlined style={{ color: '#108ee9' }} />}
+                            onClick={() => handleEditClick(record)}
+                        />
+                    </Tooltip>
+                    
+                    <Tooltip title="Delete Request">
+                        <Button 
+                            type="text" 
+                            shape="circle"
+                            icon={<DeleteOutlined style={{ color: '#ff4d4f' }} />}
+                            onClick={() => handleDeleteClick(record._id)}
+                        />
+                    </Tooltip>
+                </Space>
+            ),
+        },
+    ];
+
+    // Styles
+    const tabButtonStyle = { borderRadius: '20px', border: '1px solid #e5e7eb', padding: '0 15px', fontSize: '13px' };
+    const activeTabStyle = { ...tabButtonStyle, backgroundColor: '#1f2937', color: 'white', border: 'none' };
+    const labelStyle = { fontWeight: 'bold', fontSize: '11px', color: '#555', marginBottom: '5px', display: 'block', textTransform: 'uppercase' };
+    const inputStyle = { borderRadius: '6px', padding: '8px' };
+
+    return (
+        <div className="p-6 bg-white rounded-lg shadow-sm max-w-7xl mx-auto mb-8 mt-2">
+            
+            <div className="flex justify-between items-start mb-6">
+                <div className="flex flex-col gap-4">
+                    <h1 className="text-2xl font-bold text-gray-800">Blood Requests</h1>
+                    <Space wrap size="small">
+                        <Button style={activeTabStyle}>All</Button>
+                        <Button style={tabButtonStyle}>Urgent</Button>
+                        <Button style={tabButtonStyle}>Pending</Button>
+                        <Button style={tabButtonStyle}>Fulfilled</Button>
+                    </Space>
+                </div>
+                <Button 
+                    type="primary" 
+                    icon={<PlusOutlined />} 
+                    size="large"
+                    style={{ backgroundColor: '#1890ff', borderRadius: '6px' }}
+                    onClick={() => {
+                        setEditingRecord(null); 
+                        setFormData(getInitialFormData());
+                        setIsAddModalOpen(true); 
+                    }}
+                >
+                    Add Blood Request
+                </Button>
+            </div>
+
+            <div className="mb-6">
+                <Input 
+                    placeholder="Search by Patient Name, Hospital or Blood Group..." 
+                    prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />} 
+                    size="large"
+                    style={{ borderRadius: '8px', maxWidth: '500px' }}
+                    value={searchText}
+                    onChange={(e) => setSearchText(e.target.value)}
+                />
+            </div>
+
+            <Table 
+                columns={columns} 
+                dataSource={filteredData} 
+                loading={loading} 
+                rowKey={(record) => record._id || Math.random()} 
+                pagination={{ pageSize: 8 }}
+                className="ant-table-striped" 
+            />
+
+            {/* ADD MODAL (POST) */}
+            <Modal
+                title={<span style={{ fontSize: '18px', fontWeight: 'bold', color: '#1f2937' }}>Post New Blood Request</span>}
+                open={isAddModalOpen}
+                onCancel={() => setIsAddModalOpen(false)}
+                footer={[
+                    <Button key="cancel" type="text" onClick={() => setIsAddModalOpen(false)} style={{ color: '#999', fontWeight: 'bold' }}>
+                        Cancel
+                    </Button>,
+                    <Button 
+                        key="submit" 
+                        type="primary" 
+                        loading={submitLoading} 
+                        onClick={handlePostRequest}
+                        style={{ backgroundColor: '#1890ff', borderRadius: '6px', padding: '0 25px', height: '38px', fontWeight: 'bold' }}
+                    >
+                        Post Request Now
+                    </Button>
+                ]}
+                width={700}
+                centered
+            >
+                 <div style={{ marginTop: '20px' }}>
+                    <Row gutter={16} style={{ marginBottom: '15px' }}>
+                        <Col span={12}><label style={labelStyle}>Patient Name</label><Input placeholder="Enter patient name" name="patientName" value={formData.patientName} onChange={handleInputChange} style={inputStyle} /></Col>
+                        <Col span={12}><label style={labelStyle}>Age</label><Input placeholder="Enter age" type="number" name="age" value={formData.age} onChange={handleInputChange} style={inputStyle} /></Col>
+                    </Row>
+                    <Row gutter={16} style={{ marginBottom: '15px' }}>
+                        <Col span={12}>
+                            <label style={labelStyle}>Blood Group</label>
+                            <Select placeholder="Select Group" style={{ width: '100%', borderRadius: '6px' }} value={formData.bloodGroup} onChange={(val) => handleSelectChange('bloodGroup', val)}>
+                                {['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(bg => (<Option key={bg} value={bg}>{bg}</Option>))}
+                            </Select>
+                        </Col>
+                        <Col span={12}><label style={labelStyle}>Units Required</label><Input placeholder="e.g. 1" type="number" name="units" value={formData.units} onChange={handleInputChange} style={inputStyle} /></Col>
+                    </Row>
+                    <Row gutter={16} style={{ marginBottom: '15px' }}>
+                        <Col span={12}><label style={labelStyle}>Hospital Name</label><Input placeholder="Enter hospital name" name="hospitalName" value={formData.hospitalName} onChange={handleInputChange} style={inputStyle} /></Col>
+                        <Col span={12}><label style={labelStyle}>Location (City)</label><Input placeholder="Enter city" name="location" value={formData.location} onChange={handleInputChange} style={inputStyle} /></Col>
+                    </Row>
+                    <Row gutter={16} style={{ marginBottom: '15px' }}>
+                        <Col span={12}><label style={labelStyle}>Contact Number</label><Input placeholder="+91 9876543210" name="contactNumber" value={formData.contactNumber} onChange={handleInputChange} style={inputStyle} /></Col>
+                        <Col span={12}>
+                            <label style={labelStyle}>Urgency</label>
+                            <Select placeholder="Select Urgency" style={{ width: '100%' }} value={formData.urgency} onChange={(val) => handleSelectChange('urgency', val)}>
+                                <Option value="Normal">Normal</Option><Option value="Urgent">Urgent</Option><Option value="Critical">Critical</Option>
+                            </Select>
+                        </Col>
+                    </Row>
+                  <Row style={{ marginBottom: '15px' }}>
+                        <Col span={24}><label style={labelStyle}>Whatsapp Number</label><Input placeholder="Enter whatsapp number" name="whatsappNumber" value={formData.whatsappNumber} onChange={handleInputChange} style={inputStyle} /></Col>
+                    </Row>
+                    <Row style={{ marginBottom: '10px' }}>
+                        <Col span={24}><label style={labelStyle}>Additional Message / Description</label><TextArea rows={3} placeholder="Any specific details..." name="description" value={formData.description} onChange={handleInputChange} style={{ ...inputStyle, resize: 'none' }} /></Col>
+                    </Row>
+                </div>
+            </Modal>
+
+            {/* EDIT MODAL (PUT) */}
+            <Modal
+                title={<span style={{ fontSize: '18px', fontWeight: 'bold', color: '#1f2937' }}>Edit Blood Request ({editingRecord?.patientName})</span>}
+                open={isEditModalOpen}
+                onCancel={() => setIsEditModalOpen(false)}
+                footer={[
+                    <Button key="cancel" type="text" onClick={() => setIsEditModalOpen(false)} style={{ color: '#999', fontWeight: 'bold' }}>
+                        Cancel
+                    </Button>,
+                    <Button 
+                        key="submit" 
+                        type="primary" 
+                        loading={submitLoading} 
+                        onClick={handleUpdateRequest}
+                        style={{ backgroundColor: '#007bff', borderRadius: '6px', padding: '0 25px', height: '38px', fontWeight: 'bold' }}
+                    >
+                        Save Changes
+                    </Button>
+                ]}
+                width={700}
+                centered
+            >
+                
+                {editingRecord && (
+                    <div style={{ marginTop: '20px' }}>
+                        <Row gutter={16} style={{ marginBottom: '15px' }}>
+                            <Col span={12}><label style={labelStyle}>Patient Name</label><Input placeholder="Enter patient name" name="patientName" value={formData.patientName} onChange={handleInputChange} style={inputStyle} /></Col>
+                            <Col span={12}><label style={labelStyle}>Age</label><Input placeholder="Enter age" type="number" name="age" value={formData.age} onChange={handleInputChange} style={inputStyle} /></Col>
+                        </Row>
+                        <Row gutter={16} style={{ marginBottom: '15px' }}>
+                            <Col span={12}>
+                                <label style={labelStyle}>Blood Group</label>
+                                <Select placeholder="Select Group" style={{ width: '100%', borderRadius: '6px' }} value={formData.bloodGroup} onChange={(val) => handleSelectChange('bloodGroup', val)}>
+                                    {['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(bg => (<Option key={bg} value={bg}>{bg}</Option>))}
+                                </Select>
+                            </Col>
+                            <Col span={12}><label style={labelStyle}>Units Required</label><Input placeholder="e.g. 1" type="number" name="units" value={formData.units} onChange={handleInputChange} style={inputStyle} /></Col>
+                        </Row>
+                        <Row gutter={16} style={{ marginBottom: '15px' }}>
+                            <Col span={12}><label style={labelStyle}>Hospital Name</label><Input placeholder="Enter hospital name" name="hospitalName" value={formData.hospitalName} onChange={handleInputChange} style={inputStyle} /></Col>
+                            <Col span={12}><label style={labelStyle}>Location (City)</label><Input placeholder="Enter city" name="location" value={formData.location} onChange={handleInputChange} style={inputStyle} /></Col>
+                        </Row>
+                        <Row gutter={16} style={{ marginBottom: '15px' }}>
+                            <Col span={12}><label style={labelStyle}>Contact Number</label><Input placeholder="+91 9876543210" name="contactNumber" value={formData.contactNumber} onChange={handleInputChange} style={inputStyle} /></Col>
+                            <Col span={12}>
+                                <label style={labelStyle}>Urgency</label>
+                                <Select placeholder="Select Urgency" style={{ width: '100%' }} value={formData.urgency} onChange={(val) => handleSelectChange('urgency', val)}>
+                                    <Option value="Normal">Normal</Option><Option value="Urgent">Urgent</Option><Option value="Critical">Critical</Option>
+                                </Select>
+                            </Col>
+                        </Row>
+                        <Row style={{ marginBottom: '10px' }}>
+                            <Col span={24}><label style={labelStyle}>Additional Message / Description</label><TextArea rows={3} placeholder="Any specific details..." name="description" value={formData.description} onChange={handleInputChange} style={{ ...inputStyle, resize: 'none' }} /></Col>
+                        </Row>
+                    </div>
+                )}
+            </Modal>
+            
+            {/* VIEW MODAL */}
+             <Modal
+                title={<span style={{ fontSize: '18px', fontWeight: 'bold', color: '#1f2937' }}>Blood Request Details</span>}
+                open={isViewModalOpen}
+                onCancel={() => {setIsViewModalOpen(false); setViewingData(null);}}
+                footer={
+                    <Button key="close" type="primary" onClick={() => {setIsViewModalOpen(false); setViewingData(null);}} style={{ backgroundColor: '#1890ff', borderRadius: '6px', padding: '0 25px', height: '38px', fontWeight: 'bold' }}>
+                        Close
+                    </Button>
+                }
+                width={600}
+                centered 
+                confirmLoading={viewLoading}
+            >
+                {viewLoading && <div className="text-center py-8"><p>Loading Details...</p></div>}
+                {!viewLoading && viewingData && (
+                    <div style={{ padding: '10px' }}> 
+                        <h3 style={{ borderBottom: '2px solid #f0f0f0', paddingBottom: '10px', marginBottom: '15px', fontSize: '16px', fontWeight: '600' }}>
+                            {viewingData.patientName} (<Tag color="#cd201f">{viewingData.bloodGroup}</Tag>)
+                        </h3>
+
+                        <Row gutter={16} style={{ marginBottom: '15px' }}>
+                            <Col span={12}><p><span style={labelStyle}>Age:</span> {viewingData.age || 'N/A'}</p></Col>
+                            <Col span={12}><p><span style={labelStyle}>Units:</span> {viewingData.units || 'N/A'}</p></Col>
+                        </Row>
+
+                        <p><span style={labelStyle}>Hospital:</span> {viewingData.hospitalName || 'N/A'}</p>
+                        <p><span style={labelStyle}>Location:</span> {viewingData.location || viewingData.city || 'N/A'}</p>
+                        <p><span style={labelStyle}>Contact:</span> {viewingData.contactNumber || 'N/A'}</p>
+                        <p><span style={labelStyle}>Urgency:</span> <Tag color={viewingData.urgency === 'Urgent' ? 'red' : viewingData.urgency === 'Critical' ? 'magenta' : 'green'}>{viewingData.urgency}</Tag></p>
+                        
+                        <div style={{ marginTop: '20px' }}>
+                            <p><span style={labelStyle}>Description:</span></p>
+                            <div style={{ border: '1px solid #eee', padding: '10px', borderRadius: '4px', background: '#fafafa' }}>
+                                {viewingData.description}
+                            </div>
+                        </div>
+
+                        <div style={{ marginTop: '20px', paddingTop: '10px', borderTop: '1px solid #f0f0f0' }}>
+                            <p><span style={labelStyle}>Status:</span> <Tag color={viewingData.status === 'Fulfilled' ? 'green' : 'gold'}>{viewingData.status || 'Pending'}</Tag></p>
+                            <p><span style={labelStyle}>Posted On:</span> {viewingData.datePosted ? dayjs(viewingData.datePosted).format('DD MMM YYYY, hh:mm A') : 'N/A'}</p>
+                        </div>
+                    </div>
+                )}
+                {!viewLoading && !viewingData && <p className="text-center py-8 text-red-500">Could not load data for this request.</p>}
+            </Modal>
+        </div>
+    );
+};
+
+export default BloodRequests;
+

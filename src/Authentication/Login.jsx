@@ -30,6 +30,7 @@ const Login = () => {
       localStorage.setItem("token", data.token);
       localStorage.setItem("role", data.admin.role);
       localStorage.setItem("isLoggedIn", "true");
+      localStorage.setItem("id", data.admin.id);
 
       toast.success("Login successful!");
 

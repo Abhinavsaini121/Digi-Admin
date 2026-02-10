@@ -1,11 +1,18 @@
+
 import apiClient from './apiClient';
 
 // --- Login ---
 export const adminLogin = async (email, password) => {
     try {
         const response = await apiClient.post('/admin/login', { email, password });
+          
+        console.log("login success", response);
+                    
         if (response.data.token) { 
             localStorage.setItem("token", response.data.token);
+            if (response.data.userId) { 
+                localStorage.setItem("userId", response.data.userId); 
+            }
         }
         return response.data; 
     } catch (error) {
@@ -27,7 +34,7 @@ export const getDashboardStats = async () => {
   }
 };
 
-// --- Get All Jobs ---
+// --- Get All Jobs (Part-Time) ---
 export const getAllJobs = async () => {
     try {
         const response = await apiClient.get("/admin/part-time/jobs"); 
@@ -37,7 +44,7 @@ export const getAllJobs = async () => {
     }
 };
 
-// --- Get Job By ID (Fetch Single) ---
+// --- Get Job By ID (Part-Time) ---
 export const getJobById = async (id) => {
     try {
         const response = await apiClient.get(`/admin/part-time/job/${id}`);
@@ -47,18 +54,21 @@ export const getJobById = async (id) => {
     }
 };
 
-// --- UPDATE JOB (Corrected URL) ---
+// --- UPDATE JOB (Part-Time) ---
 export const updateJob = async (id, jobData) => {
     try {
+        // Payload mein adminId add kar sakte hain agar backend require karta hai
+        const adminId = localStorage.getItem("id");
+        const finalData = { ...jobData, updatedBy: adminId };
         
-        const response = await apiClient.put(`/admin/part-time/job/update/${id}`, jobData);
+        const response = await apiClient.put(`/admin/part-time/job/update/${id}`, finalData);
         return response.data;
     } catch (error) {
         throw error.response ? error.response.data : new Error("Network Error");
     }
 };
 
-// --- DELETE JOB ---
+// --- DELETE JOB (Part-Time) ---
 export const deleteJob = async (id) => {
     try {
         const response = await apiClient.delete(`/admin/part-time/job/delete/${id}`);
@@ -70,8 +80,10 @@ export const deleteJob = async (id) => {
 
 export const createNewJob = async (jobData) => {
     try {
-        // Aapka apiClient ya axios instance yahan use hoga
-        const response = await apiClient.post(`/admin/part-time/job/create`, jobData);
+        const adminId = localStorage.getItem("id");
+        const finalData = { ...jobData, createdBy: adminId };
+
+        const response = await apiClient.post(`/admin/part-time/job/create`, finalData);
         return response.data;
     } catch (error) {
         throw error.response ? error.response.data : new Error("Network Error");
@@ -81,54 +93,47 @@ export const createNewJob = async (jobData) => {
 // --- Get All Full-Time Jobs ---
 export const getAllFullTimeJobs = async () => {
     try {
-        // API Endpoint: GET /admin/full-time/all 
         const response = await apiClient.get("/admin/full-time/all"); 
-        
-        // Response structure expected: { success: true, data: [...] }
         return response.data; 
     } catch (error) {
-        // Throw an error with the response data (for better error messages in the component)
         throw error.response ? error.response.data : new Error("Network Error or Server Unreachable");
     }
 };
 
 export const addCategory = async (formData) => {
-    // API Endpoint: POST /admin/category/add
+    // FormData ke case mein adminId aise append karte hain
+    const adminId = localStorage.getItem("id");
+    if(adminId) formData.append('adminId', adminId);
+
     const response = await apiClient.post("/admin/category/add", formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
     });
     return response.data;
 };
-// API Endpoint: GET /user/categories
+
 export const getAllCategories = async () => {
     try {
-        // GET request to fetch category list
         const response = await apiClient.get("/admin/category/all"); 
-        return response.data; // Return fetched categories array
+        return response.data; 
     } catch (error) {
-        // Handle API error
         throw error.response ? error.response.data : new Error("Network Error");
     }
 };
 
-// --- NEW API Endpoint: DELETE /api/admin/category/delete/:id ---
+// --- Delete Category ---
 export const deleteCategory = async (categoryId) => {
     try {
-        // DELETE request to delete a category by ID
         const response = await apiClient.delete(`/admin/category/delete/${categoryId}`); 
         return response.data; 
     } catch (error) {
-        // Handle API error
         throw error.response ? error.response.data : new Error("Network Error");
     }
 };
 
 
-
-// 1. Get Pending Businesses (GET)
+// --- Get Pending Businesses ---
 export const getPendingBusinesses = async () => {
   try {
-    // URL becomes: https://digiapp-node-1.onrender.com/api/admin/business/pending
     const response = await apiClient.get("/admin/business/pending");
     return response.data;
   } catch (error) {
@@ -136,15 +141,183 @@ export const getPendingBusinesses = async () => {
     throw error;
   }
 };
-// 2. Verify/Approve/Reject Business (PUT)
+
+// --- Verify Business ---
 export const verifyBusiness = async (id, action) => {
   try {
-    // API: /api/admin/business/verify/{id}
-    // Payload: { "action": "approve" } or { "action": "reject" }
-    const response = await apiClient.put(`/admin/business/verify/${id}`, { action });
+    const adminId = localStorage.getItem("id");
+    const response = await apiClient.put(`/admin/business/verify/${id}`, { action, verifiedBy: adminId });
     return response.data;
   } catch (error) {
     console.error("Error verifying business:", error);
     throw error;
   }
+};
+
+
+export const createNewFullTimeJob = async (formData) => {
+    try {
+        const adminId = localStorage.getItem("id");
+        if(adminId) formData.append('adminId', adminId);
+
+        const response = await apiClient.post(`/admin/full-time/create`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data' 
+            }
+        });
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : new Error("Network Error or Server Unreachable");
+    }
+};
+
+// GET /api/admin/users
+export const getAllUsersAPI = async () => {
+    try {
+        const response = await apiClient.get("/admin/users"); 
+        return response.data; 
+    } catch (error) {
+        throw error.response ? error.response.data : new Error("Network Error");
+    }
+};
+
+export const updateUserStatusAPI = async (id, status) => {
+    try {
+        const adminId = localStorage.getItem("id");
+        // Payload mein status ke sath adminId bhej rahe hain
+        const response = await apiClient.patch(`/admin/user-status/${id}`, { status, adminId });
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : new Error("Network Error");
+    }
+};
+
+
+export const getAllBloodRequestsAPI = async () => {
+    try {
+        const response = await apiClient.get("/admin/blood-requests");
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : new Error("Network Error");
+    }
+};
+
+// --- Update Blood Request (PUT) ---
+export const updateBloodRequestAPI = async (id, requestData) => {
+    try {
+        const adminId = localStorage.getItem("id");
+        const finalData = { ...requestData, updatedBy: adminId };
+        
+        const response = await apiClient.put(`/admin/blood-requests/${id}`, finalData);
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : new Error("Network Error");
+    }
+};
+
+// --- Delete Blood Request (DELETE) ---
+export const deleteBloodRequestAPI = async (id) => {
+    try {
+        const response = await apiClient.delete(`/admin/blood-requests/${id}`);
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : new Error("Network Error");
+    }
+};
+
+export const getBloodRequestByIdAPI = async (id) => {
+    try {
+        const response = await apiClient.get(`/admin/blood-requests/${id}`);
+        return response.data.data || response.data; 
+    } catch (error) {
+        throw error.response ? error.response.data : new Error("Network Error");
+    }
+};
+
+export const createNewBloodRequestFromAdminAPI = async (requestDataWithUserId) => {
+    try {
+        const adminId = localStorage.getItem("id");
+        const finalData = { ...requestDataWithUserId, adminId };
+        const response = await apiClient.post('/admin/blood-requests', finalData); 
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : new Error("Network Error");
+    }
+};
+
+export const getAllAdminData = async () => {
+try {
+// Fetching data from the newly specified endpoint /api/admin/all
+const response = await apiClient.get("/admin/all");
+return response.data; 
+}
+catch (error) {
+throw error.response ? error.response.data : new Error("Network Error");
+}
+};
+// --- Modified Shop Management API Function ---
+
+export const getAllShopsForAdmin = async () => {
+    try {
+        const response = await apiClient.get("/admin/manage-business/all"); 
+        return response.data.data || response.data; 
+    } catch (error) {
+        console.error("Error fetching shops:", error);
+        throw error.response ? error.response.data : new Error("Network Error or Shop Service Unreachable");
+    }
+};
+
+export const getShopDetailsById = async (id) => {
+    try {
+        const response = await apiClient.get(`/admin/manage-business/${id}`);
+        
+        return response.data.data || response.data; 
+    } catch (error) {
+        console.error(`Error fetching shop details for ID ${id}:`, error);
+        throw error.response 
+            ? error.response.data 
+            : new Error("Network Error or Shop Details Service Unreachable");
+    }
+};
+
+export const deletebusiness = async (id) => {
+    try {
+        const response = await apiClient.delete(`admin/manage-business/delete/${id}`);
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : new Error("Network Error");
+    }
+};
+
+export const toggleBusinessStatusAPI = async (businessId, status) => {
+    try {
+        const adminId = localStorage.getItem("id");
+
+        // Updated URL and payload logic
+        const response = await apiClient.patch(
+            `/admin/manage-business/toggle-status/${businessId}`, 
+            { status, adminId }
+        );
+
+        return response.data;
+    } catch (error) {
+        // Handling the error response gracefully
+        throw error.response ? error.response.data : new Error("Network Error");
+    }
+};
+
+
+export const createNewShopAPI = async (formData) => {
+    try {
+       
+        const response = await apiClient.post("/admin/manage-business/create", formData, {
+            headers: { 
+                'Content-Type': 'multipart/form-data' 
+            }
+        });
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : new Error("Network Error or Shop Creation Failed");
+    }
+
 };

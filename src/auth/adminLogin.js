@@ -348,3 +348,12 @@ export const addServiceToBusinessAPI = async (businessId, formData) => {
         throw error.response ? error.response.data : new Error("Network Error");
     }
 };
+
+export const getBusinessServicesAPI = async (businessId) => {
+    try {
+        const response = await apiClient.get(`/business/${businessId}/services`);
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : new Error("An unexpected error occurred");
+    }
+};

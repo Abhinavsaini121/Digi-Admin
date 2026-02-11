@@ -3,7 +3,7 @@ import {
   Search, Eye, Trash2, MapPin, Phone, X,
   Loader2, Image as ImageIcon, AlertCircle,
   CheckCircle, XCircle, ShieldAlert, RefreshCcw, Plus, Upload, User, Info, FileText, AlertTriangle,
-  Layers // Added for Add Service icon
+  Layers , List, Pencil // <--- EDIT ICON ADDED HERE
 } from "lucide-react";
 
 import { 
@@ -14,9 +14,13 @@ import {
     getAllUsersAPI, 
     getAllCategories,
     createBusinessForUserAPI,
-    // Note: Make sure to export this from your adminLogin.js
-    addServiceToBusinessAPI 
+    addServiceToBusinessAPI, 
+    getBusinessServicesAPI // *** यह नई API इंपोर्ट की गई है ***
 } from "../../auth/adminLogin"; 
+// --- NEW IMPORT FOR EDIT FORM (Assuming path and name) ---
+import ShopEditForm from "./ShopEditForm"; // <--- *** यह नई फ़ाइल इम्पोर्ट करें *** 
+// ----------------------------------------------------------
+
 
 // --- Modal Sub-components ---
 const DetailSection = ({ title, children }) => (
@@ -81,6 +85,8 @@ const ShopListManagement = () => {
     serviceDetails: ""
   });
   const [serviceImages, setServiceImages] = useState([]);
+  const [businessServices, setBusinessServices] = useState([]); // *** नया स्टेट ***
+  const [servicesLoading, setServicesLoading] = useState(false); // *** नया स्टेट ***
 
   const showFeedback = (message, type = "success") => {
     setFeedback({ show: true, message, type });
@@ -228,24 +234,39 @@ const handleAddServiceSubmit = async (e) => {
     }
   };
 
-  const handleAction = async (type, shop) => {
+const handleAction = async (type, shop) => {
     setModalType(type);
     setSelectedShop(shop);
     setIsModalOpen(true);
 
-    if (type === 'view') {
+    if (type === 'view' || type === 'edit') { 
         setDetailLoading(true);
         try {
             const result = await getShopDetailsById(shop._id);
             setShopDetail(result.data || result); 
+            
+           
+            if (type === 'view' || type === 'edit') {
+                setServicesLoading(true);
+                try {
+                    const serviceRes = await getBusinessServicesAPI(shop._id);
+                    setBusinessServices(serviceRes.data || []);
+                } catch (err) {
+                    showFeedback("Error fetching services", "error");
+                } finally {
+                    setServicesLoading(false);
+                }
+            }
+
         } catch (err) {
             showFeedback("Error fetching details", "error");
+            setServicesLoading(false); 
             closeModal();
         } finally {
             setDetailLoading(false);
         }
     }
-  };
+};
 
   const closeModal = () => {
     setIsModalOpen(false);
@@ -261,6 +282,10 @@ const handleAddServiceSubmit = async (e) => {
     // Reset Service Form
     setServiceData({ serviceTitle: "", serviceDetails: "" });
     setServiceImages([]);
+    
+    // *** नया: सर्विस स्टेट रीसेट करें ***
+    setBusinessServices([]);
+    setServicesLoading(false);
   };
 
   const filteredShops = shops.filter(shop => {
@@ -379,6 +404,15 @@ const handleAddServiceSubmit = async (e) => {
                         <div className="w-[1px] h-4 bg-slate-200 mx-1"></div>
 
                         <button onClick={() => handleAction('view', shop)} className="p-2.5 text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all" title="View Details"><Eye size={18}/></button>
+                        {/* *** नया EDIT BUTTON *** */}
+                        <button 
+                            onClick={() => handleAction('edit', shop)} // <-- 'edit' एक्शन
+                            className="p-2.5 text-amber-500 hover:bg-amber-50 rounded-xl transition-all" 
+                            title="Edit Business"
+                        >
+                            <Pencil size={18}/> 
+                        </button>
+                        {/* *** EDIT BUTTON समाप्त *** */}
                         <button onClick={() => handleAction('delete', shop)} className="p-2.5 text-rose-500 hover:bg-rose-50 rounded-xl transition-all" title="Delete"><Trash2 size={18}/></button>
                     </div>
                     </td>
@@ -392,12 +426,13 @@ const handleAddServiceSubmit = async (e) => {
       {/* --- MODALS --- */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-[4px] p-4">
-          <div className={`bg-white rounded-[2rem] shadow-2xl overflow-hidden flex flex-col transition-all animate-in zoom-in-95 duration-200 ${['view', 'add', 'addService'].includes(modalType) ? 'w-full max-w-5xl max-h-[90vh]' : 'w-full max-w-md'}`}>
+          <div className={`bg-white rounded-[2rem] shadow-2xl overflow-hidden flex flex-col transition-all animate-in zoom-in-95 duration-200 ${['view', 'add', 'addService', 'edit'].includes(modalType) ? 'w-full max-w-5xl max-h-[90vh]' : 'w-full max-w-md'}`}>
             
             <div className="px-8 py-6 border-b flex justify-between items-center bg-white sticky top-0 z-20">
               <div>
                 <h3 className="text-xl font-black text-slate-800 uppercase tracking-tight">
                     {modalType === 'view' ? 'Verify Listing' : 
+                     modalType === 'edit' ? `Edit Listing: ${selectedShop?.businessName}` : // <--- EDIT TITLE
                      modalType === 'add' ? 'Add New Business' : 
                      modalType === 'addService' ? `Add Service to ${selectedShop?.businessName}` :
                      modalType === 'approve' ? 'Approve Listing' : 
@@ -412,6 +447,7 @@ const handleAddServiceSubmit = async (e) => {
               {/* Add Business Form */}
               {modalType === 'add' && (
                 <form id="addShopForm" onSubmit={handleAddShopSubmit} className="space-y-8">
+                    {/* ... (Add Shop Form Content - UNCHANGED) ... */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                         <div className="col-span-2 space-y-4">
                              <div className="flex items-center gap-2 text-indigo-600">
@@ -517,6 +553,19 @@ const handleAddServiceSubmit = async (e) => {
                 </form>
               )}
 
+              {/* --- NEW: Shop Edit Form (Loaded from external file) --- */}
+              {modalType === 'edit' && shopDetail && (
+                <ShopEditForm 
+                    shopData={shopDetail} 
+                    users={users} 
+                    categories={categories} 
+                    onClose={closeModal} 
+                    // isProcessing, setIsProcessing, showFeedback, fetchInitialData को ShopEditForm के अंदर हैंडल किया जाएगा
+                />
+              )}
+              {/* --- NEW: Shop Edit Form समाप्त --- */}
+
+
               {/* --- NEW: Add Service Form --- */}
               {modalType === 'addService' && (
                 <form id="addServiceForm" onSubmit={handleAddServiceSubmit} className="space-y-8">
@@ -619,6 +668,7 @@ const handleAddServiceSubmit = async (e) => {
                   </div>
                 ) : shopDetail ? (
                   <div className="space-y-10">
+                    {/* ... (View Detail Content - UNCHANGED) ... */}
                     <div className="relative h-60 w-full rounded-3xl overflow-hidden shadow-lg bg-slate-200">
                         <img src={shopDetail.businessImages?.[0] || "https://images.unsplash.com/photo-1534723452862-4c874018d66d?auto=format&fit=crop&q=80"} className="w-full h-full object-cover" alt="Banner"/>
                         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent"></div>
@@ -669,6 +719,38 @@ const handleAddServiceSubmit = async (e) => {
                             </div>
                         </div>
                     </div>
+
+                    {/* *** नई सर्विस लिस्टिंग सेक्शन *** */}
+                    <div className="bg-white rounded-[2rem] shadow-lg border border-indigo-100 p-6">
+                        <h4 className="text-xl font-black text-indigo-700 mb-5 flex items-center gap-2 border-b pb-3">
+                           <List size={22}/> All Services ({businessServices.length})
+                        </h4>
+                        
+                        {servicesLoading ? (
+                            <div className="flex justify-center items-center py-10"><Loader2 className="animate-spin text-indigo-500" size={30}/></div>
+                        ) : businessServices.length === 0 ? (
+                            <p className="text-center text-slate-500 font-medium italic py-10">No services listed for this business yet.</p>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {businessServices.map(service => (
+                                    <div key={service._id} className="border border-slate-200 rounded-xl p-5 hover:shadow-md transition-shadow bg-slate-50">
+                                        <h5 className="text-lg font-bold text-slate-800 mb-1">{service.serviceTitle}</h5>
+                                        <p className="text-sm text-slate-600 mb-3 line-clamp-2">{service.serviceDetails}</p>
+                                        {service.serviceImages?.[0] && (
+                                            <img 
+                                                src={service.serviceImages[0]} 
+                                                alt={service.serviceTitle} 
+                                                className="w-full h-32 object-cover rounded-lg mb-3 border border-slate-100"
+                                            />
+                                        )}
+                                        <p className='text-[10px] text-indigo-500 font-semibold'>Images: {service.serviceImages?.length || 0}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                    {/* *** नई सर्विस लिस्टिंग सेक्शन समाप्त *** */}
+
                   </div>
                 ) : null
               )}
@@ -686,6 +768,15 @@ const handleAddServiceSubmit = async (e) => {
                             )}
                         </div>
                         <button onClick={closeModal} className="px-6 py-2.5 bg-slate-900 text-white rounded-xl text-[11px] font-bold uppercase">Close</button>
+                    </>
+                ) : modalType === 'edit' ? ( // <-- EDIT MODE FOOTER BUTTON
+                    <>
+                        <button type="button" onClick={closeModal} className="px-6 py-2 text-[11px] font-bold text-slate-400 uppercase hover:text-slate-600">Cancel</button>
+                        {/* The actual submit for the edit form should be triggered by a button inside ShopEditForm, 
+                            but this button acts as a visual placeholder/trigger if needed, or can be disabled. */}
+                        <button type="submit" form="editShopForm" disabled={isProcessing} className="px-10 py-3 bg-amber-600 text-white rounded-xl text-[11px] font-bold uppercase tracking-widest shadow-lg shadow-amber-100 hover:bg-amber-700 disabled:opacity-50 flex items-center gap-2 transition-all">
+                            {isProcessing ? <Loader2 className="animate-spin" size={14} /> : <Pencil size={14}/>} Update Details
+                        </button>
                     </>
                 ) : modalType === 'add' ? (
                     <>

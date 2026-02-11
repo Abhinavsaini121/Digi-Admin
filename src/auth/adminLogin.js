@@ -293,7 +293,7 @@ export const toggleBusinessStatusAPI = async (businessId, status) => {
     try {
         const adminId = localStorage.getItem("id");
 
-        // Updated URL and payload logic
+      
         const response = await apiClient.patch(
             `/admin/manage-business/toggle-status/${businessId}`, 
             { status, adminId }
@@ -301,7 +301,7 @@ export const toggleBusinessStatusAPI = async (businessId, status) => {
 
         return response.data;
     } catch (error) {
-        // Handling the error response gracefully
+      
         throw error.response ? error.response.data : new Error("Network Error");
     }
 };
@@ -320,4 +320,31 @@ export const createNewShopAPI = async (formData) => {
         throw error.response ? error.response.data : new Error("Network Error or Shop Creation Failed");
     }
 
+};
+
+
+export const createBusinessForUserAPI = async (formData) => {
+    try {
+        const response = await apiClient.post("/admin/manage-business/create-for-user", formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : new Error("Network Error");
+    }
+};
+
+export const addServiceToBusinessAPI = async (businessId, formData) => {
+    try {
+        const response = await apiClient.post(`/admin/manage-business/add-service/${businessId}`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : new Error("Network Error");
+    }
 };

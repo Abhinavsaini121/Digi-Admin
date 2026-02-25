@@ -1,224 +1,195 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { AlertCircle, X, Star, Trash2, PlusCircle, Loader2, Eye, Upload, Image as ImageIcon } from "lucide-react";
-import { getAllJobs, getJobById, updateJob, deleteJob, createNewJob } from "../../auth/adminLogin";
+import { AlertCircle, X, Star, Trash2, PlusCircle, Loader2, Eye, Upload, Image as ImageIcon, User, MapPin, MessageSquare, Navigation, AlignLeft } from "lucide-react";
+import { getAllJobs, getJobById, updateJob, deleteJob, createNewJob, getAllUsersAPI } from "../../auth/adminLogin";
 import toast, { Toaster } from "react-hot-toast";
 import JobViewModal from "./JobDetailsModal";
 
+// Aapki Google API Key
+const GOOGLE_MAPS_API_KEY = "AIzaSyB25eeQ2I_NTGDM9ybfnLXvc6PIerCsK3I";
+
 const PartTimeJobManagement = () => {
   const [allJobs, setAllJobs] = useState([]);
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [locLoading, setLocLoading] = useState(false);
 
-  // Modal States
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
 
   const [selectedJob, setSelectedJob] = useState(null);
-  const [newImages, setNewImages] = useState([]); // For Edit Modal
-  const [createImages, setCreateImages] = useState([]); // For Create Modal
+  const [createImages, setCreateImages] = useState([]);
 
-  const fileInputRef = useRef(null);
   const createFileInputRef = useRef(null);
 
-  const [newJob, setNewJob] = useState({
+  const initialJobState = {
+    userId: "",
     title: "",
+    description: "", // Short Description
     companyName: "",
-    location: "", // Keep this as string input for creation form
     jobRole: "",
-    workType: "",
-    vacancies: 1,
+    vacancies: 5,
     minPay: "",
     maxPay: "",
-    details: "",
+    details: "", // Full Job description
     whatsappNumber: "",
-    experience: "",
-    qualification: "",
-    unlockCount: 0,
+    experience: "Fresher",
+    qualification: "10th Pass",
+    address: "",
+    latitude: "19.0760", // Default (Mumbai) ya empty string ko handle karenge
+    longitude: "72.8777", // Default (Mumbai)
+    status: "active",
     isFeatured: false,
-    isActive: true
-  });
+    preferredCommunication: ["WhatsApp"]
+  };
 
-  const [fetchLoading, setFetchLoading] = useState(false);
+  const [newJob, setNewJob] = useState(initialJobState);
   const [saveLoading, setSaveLoading] = useState(false);
 
   useEffect(() => {
     fetchData();
+    fetchUsers();
   }, []);
-
-  const filteredJobs = useMemo(() => {
-    return allJobs.filter((job) =>
-      (job.jobCategory?.includes && job.jobCategory?.includes("Part-time")) ||
-      (job.workType?.includes && job.workType?.includes("Part-time"))
-    );
-  }, [allJobs]);
 
   const fetchData = async () => {
     try {
       setLoading(true);
       const response = await getAllJobs();
-      setAllJobs(response.data);
+      setAllJobs(response.data || []);
     } catch (err) {
-      setError("Failed to fetch jobs. Please try again.");
       toast.error("Error fetching job list");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleViewClick = async (jobId) => {
-    setIsViewModalOpen(true);
-    setFetchLoading(true);
+  const fetchUsers = async () => {
     try {
-      const response = await getJobById(jobId);
-      setSelectedJob(response.data.data || response.data);
+      const response = await getAllUsersAPI();
+      if (response.success) setUsers(response.data);
     } catch (err) {
-      toast.error("Failed to fetch job details");
-      setIsViewModalOpen(false);
-    } finally {
-      setFetchLoading(false);
+      console.error("Failed to fetch users", err);
     }
   };
 
-  const handleDelete = async (jobId) => {
-    if (window.confirm("Are you sure you want to delete this job?")) {
-      try {
-        setSaveLoading(true);
-        await deleteJob(jobId);
-        toast.success("Job deleted successfully!");
-        fetchData();
-      } catch (err) {
-        toast.error(err.message || "Failed to delete job.");
-      } finally {
-        setSaveLoading(false);
-      }
+  const filteredJobs = useMemo(() => {
+    return allJobs.filter((job) =>
+      job.jobCategory?.toLowerCase().includes("part-time")
+    );
+  }, [allJobs]);
+
+  const handleFetchLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error("Geolocation is not supported");
+      return;
     }
-  };
 
-  const handleEditClick = async (jobId) => {
-    setIsEditModalOpen(true);
-    setFetchLoading(true);
-    setSelectedJob(null);
-    setNewImages([]);
-    try {
-      const response = await getJobById(jobId);
-      const apiData = response.data.data || response.data;
+    setLocLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        try {
+          const osmRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`);
+          const osmData = await osmRes.json();
 
-      setSelectedJob({
-        ...apiData,
-        _id: apiData._id,
-        title: apiData.title || "",
-        companyName: apiData.companyName || "",
-        // Safely set location: If object, take address, else take the value (which might be the string itself)
-        location: typeof apiData.location === 'object' && apiData.location.address ? apiData.location.address : apiData.location || "",
-        jobRole: apiData.jobRole || apiData.workType || "",
-        workType: apiData.workType || "",
-        vacancies: apiData.vacancies || 0,
-        details: apiData.details || "",
-        whatsappNumber: apiData.whatsappNumber || "",
-        experience: apiData.experience || "",
-        qualification: apiData.qualification || "",
-        budget: {
-          min: apiData.budget?.min || apiData.salaryRange?.min || 0,
-          max: apiData.budget?.max || apiData.salaryRange?.max || 0
-        },
-        unlockCount: apiData.unlockCount || 0,
-        isFeatured: apiData.isFeatured || false,
-        isActive: apiData.status === "active",
-        existingImages: apiData.images || []
-      });
-    } catch (err) {
-      toast.error("Failed to fetch job details");
-      setIsEditModalOpen(false);
-    } finally {
-      setFetchLoading(false);
-    }
-  };
-
-  // --- Image Handling Logic ---
-  const removeExistingImage = (imgUrl) => {
-    setSelectedJob(prev => ({
-      ...prev,
-      existingImages: prev.existingImages.filter(img => img !== imgUrl)
-    }));
-  };
-
-  const handleFileSelect = (e) => {
-    const files = Array.from(e.target.files);
-    setNewImages(prev => [...prev, ...files]);
+          setNewJob(prev => ({
+            ...prev,
+            latitude: latitude.toString(),
+            longitude: longitude.toString(),
+            address: osmData.display_name || "Location Found"
+          }));
+          toast.success("Location fetched!");
+        } catch (error) {
+          toast.error("Error resolving address");
+        } finally {
+          setLocLoading(false);
+        }
+      },
+      () => { toast.error("Location permission denied"); setLocLoading(false); }
+    );
   };
 
   const handleCreateFileSelect = (e) => {
     const files = Array.from(e.target.files);
+    if (createImages.length + files.length > 5) {
+      toast.error("Max 5 images allowed");
+      return;
+    }
     setCreateImages(prev => [...prev, ...files]);
   };
 
-  const removeNewImage = (index) => {
-    setNewImages(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const removeCreateImage = (index) => {
-    setCreateImages(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const handleSaveChanges = async () => {
-    if (!selectedJob) return;
-    try {
-      setSaveLoading(true);
-      const payload = {
-        title: selectedJob.title,
-        companyName: selectedJob.companyName,
-        // Sending the location as the string we derived in handleEditClick
-        location: selectedJob.location,
-        workType: selectedJob.workType,
-        jobRole: selectedJob.jobRole,
-        vacancies: Number(selectedJob.vacancies),
-        details: selectedJob.details,
-        whatsappNumber: selectedJob.whatsappNumber,
-        experience: selectedJob.experience,
-        qualification: selectedJob.qualification,
-        salaryRange: { min: Number(selectedJob.budget.min), max: Number(selectedJob.budget.max) },
-        status: selectedJob.isActive ? "active" : "inactive",
-        unlockCount: Number(selectedJob.unlockCount),
-        isFeatured: selectedJob.isFeatured,
-        images: selectedJob.existingImages // NOTE: Image upload logic still needs to be implemented here to send newImages
-      };
-      await updateJob(selectedJob._id, payload);
-      toast.success("Job updated successfully!");
-      setIsEditModalOpen(false);
-      fetchData();
-    } catch (err) {
-      toast.error(err.message || "Failed to update job.");
-    } finally {
-      setSaveLoading(false);
-    }
-  };
-
+  // --- SUBMIT FUNCTION WITH FIXES ---
   const handleCreateNewJob = async () => {
-    if (!newJob.title || !newJob.jobRole || !newJob.minPay || !newJob.maxPay) {
-        toast.error("Title, Job Role, Min Pay, and Max Pay are required.");
-        return;
-    }
+    // 1. Validation check (ensure values are not empty)
+    if (!newJob.userId) return toast.error("Select a User first!");
+    if (!newJob.title.trim()) return toast.error("Job Title is required!");
+    if (!newJob.details.trim()) return toast.error("Full Job details are required!");
+    if (!newJob.minPay || !newJob.maxPay) return toast.error("Salary range is required!");
+    if (!newJob.address.trim()) return toast.error("Address is required!");
+
     try {
       setSaveLoading(true);
-      const payload = {
-        ...newJob,
-        salaryRange: { min: Number(newJob.minPay), max: Number(newJob.maxPay) },
-        status: newJob.isActive ? "active" : "inactive",
-        jobCategory: "Part-time",
-        workType: newJob.jobRole,
-        jobRole: newJob.jobRole
-      };
-      // NOTE: Image upload logic is missing here for createImages
-      await createNewJob(payload);
-      toast.success("New Part-time Job posted successfully!");
-      setIsCreateModalOpen(false);
-      // Reset State
-      setNewJob({ title: "", companyName: "", location: "", jobRole: "", minPay: "", maxPay: "", vacancies: 1, details: "", whatsappNumber: "", experience: "", qualification: "", unlockCount: 0, isFeatured: false, isActive: true });
-      setCreateImages([]);
-      fetchData();
+      const formData = new FormData();
+
+      // Basic Fields
+      formData.append("userId", newJob.userId);
+      formData.append("jobCategory", "Part-time job");
+      formData.append("title", newJob.title.trim());
+      formData.append("description", newJob.description.trim());
+      formData.append("details", newJob.details.trim());
+      formData.append("companyName", newJob.companyName || "N/A");
+      formData.append("jobRole", newJob.jobRole || "N/A");
+      formData.append("vacancies", Number(newJob.vacancies) || 1);
+      formData.append("whatsappNumber", newJob.whatsappNumber || "");
+      formData.append("experience", newJob.experience);
+      formData.append("qualification", newJob.qualification);
+      formData.append("status", newJob.status);
+      formData.append("isFeatured", String(newJob.isFeatured)); // Boolean ko string mein bhejein
+
+      // Important: Preferred Communication (Backend array expect kar raha hai)
+      formData.append("preferredCommunication[0]", "WhatsApp");
+
+      // Salary Object
+      formData.append("salaryRange[min]", Number(newJob.minPay));
+      formData.append("salaryRange[max]", Number(newJob.maxPay));
+
+      // --- LOCATION FIX ---
+      // parseFloat agar fail ho jaye to default value (Mumbai coordinates) dein
+      const lng = parseFloat(newJob.longitude);
+      const lat = parseFloat(newJob.latitude);
+
+      const finalLng = isNaN(lng) ? 72.8777 : lng;
+      const finalLat = isNaN(lat) ? 19.0760 : lat;
+
+      formData.append("location[address]", newJob.address.trim());
+      formData.append("location[type]", "Point");
+      // Alag-alag index par append karein
+      formData.append("location[coordinates][0]", finalLng);
+      formData.append("location[coordinates][1]", finalLat);
+
+      // Images
+      if (createImages.length > 0) {
+        createImages.forEach((file) => {
+          formData.append("images", file);
+        });
+      }
+
+      // Debugging ke liye: Console mein check karein kya data ja raha hai
+      // for (let pair of formData.entries()) { console.log(pair[0] + ': ' + pair[1]); }
+
+      const response = await createNewJob(formData);
+
+      if (response.success) {
+        toast.success("Job posted successfully!");
+        setIsCreateModalOpen(false);
+        setNewJob(initialJobState);
+        setCreateImages([]);
+        fetchData();
+      }
     } catch (err) {
-      toast.error(err.message || "Failed to create job.");
+      console.error("Full Error Object:", err);
+      const errMsg = err.response?.data?.message || "Something went wrong";
+      toast.error(errMsg);
     } finally {
       setSaveLoading(false);
     }
@@ -226,271 +197,196 @@ const PartTimeJobManagement = () => {
 
   return (
     <div className="p-4 md:p-8 bg-[#f8fafc] min-h-screen font-sans relative">
-      <Toaster position="top-center" reverseOrder={false} />
+      <Toaster position="top-center" />
 
+      {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
           <h1 className="text-2xl font-extrabold text-slate-800 tracking-tight">Part-time Job Management</h1>
-          <p className="text-slate-500 text-sm">Manage all Part-time postings</p>
+          <p className="text-slate-500 text-sm">Create and manage your part-time listings</p>
         </div>
         <button
           onClick={() => setIsCreateModalOpen(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg text-sm font-medium shadow-md flex items-center gap-2 transition-transform active:scale-95"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg text-sm font-medium shadow-md flex items-center gap-2"
         >
           <PlusCircle size={18} />Post New Job
         </button>
       </div>
 
       {/* Table Section */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden min-h-[400px]">
-          <div className="overflow-x-auto relative">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-slate-50/50 border-b border-slate-200">
-                  <th className="p-4 text-xs font-semibold text-slate-500 uppercase">Job Title & Details</th>
-                  <th className="p-4 text-xs font-semibold text-slate-500 uppercase">Job Role</th>
-                  <th className="p-4 text-xs font-semibold text-slate-500 uppercase">Salary Range</th>
-                  <th className="p-4 text-xs font-semibold text-slate-500 uppercase text-center">Featured</th>
-                  <th className="p-4 text-xs font-semibold text-slate-500 uppercase text-center">Unlock</th>
-                  <th className="p-4 text-xs font-semibold text-slate-500 uppercase text-center">Status</th>
-                  <th className="p-4 text-xs font-semibold text-slate-500 uppercase text-center">Actions</th>
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-50 border-b border-slate-200">
+                <th className="p-4 text-xs font-semibold text-slate-500 uppercase">Job Details</th>
+                <th className="p-4 text-xs font-semibold text-slate-500 uppercase">Salary</th>
+                <th className="p-4 text-xs font-semibold text-slate-500 uppercase text-center text-center">Featured</th>
+                <th className="p-4 text-xs font-semibold text-slate-500 uppercase text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {loading ? (
+                <tr><td colSpan="4" className="p-10 text-center"><Loader2 className="animate-spin mx-auto text-blue-600" /></td></tr>
+              ) : filteredJobs.length === 0 ? (
+                <tr><td colSpan="4" className="p-10 text-center text-slate-400">No jobs found.</td></tr>
+              ) : filteredJobs.map((job) => (
+                <tr key={job._id} className="hover:bg-slate-50 transition-colors">
+                  <td className="p-4">
+                    <div className="flex items-start gap-3">
+                      <img src={job.images?.[0] || "https://placehold.co/150"} className="w-10 h-10 rounded-lg object-cover border" alt="job" />
+                      <div>
+                        <div className="font-bold text-slate-800 text-sm">{job.title}</div>
+                        <div className="text-[10px] text-blue-600 font-bold uppercase">{job.jobRole}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="p-4 font-bold text-slate-700 text-sm">₹{job.salaryRange?.min} - ₹{job.salaryRange?.max}</td>
+                  <td className="p-4 text-center"><Star size={18} className={job.isFeatured ? "text-amber-400 fill-amber-400 mx-auto" : "text-slate-300 mx-auto"} /></td>
+                  <td className="p-4">
+                    <div className="flex justify-center gap-2">
+                      <ActionBtn text="View" variant="blue" icon={<Eye size={12} />} onClick={() => { setSelectedJob(job); setIsViewModalOpen(true) }} />
+                      <ActionBtn text="Delete" variant="red" icon={<Trash2 size={12} />} onClick={async () => { if (window.confirm("Delete?")) { await deleteJob(job._id); fetchData(); } }} />
+                    </div>
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {loading ? (
-                    <tr><td colSpan="7" className="p-10 text-center"><Loader2 className="animate-spin mx-auto text-blue-600" /></td></tr>
-                ) : filteredJobs.length === 0 ? (
-                    <tr><td colSpan="7" className="p-10 text-center text-slate-500">No Part-time jobs found.</td></tr>
-                ) : filteredJobs.map((job) => (
-                  <tr key={job._id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="p-4 align-top max-w-[250px]">
-                      <div className="flex items-start gap-3">
-                        <img src={job.images?.[0] || "https://placehold.co/150"} alt="job" className="w-10 h-10 rounded-lg object-cover border border-slate-100 bg-slate-50" />
-                        {/* --- FIX APPLIED HERE --- */}
-                        <div className="flex flex-col">
-                          <div className="font-bold text-slate-800 text-sm leading-tight mb-1">{job.title || "Untitled Job"}</div>
-                          <div className="text-xs text-slate-500">
-                            {typeof job.location === 'object' && job.location !== null && job.location.address ?
-                                job.location.address
-                                : (job.location || "N/A")}
-                          </div>
-                        </div>
-                        {/* --- END FIX --- */}
-                      </div>
-                    </td>
-                    <td className="p-4 align-top"><span className="text-sm font-medium text-blue-700 bg-blue-50 px-2 py-1 rounded-md">{job.workType || job.jobRole || "N/A"}</span></td>
-                    <td className="p-4 align-top font-bold text-slate-700 text-sm">₹{job.salaryRange?.min || 0} - ₹{job.salaryRange?.max || 0}</td>
-                    <td className="p-4 align-top text-center"><Star size={20} className={job.isFeatured ? "text-amber-400 fill-amber-400 mx-auto" : "text-slate-300 mx-auto"} /></td>
-                    <td className="p-4 align-top text-center text-xs font-bold text-slate-600">{job.unlockCount || 0}</td>
-                    <td className="p-4 align-top text-center">
-                        <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${job.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
-                            {job.status === 'active' ? 'Active' : 'Inactive'}
-                        </span>
-                    </td>
-                    <td className="p-4 align-top">
-                      <div className="flex justify-center gap-2 flex-wrap max-w-[120px] mx-auto">
-                        <ActionBtn text="View" variant="blue" icon={<Eye size={12}/>} onClick={() => handleViewClick(job._id)} />
-                        <ActionBtn text="Edit" variant="yellow" onClick={() => handleEditClick(job._id)} />
-                        <ActionBtn text="Delete" variant="red" icon={<Trash2 size={12}/>} onClick={() => handleDelete(job._id)} />
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      {/* --- View Modal --- */}
-      <JobViewModal isOpen={isViewModalOpen} onClose={() => setIsViewModalOpen(false)} job={selectedJob} loading={fetchLoading} />
-
-      {/* --- NEW Post Job Modal (Create) --- */}
+      {/* CREATE JOB MODAL */}
       {isCreateModalOpen && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-200">
-            <div className="sticky top-0 bg-white z-10 flex items-center justify-between px-6 py-4 border-b border-slate-100">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white z-10 flex items-center justify-between px-6 py-4 border-b">
               <h2 className="text-xl font-bold text-slate-800">Post New Part-time Job</h2>
-              <button type="button" onClick={() => setIsCreateModalOpen(false)} className="p-1 hover:bg-slate-100 rounded-full"><X size={20} className="text-slate-400" /></button>
+              <button onClick={() => setIsCreateModalOpen(false)} className="p-1 hover:bg-slate-100 rounded-full"><X size={20} /></button>
             </div>
 
             <div className="p-6 space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Input label="Job Title" value={newJob.title} onChange={(v)=>setNewJob({...newJob, title:v})} />
-                  <Input label="Company Name" value={newJob.companyName} onChange={(v)=>setNewJob({...newJob, companyName:v})} />
-                  <Input label="Location" value={newJob.location} onChange={(v)=>setNewJob({...newJob, location:v})} />
-                  <Input label="Vacancies" type="number" value={newJob.vacancies} onChange={(v)=>setNewJob({...newJob, vacancies:v})} />
+              {/* User & Title */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="md:col-span-2">
+                  <label className="label-text flex items-center gap-1"><User size={12} /> Select Job Poster (User)*</label>
+                  <select className="input-field" value={newJob.userId} onChange={(e) => setNewJob({ ...newJob, userId: e.target.value })}>
+                    <option value="">Choose a user...</option>
+                    {users.map(u => <option key={u._id} value={u._id}>{u.fullName} ({u.mobile})</option>)}
+                  </select>
                 </div>
+                <Input label="Job Title*" value={newJob.title} onChange={(v) => setNewJob({ ...newJob, title: v })} />
+                <Input label="Short Description*" value={newJob.description} onChange={(v) => setNewJob({ ...newJob, description: v })} />
+              </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Input label="Job Role / Type (e.g., Data Entry, Tutor)" value={newJob.jobRole} onChange={(v)=>setNewJob({...newJob, jobRole:v, workType:v})} />
-                  <div className="grid grid-cols-2 gap-2">
-                    <Input label="Min Pay (₹)" type="number" value={newJob.minPay} onChange={(v)=>setNewJob({...newJob, minPay:v})} />
-                    <Input label="Max Pay (₹)" type="number" value={newJob.maxPay} onChange={(v)=>setNewJob({...newJob, maxPay:v})} />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Input label="Whatsapp Number" value={newJob.whatsappNumber} onChange={(v)=>setNewJob({...newJob, whatsappNumber:v})} />
-                    <Input label="Experience" value={newJob.experience} onChange={(v)=>setNewJob({...newJob, experience:v})} />
-                </div>
-
-                <div>
-                    <label className="label-text">Job Description</label>
-                    <textarea className="input-field min-h-[100px] resize-none" value={newJob.details} onChange={(e) => setNewJob({...newJob, details: e.target.value})} />
-                </div>
-
-                <div className="flex flex-wrap gap-6 p-4 bg-slate-50 rounded-xl border border-slate-100">
-                  <Input label="Unlock Count" type="number" value={newJob.unlockCount} onChange={(v)=>setNewJob({...newJob, unlockCount:v})} />
-                  <div className="flex items-end gap-4 pb-2">
-                    <Check label="Featured" checked={newJob.isFeatured} onChange={(v)=>setNewJob({...newJob, isFeatured:v})} />
-                    <Check label="Active" checked={newJob.isActive} onChange={(v)=>setNewJob({...newJob, isActive:v})} />
-                  </div>
-                </div>
-
-                {/* Create Image Upload */}
-                <div className="space-y-3">
-                    <label className="label-text flex items-center gap-2"><ImageIcon size={14}/> Job Images</label>
-                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
-                        {createImages.map((file, idx) => (
-                            <div key={idx} className="relative aspect-square rounded-xl overflow-hidden border-2 border-blue-200">
-                                <img src={URL.createObjectURL(file)} className="w-full h-full object-cover" alt="New" />
-                                <button type="button" onClick={() => removeCreateImage(idx)} className="absolute top-1 right-1 bg-white text-red-500 rounded-full p-0.5 shadow-md"><X size={14} /></button>
-                            </div>
-                        ))}
-                        <button type="button" onClick={() => createFileInputRef.current.click()} className="aspect-square border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center text-slate-400 hover:border-blue-400 hover:text-blue-500 transition-all bg-slate-50">
-                            <Upload size={20} /> <span className="text-[10px] font-bold mt-1">Upload</span>
-                        </button>
-                    </div>
-                    <input type="file" ref={createFileInputRef} className="hidden" multiple accept="image/*" onChange={handleCreateFileSelect} />
-                </div>
-
-                <div className="sticky bottom-0 bg-white pt-4 pb-2 flex justify-end gap-3 border-t border-slate-100">
-                  <button type="button" onClick={() => setIsCreateModalOpen(false)} className="px-6 py-2 text-sm font-bold text-slate-400">Cancel</button>
-                  <button type="button" onClick={handleCreateNewJob} disabled={saveLoading} className="bg-blue-600 text-white px-8 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 shadow-lg shadow-blue-100">
-                    {saveLoading ? <Loader2 size={16} className="animate-spin" /> : "Post Job Now"}
+              {/* Location Section */}
+              <div className="p-5 bg-blue-50/50 rounded-2xl border border-blue-100 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-blue-700 font-extrabold text-[10px] uppercase"><MapPin size={14} /> Job Location</div>
+                  <button type="button" onClick={handleFetchLocation} disabled={locLoading} className="bg-blue-600 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg flex items-center gap-1">
+                    {locLoading ? <Loader2 size={12} className="animate-spin" /> : <Navigation size={12} />} Fetch Location
                   </button>
                 </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* --- Advanced Edit Modal --- */}
-      {isEditModalOpen && selectedJob && ( // Added check for selectedJob
-        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-200">
-            <div className="sticky top-0 bg-white z-10 flex items-center justify-between px-6 py-4 border-b border-slate-100">
-              <h2 className="text-xl font-bold text-slate-800">Advanced Job Editor</h2>
-              <button type="button" onClick={() => setIsEditModalOpen(false)} className="p-1 hover:bg-slate-100 rounded-full"><X size={20} className="text-slate-400" /></button>
-            </div>
-
-            {fetchLoading ? (
-              <div className="p-20 flex flex-col items-center justify-center"><Loader2 className="animate-spin text-blue-600 mb-2" size={30} /><p className="text-sm font-bold text-slate-400">Loading Job Data...</p></div>
-            ) : (
-              <div className="p-6 space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Input label="Job Title" value={selectedJob.title} onChange={(v)=>setSelectedJob({...selectedJob, title:v})} />
-                  <Input label="Company Name" value={selectedJob.companyName} onChange={(v)=>setSelectedJob({...selectedJob, companyName:v})} />
-                  <Input label="Location" value={selectedJob.location} onChange={(v)=>setSelectedJob({...selectedJob, location:v})} /> {/* Now ensures location is a string */}
-                  <Input label="Vacancies" type="number" value={selectedJob.vacancies} onChange={(v)=>setSelectedJob({...selectedJob, vacancies:v})} />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Input label="Job Role" value={selectedJob.jobRole} onChange={(v)=>setSelectedJob({...selectedJob, jobRole:v, workType:v})} />
-                  <div className="grid grid-cols-2 gap-2">
-                    <Input label="Min Pay (₹)" type="number" value={selectedJob.budget.min} onChange={(v)=>setSelectedJob({...selectedJob, budget:{...selectedJob.budget, min:v}})} />
-                    <Input label="Max Pay (₹)" type="number" value={selectedJob.budget.max} onChange={(v)=>setSelectedJob({...selectedJob, budget:{...selectedJob.budget, max:v}})} />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Input label="Whatsapp Number" value={selectedJob.whatsappNumber} onChange={(v)=>setSelectedJob({...selectedJob, whatsappNumber:v})} />
-                    <Input label="Experience Required" value={selectedJob.experience} onChange={(v)=>setSelectedJob({...selectedJob, experience:v})} />
-                    <Input label="Qualification" className="md:col-span-2" value={selectedJob.qualification} onChange={(v)=>setSelectedJob({...selectedJob, qualification:v})} />
-                </div>
-
-                <div>
-                    <label className="label-text">Job Description</label>
-                    <textarea className="input-field min-h-[100px] resize-none" value={selectedJob.details} onChange={(e) => setSelectedJob({...selectedJob, details: e.target.value})} />
-                </div>
-
-                <div className="flex flex-wrap gap-6 p-4 bg-slate-50 rounded-xl border border-slate-100">
-                  <Input label="Unlock Count" type="number" value={selectedJob.unlockCount} onChange={(v)=>setSelectedJob({...selectedJob, unlockCount:v})} />
-                  <div className="flex items-end gap-4 pb-2">
-                    <Check label="Featured" checked={selectedJob.isFeatured} onChange={(v)=>setSelectedJob({...selectedJob, isFeatured:v})} />
-                    <Check label="Active Status" checked={selectedJob.isActive} onChange={(v)=>setSelectedJob({...selectedJob, isActive:v})} />
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                    <label className="label-text flex items-center gap-2"><ImageIcon size={14}/> Media Management</label>
-                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
-                        {selectedJob.existingImages.map((img, idx) => (
-                            <div key={idx} className="relative group aspect-square rounded-xl overflow-hidden border-2 border-slate-100">
-                                <img src={img} className="w-full h-full object-cover" alt="Job" />
-                                <button type="button" onClick={() => removeExistingImage(img)} className="absolute inset-0 bg-red-500/80 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"><Trash2 size={18} /></button>
-                            </div>
-                        ))}
-                        {newImages.map((file, idx) => (
-                            <div key={idx} className="relative aspect-square rounded-xl overflow-hidden border-2 border-blue-200">
-                                <img src={URL.createObjectURL(file)} className="w-full h-full object-cover opacity-60" alt="New" />
-                                <button type="button" onClick={() => removeNewImage(idx)} className="absolute top-1 right-1 bg-white text-red-500 rounded-full p-0.5 shadow-md"><X size={14} /></button>
-                                <div className="absolute bottom-0 left-0 right-0 bg-blue-500 text-[8px] text-white text-center py-0.5">NEW</div>
-                            </div>
-                        ))}
-                        <button type="button" onClick={() => fileInputRef.current.click()} className="aspect-square border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center text-slate-400 hover:border-blue-400 hover:text-blue-500 transition-all bg-slate-50">
-                            <Upload size={20} /> <span className="text-[10px] font-bold mt-1">Upload</span>
-                        </button>
-                    </div>
-                    <input type="file" ref={fileInputRef} className="hidden" multiple accept="image/*" onChange={handleFileSelect} />
-                </div>
-
-                <div className="sticky bottom-0 bg-white pt-4 pb-2 flex justify-end gap-3 border-t border-slate-100">
-                  <button type="button" onClick={() => setIsEditModalOpen(false)} className="px-6 py-2 text-sm font-bold text-slate-400">Cancel</button>
-                  <button type="button" onClick={handleSaveChanges} disabled={saveLoading} className="bg-blue-600 text-white px-8 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-blue-100 flex items-center gap-2">
-                    {saveLoading ? <Loader2 size={16} className="animate-spin" /> : "Update Everything"}
-                  </button>
+                <Input label="Full Address*" value={newJob.address} onChange={(v) => setNewJob({ ...newJob, address: v })} />
+                <div className="grid grid-cols-2 gap-4">
+                  <Input label="Latitude" value={newJob.latitude} onChange={(v) => setNewJob({ ...newJob, latitude: v })} />
+                  <Input label="Longitude" value={newJob.longitude} onChange={(v) => setNewJob({ ...newJob, longitude: v })} />
                 </div>
               </div>
-            )}
+
+              {/* Job Details */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Input label="Company Name" value={newJob.companyName} onChange={(v) => setNewJob({ ...newJob, companyName: v })} />
+                <Input label="Job Role" value={newJob.jobRole} onChange={(v) => setNewJob({ ...newJob, jobRole: v })} />
+                <div className="grid grid-cols-2 gap-2">
+                  <Input label="Min Pay (₹)*" type="number" value={newJob.minPay} onChange={(v) => setNewJob({ ...newJob, minPay: v })} />
+                  <Input label="Max Pay (₹)*" type="number" value={newJob.maxPay} onChange={(v) => setNewJob({ ...newJob, maxPay: v })} />
+                </div>
+                <Input label="Vacancies" type="number" value={newJob.vacancies} onChange={(v) => setNewJob({ ...newJob, vacancies: v })} />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Input label="Whatsapp Number" value={newJob.whatsappNumber} onChange={(v) => setNewJob({ ...newJob, whatsappNumber: v })} />
+                <div className="space-y-1">
+                  <label className="label-text">Experience</label>
+                  <select className="input-field" value={newJob.experience} onChange={(e) => setNewJob({ ...newJob, experience: e.target.value })}>
+                    <option value="Fresher">Fresher</option>
+                    <option value="1+ Year">1+ Year</option>
+                    <option value="2+ Year">2+ Year</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="label-text">Full Job Details/Description*</label>
+                    
+                <textarea
+                  className="input-field"
+                  value={newJob.details}
+                  onChange={(e) => setNewJob({ ...newJob, details: e.target.value })}
+                />
+              </div>
+
+              {/* Images Section */}
+              <div className="space-y-3">
+                <label className="label-text flex items-center justify-between">
+                  <span><ImageIcon size={14} /> Job Images (Max 5)</span>
+                  <span className="text-[10px]">{createImages.length} / 5</span>
+                </label>
+                <div className="grid grid-cols-5 gap-3">
+                  {createImages.map((file, idx) => (
+                    <div key={idx} className="relative aspect-square rounded-xl overflow-hidden border">
+                      <img src={URL.createObjectURL(file)} className="w-full h-full object-cover" alt="Preview" />
+                      <button type="button" onClick={() => setCreateImages(createImages.filter((_, i) => i !== idx))} className="absolute top-1 right-1 bg-white text-red-500 rounded-full p-0.5"><X size={12} /></button>
+                    </div>
+                  ))}
+                  {createImages.length < 5 && (
+                    <button type="button" onClick={() => createFileInputRef.current.click()} className="aspect-square border-2 border-dashed rounded-xl flex items-center justify-center text-slate-400 hover:border-blue-400">
+                      <PlusCircle size={24} />
+                    </button>
+                  )}
+                </div>
+                <input type="file" ref={createFileInputRef} className="hidden" multiple accept="image/*" onChange={handleCreateFileSelect} />
+              </div>
+
+              {/* Footer Buttons */}
+              <div className="sticky bottom-0 bg-white pt-4 pb-2 flex justify-end gap-3 border-t">
+                <button type="button" onClick={() => setIsCreateModalOpen(false)} className="px-6 py-2 text-sm font-bold text-slate-400">Cancel</button>
+                <button type="button" onClick={handleCreateNewJob} disabled={saveLoading} className="bg-blue-600 text-white px-8 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 shadow-lg disabled:opacity-50">
+                  {saveLoading ? <Loader2 size={16} className="animate-spin" /> : "Post Job Now"}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
+
+      <JobViewModal isOpen={isViewModalOpen} onClose={() => setIsViewModalOpen(false)} job={selectedJob} />
 
       <style>{`
         .label-text { display: block; font-size: 0.7rem; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 0.4rem; }
-        .input-field { width: 100%; padding: 0.7rem 1rem; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.75rem; outline: none; transition: 0.2s; color: #334155; font-size: 0.9rem; font-weight: 500; }
+        .input-field { width: 100%; padding: 0.7rem 1rem; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.75rem; outline: none; transition: 0.2s; color: #334155; font-size: 0.9rem; }
         .input-field:focus { border-color: #3b82f6; box-shadow: 0 0 0 4px #3b82f615; background-color: #fff; }
       `}</style>
     </div>
   );
 };
 
-const Input = ({ label, type="text", value, onChange, className="" }) => (
-  <div className={className}>
+// Helper Components
+const Input = ({ label, type = "text", value, onChange }) => (
+  <div className="w-full">
     <label className="label-text">{label}</label>
-    <input type={type} value={value} onChange={(e)=>onChange(e.target.value)} className="input-field" />
+    <input type={type} value={value} onChange={(e) => onChange(e.target.value)} className="input-field" />
   </div>
-);
-
-const Check = ({ label, checked, onChange }) => (
-  <label className="flex items-center gap-2 cursor-pointer group">
-    <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${checked ? 'bg-blue-600 border-blue-600 shadow-sm' : 'border-slate-300 group-hover:border-blue-400'}`}>
-        {checked && <X size={14} className="text-white rotate-45" />}
-    </div>
-    <input type="checkbox" checked={checked} onChange={(e)=>onChange(e.target.checked)} className="hidden" />
-    <span className="text-xs font-bold text-slate-600">{label}</span>
-  </label>
 );
 
 const ActionBtn = ({ text, variant, onClick, icon }) => {
   const styles = {
-    yellow: "bg-amber-50 text-amber-600 border-amber-100 hover:bg-amber-600 hover:text-white",
     red: "bg-red-50 text-red-600 border-red-100 hover:bg-red-600 hover:text-white",
     blue: "bg-blue-50 text-blue-600 border-blue-100 hover:bg-blue-600 hover:text-white",
   };
   return (
-    <button type="button" onClick={onClick} className={`flex items-center gap-1 px-3 py-1.5 text-[10px] font-bold rounded-md border transition-all ${styles[variant]}`}>
+    <button onClick={onClick} className={`flex items-center gap-1 px-3 py-1.5 text-[10px] font-bold rounded-md border transition-all ${styles[variant]}`}>
       {icon} {text}
     </button>
   );

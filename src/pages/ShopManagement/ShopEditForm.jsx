@@ -1,23 +1,13 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { Loader2, CheckCircle, X, User, Info, Phone, AlertCircle, Upload, Pencil, ImageIcon } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { CheckCircle, X, User, Info, Phone, AlertCircle, Upload, Pencil, ImageIcon, Loader2 } from 'lucide-react';
 
-
-// *** IMPORTANT ***: मैंने आपके संदर्भ से यह API इम्पोर्ट कर ली है। 
-// आपको यह सुनिश्चित करना होगा कि यह API सही ढंग से इम्पोर्ट हो और `apiClient` के माध्यम से काम करे।
-// इस कोड को चलाने के लिए आपको इसे `../../auth/adminLogin` से सही ढंग से इम्पोर्ट करना होगा।
-// इस उदाहरण के लिए, मैं इसे यहाँ डमी के रूप में रख रहा हूँ, लेकिन आपको अपने मुख्य फ़ाइल से इसे हटाकर सही इम्पोर्ट का उपयोग करना होगा।
-const updateBusinessDetailsAPI = async (id, data) => {
-    console.log(`API Call: updateBusinessDetailsAPI for ID: ${id}`);
-    // डमी सफल प्रतिक्रिया (असली लॉजिक के लिए इसे हटा दें और सही API से बदलें)
-    return { success: true }; 
-};
-// ********************************************************************
-
+// अपनी API फाइल का सही पथ (Path) यहाँ इंपोर्ट करें
+import { updateBusinessDetailsAPI } from "../../auth/adminLogin"; 
 
 const ShopEditForm = ({ shopData, users, categories, onClose }) => {
 
+  // --- State Initialization ---
   const [editFormData, setEditFormData] = useState({
-    // सुनिश्चित करें कि userId सही ढंग से सेट हो, भले ही वह ऑब्जेक्ट हो या ID स्ट्रिंग
     userId: shopData?.userId?._id || shopData?.userId || "", 
     businessName: shopData?.businessName || "",
     details: shopData?.details || "",
@@ -29,23 +19,47 @@ const ShopEditForm = ({ shopData, users, categories, onClose }) => {
     whatsappNumber: shopData?.whatsappNumber || "",
   });
   
- 
   const [formFiles, setFormFiles] = useState({
-    businessImages: [], // Array of new files
-    nationalIdImage: null, // Single new file
-    ownerImage: null, // Single new file
+    businessImages: [], 
+    nationalIdImage: null, 
+    ownerImage: null, 
+  });
+
+  const [previews, setPreviews] = useState({
+    businessImages: [],
+    nationalIdImage: null,
+    ownerImage: null
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Feedback state for Popup
   const [feedback, setFeedback] = useState({ show: false, message: "", type: "success" });
 
-  const showLocalFeedback = (message, type = "success") => {
+  // --- Cleanup Previews on Unmount ---
+  useEffect(() => {
+    return () => {
+        if (previews.nationalIdImage) URL.revokeObjectURL(previews.nationalIdImage);
+        if (previews.ownerImage) URL.revokeObjectURL(previews.ownerImage);
+        previews.businessImages.forEach(url => URL.revokeObjectURL(url));
+    };
+  }, [previews]);
+
+  const showPopupMessage = (message, type = "success") => {
     setFeedback({ show: true, message, type });
+    // Success hone par 2 second baad msg hatega aur modal close hoga
     if (type === 'success') {
+        setTimeout(() => {
+            setFeedback({ show: false, message: "", type: "success" });
+            if(onClose) onClose(); // Modal Close Trigger
+        }, 1500);
+    } else {
+        // Error hone par 3 sec baad msg hatega
         setTimeout(() => setFeedback({ show: false, message: "", type: "success" }), 3000);
     }
   };
 
+  // --- Handle Text Changes ---
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     if (name === "userId") {
@@ -57,79 +71,125 @@ const ShopEditForm = ({ shopData, users, categories, onClose }) => {
     }
   };
 
+  // --- Handle File Changes ---
   const handleFileChange = (e, field) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
     if (field === "businessImages") {
-      // पुरानी फाइलों को नए से बदलें (या यदि आप जोड़ना चाहते हैं तो मौजूदा फाइलों के साथ concat करें)
-      setFormFiles(prev => ({ ...prev, [field]: Array.from(e.target.files) }));
+      const newFiles = Array.from(files);
+      setFormFiles(prev => ({ ...prev, [field]: newFiles }));
+      
+      const newPreviews = newFiles.map(file => URL.createObjectURL(file));
+      setPreviews(prev => ({ ...prev, [field]: newPreviews }));
     } else {
-      setFormFiles(prev => ({ ...prev, [field]: e.target.files[0] }));
+      const file = files[0];
+      setFormFiles(prev => ({ ...prev, [field]: file }));
+      setPreviews(prev => ({ ...prev, [field]: URL.createObjectURL(file) }));
     }
   };
 
+  // --- Helper: Check if string is URL ---
+  const isValidUrl = (url) => url && typeof url === 'string' && (url.match(/^https?:\/\//) || url.startsWith('/'));
+
+  // --- Helper: Get Button Text ---
+  const getFileStatusText = (field, isMultiple = false) => {
+      if(isMultiple) {
+          return formFiles[field].length > 0 ? `${formFiles[field].length} New File(s)` : 'Upload Gallery';
+      }
+      return formFiles[field] ? 'Change File' : 'Upload File';
+  };
+
+  // --- MAIN SUBMIT HANDLER ---
   const handleUpdateSubmit = async (e) => {
     e.preventDefault();
+    
+    if(!shopData?._id) return showPopupMessage("Error: Shop ID missing", "error");
+
     setIsSubmitting(true);
 
     const data = new FormData();
     
-    // सभी फ़ॉर्म डेटा संलग्न करें
-    Object.keys(editFormData).forEach(key => data.append(key, editFormData[key]));
+    // 1. Append all text fields
+    Object.keys(editFormData).forEach(key => {
+        data.append(key, editFormData[key]);
+    });
     
-    // केवल नई फ़ाइलें संलग्न करें
-    let filesUploaded = false;
-    formFiles.businessImages.forEach(file => { data.append('businessImages', file); filesUploaded = true; });
-    if (formFiles.nationalIdImage) { data.append('nationalIdImage', formFiles.nationalIdImage); filesUploaded = true; }
-    if (formFiles.ownerImage) { data.append('ownerImage', formFiles.ownerImage); filesUploaded = true; }
-    
-    // यदि कोई नई फ़ाइल अपलोड नहीं की गई है, तो हम एक विशेष फ्लैग भेज सकते हैं, 
-    // लेकिन सबसे सुरक्षित तरीका है कि बैकएंड पर फ़ील्ड को छोड़ दिया जाए यदि वह null/undefined है, 
-    // जिससे बैकएंड मौजूदा फ़ाइल को बनाए रखेगा।
+    // 2. Append Files
+    if (formFiles.businessImages.length > 0) {
+        formFiles.businessImages.forEach(file => { 
+            data.append('businessImages', file); 
+        });
+    }
+
+    if (formFiles.nationalIdImage) { 
+        data.append('nationalIdImage', formFiles.nationalIdImage); 
+    }
+    if (formFiles.ownerImage) { 
+        data.append('ownerImage', formFiles.ownerImage); 
+    }
     
     try {
-        // *** आपको यहाँ `updateBusinessDetailsAPI` को कॉल करना होगा ***
+        // API CALL
         const response = await updateBusinessDetailsAPI(shopData._id, data); 
         
-        if (response.success) {
-            showLocalFeedback("Business Details Updated Successfully!");
-            // पैरेंट कंपोनेंट को बताएं कि डेटा अपडेट हो गया है और फिर बंद करें
-            setTimeout(onClose, 1500);
+        if (response.success || response) {
+            // SUCCESS POPUP TRIGGER
+            showPopupMessage("Updated Successfully!", "success");
         }
     } catch (error) {
-        // सुनिश्चित करें कि error ऑब्जेक्ट में message प्रॉपर्टी हो
-        showLocalFeedback(error.message || "Failed to update business details", "error");
+        console.error("Update Error:", error);
+        showPopupMessage(error.message || "Failed to update business details", "error");
     } finally {
         setIsSubmitting(false);
     }
   };
 
-  const getFileStatusText = (field, isMultiple = false) => {
-      if(isMultiple) {
-          return formFiles[field].length > 0 ? `${formFiles[field].length} New File(s) Selected` : 'Upload Gallery';
-      }
-      return formFiles[field] ? 'New File Selected' : 'Upload File';
-  };
-
-  // Helper function to check if the URL is valid before displaying
-  const isValidUrl = (url) => url && typeof url === 'string' && (url.match(/^https?:\/\//));
-
-
   return (
-    <form id="editShopForm" onSubmit={handleUpdateSubmit} className="space-y-8">
-        {/* Feedback Popup (Local to this form) */}
+    <form id="editShopForm" onSubmit={handleUpdateSubmit} className="space-y-8 relative min-h-[400px]">
+        
+        {/* --- POPUP MESSAGE OVERLAY (CENTERED) --- */}
         {feedback.show && (
-            <div className="p-3 rounded-xl shadow-lg flex items-center gap-3 mb-4" style={{
-                backgroundColor: feedback.type === 'success' ? '#d1fae5' : '#fee2e2',
-                color: feedback.type === 'success' ? '#065f46' : '#991b1b',
-                border: feedback.type === 'success' ? '1px solid #059669' : '1px solid #fca5a5'
-            }}>
-                {feedback.type === 'success' ? <CheckCircle size={20}/> : <AlertCircle size={20}/>}
-                <p className="font-bold text-sm tracking-wide">{feedback.message}</p>
-                <button onClick={() => setFeedback({ ...feedback, show: false })} className="ml-auto opacity-70 hover:opacity-100 transition-opacity"><X size={16}/></button>
+            <div className="absolute inset-0 z-[100] flex items-center justify-center backdrop-blur-sm bg-white/30 rounded-3xl transition-all duration-300">
+                <div className={`
+                    flex flex-col items-center gap-3 px-8 py-6 rounded-2xl shadow-2xl transform scale-110 animate-in zoom-in duration-200 border
+                    ${feedback.type === 'success' 
+                        ? 'bg-emerald-600 border-emerald-500 text-white' 
+                        : 'bg-rose-600 border-rose-500 text-white'}
+                `}>
+                    {feedback.type === 'success' ? (
+                        <div className="bg-white rounded-full p-2">
+                            <CheckCircle size={40} className="text-emerald-600" strokeWidth={3} />
+                        </div>
+                    ) : (
+                        <div className="bg-white rounded-full p-2">
+                            <AlertCircle size={40} className="text-rose-600" strokeWidth={3} />
+                        </div>
+                    )}
+                    
+                    <div className="text-center">
+                        <h4 className="text-xl font-black uppercase tracking-wide">
+                            {feedback.type === 'success' ? 'Success' : 'Error'}
+                        </h4>
+                        <p className="text-sm font-bold opacity-90 mt-1">{feedback.message}</p>
+                    </div>
+                </div>
             </div>
         )}
 
+        {/* Loading Overlay (When submitting but before success/error) */}
+        {isSubmitting && !feedback.show && (
+            <div className="absolute inset-0 bg-white/60 z-50 flex items-center justify-center backdrop-blur-[2px] rounded-xl">
+                <div className="flex flex-col items-center bg-white px-6 py-4 rounded-xl shadow-lg border border-slate-100">
+                    <Loader2 className="animate-spin text-amber-600 mb-2" size={32} />
+                    <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">Updating...</span>
+                </div>
+            </div>
+        )}
+
+        {/* --- FORM CONTENT --- */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-            {/* Ownership Details */}
+            {/* User & Owner Details */}
             <div className="col-span-2 space-y-4">
                  <div className="flex items-center gap-2 text-amber-600">
                     <User size={16} strokeWidth={3}/>
@@ -162,7 +222,7 @@ const ShopEditForm = ({ shopData, users, categories, onClose }) => {
                  </div>
             </div>
 
-            {/* Business Information */}
+            {/* Business Info */}
             <div className="space-y-4">
                  <div className="flex items-center gap-2 text-amber-600">
                     <Info size={16} strokeWidth={3}/>
@@ -199,130 +259,107 @@ const ShopEditForm = ({ shopData, users, categories, onClose }) => {
                  </div>
             </div>
             
-            {/* --- FILE PREVIEW & UPLOAD SECTION (Matches your image) --- */}
+            {/* File Uploads */}
             <div className="col-span-2 space-y-6 pt-4 border-t border-slate-200">
                  <div className="flex items-center gap-2 text-amber-600">
                     <Upload size={16} strokeWidth={3}/>
-                    <h4 className="text-[11px] font-black uppercase tracking-widest">Update Documents (Current & New)</h4>
+                    <h4 className="text-[11px] font-black uppercase tracking-widest">Update Documents</h4>
                  </div>
                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     
-                    {/* National ID Preview & Upload (Customized to look like your image) */}
-                    <div className="space-y-2 border border-slate-100 p-3 rounded-2xl shadow-sm">
+                    {/* National ID */}
+                    <div className="space-y-2 border border-slate-100 p-3 rounded-2xl shadow-sm bg-white">
                         <p className="text-[9px] font-black text-slate-500 uppercase ml-1 mb-2">NATIONAL ID PROOF</p>
                         <div className="aspect-square rounded-xl overflow-hidden border-2 border-dashed border-slate-300 relative bg-slate-50">
-                            {/* 1. Current Image */}
-                            {isValidUrl(shopData.nationalIdImage) ? (
-                                <img src={shopData.nationalIdImage} className="w-full h-full object-cover opacity-40" alt="Existing ID"/>
+                            {(previews.nationalIdImage || isValidUrl(shopData.nationalIdImage)) ? (
+                                <img 
+                                    src={previews.nationalIdImage || shopData.nationalIdImage} 
+                                    className="w-full h-full object-cover" 
+                                    style={{ opacity: previews.nationalIdImage ? 1 : 0.6 }} // Dim if old image
+                                    alt="National ID"
+                                />
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center">
-                                    <p className='text-xs text-slate-400 font-bold'>No Existing Image</p>
+                                    <p className='text-xs text-slate-400 font-bold'>No Image</p>
                                 </div>
                             )}
-                            {/* 2. Overlay/Status */}
-                            <div className="absolute inset-0 flex flex-col items-center justify-center p-2 text-center">
-                                {isValidUrl(shopData.nationalIdImage) ? (
-                                    <>
-                                        <p className='text-[10px] font-bold text-blue-600 mb-1'>Existing: Image Available</p>
-                                        <label className="flex items-center gap-1 px-3 py-1 bg-amber-500/90 rounded-full cursor-pointer hover:bg-amber-600 transition-all">
-                                            <Pencil size={12} className='text-white'/>
-                                            <span className="text-[10px] font-bold text-white">{getFileStatusText('nationalIdImage')}</span>
-                                            <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileChange(e, 'nationalIdImage')} />
-                                        </label>
-                                    </>
-                                ) : (
-                                    <label className="flex flex-col items-center gap-1 px-3 py-1 bg-indigo-500/90 rounded-full cursor-pointer hover:bg-indigo-600 transition-all">
-                                        <Upload size={12} className='text-white'/>
-                                        <span className="text-[10px] font-bold text-white">{getFileStatusText('nationalIdImage')}</span>
-                                        <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileChange(e, 'nationalIdImage')} />
-                                    </label>
-                                )}
+                            <div className="absolute inset-0 flex flex-col items-center justify-center p-2 text-center group">
+                                <label className="flex items-center gap-1 px-3 py-1 bg-amber-500/90 rounded-full cursor-pointer hover:bg-amber-600 transition-all shadow-md">
+                                    <Pencil size={12} className='text-white'/>
+                                    <span className="text-[10px] font-bold text-white">{getFileStatusText('nationalIdImage')}</span>
+                                    <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileChange(e, 'nationalIdImage')} />
+                                </label>
                             </div>
                         </div>
                     </div>
                     
-                    {/* Owner Photo Preview & Upload */}
-                    <div className="space-y-2 border border-slate-100 p-3 rounded-2xl shadow-sm">
+                    {/* Owner Photo */}
+                    <div className="space-y-2 border border-slate-100 p-3 rounded-2xl shadow-sm bg-white">
                         <p className="text-[9px] font-black text-slate-500 uppercase ml-1 mb-2">OWNER PHOTO</p>
                         <div className="aspect-square rounded-xl overflow-hidden border-2 border-dashed border-slate-300 relative bg-slate-50">
-                             {/* 1. Current Image */}
-                            {isValidUrl(shopData.ownerImage) ? (
-                                <img src={shopData.ownerImage} className="w-full h-full object-cover opacity-40" alt="Existing Owner Photo"/>
+                            {(previews.ownerImage || isValidUrl(shopData.ownerImage)) ? (
+                                <img 
+                                    src={previews.ownerImage || shopData.ownerImage} 
+                                    className="w-full h-full object-cover" 
+                                    style={{ opacity: previews.ownerImage ? 1 : 0.6 }}
+                                    alt="Owner Photo"
+                                />
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center">
-                                    <p className='text-xs text-slate-400 font-bold'>No Existing Photo</p>
+                                    <p className='text-xs text-slate-400 font-bold'>No Photo</p>
                                 </div>
                             )}
-                             {/* 2. Overlay/Status */}
-                             <div className="absolute inset-0 flex flex-col items-center justify-center p-2 text-center">
-                                {isValidUrl(shopData.ownerImage) ? (
-                                    <>
-                                        <p className='text-[10px] font-bold text-blue-600 mb-1'>Existing: Image Available</p>
-                                        <label className="flex items-center gap-1 px-3 py-1 bg-amber-500/90 rounded-full cursor-pointer hover:bg-amber-600 transition-all">
-                                            <Pencil size={12} className='text-white'/>
-                                            <span className="text-[10px] font-bold text-white">{getFileStatusText('ownerImage')}</span>
-                                            <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileChange(e, 'ownerImage')} />
-                                        </label>
-                                    </>
-                                ) : (
-                                    <label className="flex flex-col items-center gap-1 px-3 py-1 bg-indigo-500/90 rounded-full cursor-pointer hover:bg-indigo-600 transition-all">
-                                        <Upload size={12} className='text-white'/>
-                                        <span className="text-[10px] font-bold text-white">{getFileStatusText('ownerImage')}</span>
-                                        <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileChange(e, 'ownerImage')} />
-                                    </label>
-                                )}
+                            <div className="absolute inset-0 flex flex-col items-center justify-center p-2 text-center group">
+                                <label className="flex items-center gap-1 px-3 py-1 bg-amber-500/90 rounded-full cursor-pointer hover:bg-amber-600 transition-all shadow-md">
+                                    <Pencil size={12} className='text-white'/>
+                                    <span className="text-[10px] font-bold text-white">{getFileStatusText('ownerImage')}</span>
+                                    <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileChange(e, 'ownerImage')} />
+                                </label>
                             </div>
                         </div>
                     </div>
 
-                    {/* Shop Images Preview & Upload (Matches your image) */}
-                    <div className="space-y-2 border border-slate-100 p-3 rounded-2xl shadow-sm">
+                    {/* Shop Images (Multiple) */}
+                    <div className="space-y-2 border border-slate-100 p-3 rounded-2xl shadow-sm bg-white">
                         <p className="text-[9px] font-black text-slate-500 uppercase ml-1 mb-2">SHOP IMAGES</p>
                         <div className="aspect-square rounded-xl overflow-hidden border-2 border-dashed border-slate-300 relative bg-slate-50 flex flex-col items-center justify-center">
-                             {/* 1. Display Existing Image (if any) */}
-                             {isValidUrl(shopData.businessImages?.[0]) ? (
+                             {(previews.businessImages.length > 0 || (shopData.businessImages && shopData.businessImages.length > 0)) ? (
                                 <img 
-                                    src={shopData.businessImages[0]} 
-                                    className="w-full h-full object-cover opacity-40" 
-                                    alt="Existing Shop Image"
+                                    src={previews.businessImages.length > 0 ? previews.businessImages[0] : shopData.businessImages[0]} 
+                                    className="w-full h-full object-cover" 
+                                    style={{ opacity: previews.businessImages.length > 0 ? 1 : 0.6 }}
+                                    alt="Shop Image"
                                 />
                              ) : (
                                 <ImageIcon size={24} className='text-slate-300 mb-1'/>
                              )}
                              
-                             {/* 2. Overlay for Status and Upload Button */}
-                             <div className="absolute inset-0 flex flex-col items-center justify-center p-2 text-center bg-white/80">
-                                {isValidUrl(shopData.businessImages?.[0]) ? (
-                                    <>
-                                        <p className='text-[10px] font-bold text-slate-700 mb-1'>Existing Image Found</p>
-                                        <label className="flex items-center gap-1 px-3 py-1 bg-amber-500/90 rounded-full cursor-pointer hover:bg-amber-600 transition-all">
-                                            <Pencil size={12} className='text-white'/>
-                                            <span className="text-[10px] font-bold text-white">{getFileStatusText('businessImages', true)}</span>
-                                            <input type="file" multiple className="hidden" accept="image/*" onChange={(e) => handleFileChange(e, 'businessImages')} />
-                                        </label>
-                                    </>
-                                ) : (
-                                    <label className="flex flex-col items-center gap-1 px-3 py-1 bg-indigo-500/90 rounded-full cursor-pointer hover:bg-indigo-600 transition-all">
-                                        <Upload size={12} className='text-white'/>
-                                        <span className="text-[10px] font-bold text-white">{getFileStatusText('businessImages', true)}</span>
-                                        <input type="file" multiple className="hidden" accept="image/*" onChange={(e) => handleFileChange(e, 'businessImages')} />
-                                    </label>
-                                )}
+                             <div className="absolute inset-0 flex flex-col items-center justify-center p-2 text-center">
+                                <label className="flex items-center gap-1 px-3 py-1 bg-amber-500/90 rounded-full cursor-pointer hover:bg-amber-600 transition-all shadow-md">
+                                    <Pencil size={12} className='text-white'/>
+                                    <span className="text-[10px] font-bold text-white">{getFileStatusText('businessImages', true)}</span>
+                                    <input type="file" multiple className="hidden" accept="image/*" onChange={(e) => handleFileChange(e, 'businessImages')} />
+                                </label>
                              </div>
                         </div>
-                        {formFiles.businessImages.length > 0 && (
+                        {/* Selected Files Indicator */}
+                        {formFiles.businessImages.length > 0 ? (
                             <div className="flex flex-wrap gap-2 mt-2">
-                                {formFiles.businessImages.map((file, idx) => (
-                                    <div key={idx} className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-[10px] font-bold">
-                                        {file.name.substring(0, 15)}...
-                                    </div>
-                                ))}
+                                <span className="px-3 py-1 bg-amber-50 text-amber-700 border border-amber-100 rounded-lg text-[10px] font-bold flex items-center gap-1">
+                                    <CheckCircle size={10}/> {formFiles.businessImages.length} New Images
+                                </span>
                             </div>
+                        ) : (
+                             // Show Existing Count
+                             shopData.businessImages?.length > 0 && (
+                                <div className="mt-2 text-[10px] font-bold text-slate-400 text-center">
+                                    Current Gallery: {shopData.businessImages.length} images
+                                </div>
+                             )
                         )}
                     </div>
                  </div>
             </div>
-            {/* --- FILE PREVIEW & UPLOAD SECTION समाप्त --- */}
         </div>
     </form>
   );

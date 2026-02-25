@@ -357,3 +357,48 @@ export const getBusinessServicesAPI = async (businessId) => {
         throw error.response ? error.response.data : new Error("An unexpected error occurred");
     }
 };
+
+export const updateBusinessDetailsAPI = async (businessId, formData) => {
+    try {
+  
+        const response = await apiClient.put(`/admin/manage-business/update/${businessId}`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data', 
+            },
+        });
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : new Error("An unexpected error occurred");
+    }
+};
+
+
+
+export const updateBusinessServiceAPI = async (businessId, serviceId, formData) => {
+    try {
+        const response = await apiClient.put(
+            `/admin/manage-business/update-service/${businessId}/${serviceId}`, 
+            formData, 
+            {
+                headers: {
+                    'Content-Type': 'multipart/form-data', 
+                },
+            }
+        );
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : new Error("An unexpected error occurred");
+    }
+};
+
+
+export const deleteBusinessServiceAPI = async (businessId, serviceId) => {
+    try {
+        const response = await apiClient.delete(
+            `/admin/manage-business/delete-service/${businessId}/${serviceId}`
+        );
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : new Error("An unexpected error occurred");
+    }
+};

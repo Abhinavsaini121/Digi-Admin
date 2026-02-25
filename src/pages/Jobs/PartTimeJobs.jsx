@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { AlertCircle, X, Star, Trash2, PlusCircle, Loader2, Eye, Upload, Image as ImageIcon } from "lucide-react";
-import { getAllJobs, getJobById, updateJob, deleteJob, createNewJob } from "../../auth/adminLogin"; 
+import { getAllJobs, getJobById, updateJob, deleteJob, createNewJob } from "../../auth/adminLogin";
 import toast, { Toaster } from "react-hot-toast";
-import JobViewModal from "./JobDetailsModal"; 
+import JobViewModal from "./JobDetailsModal";
 
 const PartTimeJobManagement = () => {
   const [allJobs, setAllJobs] = useState([]);
@@ -14,18 +13,18 @@ const PartTimeJobManagement = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-  
+
   const [selectedJob, setSelectedJob] = useState(null);
   const [newImages, setNewImages] = useState([]); // For Edit Modal
   const [createImages, setCreateImages] = useState([]); // For Create Modal
-  
+
   const fileInputRef = useRef(null);
   const createFileInputRef = useRef(null);
 
   const [newJob, setNewJob] = useState({
     title: "",
     companyName: "",
-    location: "",
+    location: "", // Keep this as string input for creation form
     jobRole: "",
     workType: "",
     vacancies: 1,
@@ -40,17 +39,17 @@ const PartTimeJobManagement = () => {
     isActive: true
   });
 
-  const [fetchLoading, setFetchLoading] = useState(false); 
-  const [saveLoading, setSaveLoading] = useState(false);   
+  const [fetchLoading, setFetchLoading] = useState(false);
+  const [saveLoading, setSaveLoading] = useState(false);
 
   useEffect(() => {
     fetchData();
   }, []);
 
   const filteredJobs = useMemo(() => {
-    return allJobs.filter((job) => 
-      job.jobCategory?.includes("Part-time") || 
-      job.workType?.includes("Part-time")
+    return allJobs.filter((job) =>
+      (job.jobCategory?.includes && job.jobCategory?.includes("Part-time")) ||
+      (job.workType?.includes && job.workType?.includes("Part-time"))
     );
   }, [allJobs]);
 
@@ -95,32 +94,33 @@ const PartTimeJobManagement = () => {
       }
     }
   };
-  
+
   const handleEditClick = async (jobId) => {
-    setIsEditModalOpen(true); 
-    setFetchLoading(true); 
-    setSelectedJob(null); 
+    setIsEditModalOpen(true);
+    setFetchLoading(true);
+    setSelectedJob(null);
     setNewImages([]);
     try {
       const response = await getJobById(jobId);
       const apiData = response.data.data || response.data;
-      
+
       setSelectedJob({
         ...apiData,
         _id: apiData._id,
         title: apiData.title || "",
         companyName: apiData.companyName || "",
-        location: apiData.location || "",
-        jobRole: apiData.jobRole || apiData.workType || "", 
+        // Safely set location: If object, take address, else take the value (which might be the string itself)
+        location: typeof apiData.location === 'object' && apiData.location.address ? apiData.location.address : apiData.location || "",
+        jobRole: apiData.jobRole || apiData.workType || "",
         workType: apiData.workType || "",
         vacancies: apiData.vacancies || 0,
         details: apiData.details || "",
         whatsappNumber: apiData.whatsappNumber || "",
         experience: apiData.experience || "",
         qualification: apiData.qualification || "",
-        budget: { 
-            min: apiData.budget?.min || apiData.salaryRange?.min || 0, 
-            max: apiData.budget?.max || apiData.salaryRange?.max || 0 
+        budget: {
+          min: apiData.budget?.min || apiData.salaryRange?.min || 0,
+          max: apiData.budget?.max || apiData.salaryRange?.max || 0
         },
         unlockCount: apiData.unlockCount || 0,
         isFeatured: apiData.isFeatured || false,
@@ -129,17 +129,17 @@ const PartTimeJobManagement = () => {
       });
     } catch (err) {
       toast.error("Failed to fetch job details");
-      setIsEditModalOpen(false); 
+      setIsEditModalOpen(false);
     } finally {
-      setFetchLoading(false); 
+      setFetchLoading(false);
     }
   };
 
   // --- Image Handling Logic ---
   const removeExistingImage = (imgUrl) => {
     setSelectedJob(prev => ({
-        ...prev,
-        existingImages: prev.existingImages.filter(img => img !== imgUrl)
+      ...prev,
+      existingImages: prev.existingImages.filter(img => img !== imgUrl)
     }));
   };
 
@@ -164,36 +164,41 @@ const PartTimeJobManagement = () => {
   const handleSaveChanges = async () => {
     if (!selectedJob) return;
     try {
-      setSaveLoading(true); 
+      setSaveLoading(true);
       const payload = {
-          title: selectedJob.title,
-          companyName: selectedJob.companyName,
-          location: selectedJob.location,
-          workType: selectedJob.jobRole,
-          jobRole: selectedJob.jobRole,
-          vacancies: Number(selectedJob.vacancies),
-          details: selectedJob.details,
-          whatsappNumber: selectedJob.whatsappNumber,
-          experience: selectedJob.experience,
-          qualification: selectedJob.qualification,
-          salaryRange: { min: Number(selectedJob.budget.min), max: Number(selectedJob.budget.max) },
-          status: selectedJob.isActive ? "active" : "inactive",
-          unlockCount: Number(selectedJob.unlockCount),
-          isFeatured: selectedJob.isFeatured,
-          images: selectedJob.existingImages
+        title: selectedJob.title,
+        companyName: selectedJob.companyName,
+        // Sending the location as the string we derived in handleEditClick
+        location: selectedJob.location,
+        workType: selectedJob.workType,
+        jobRole: selectedJob.jobRole,
+        vacancies: Number(selectedJob.vacancies),
+        details: selectedJob.details,
+        whatsappNumber: selectedJob.whatsappNumber,
+        experience: selectedJob.experience,
+        qualification: selectedJob.qualification,
+        salaryRange: { min: Number(selectedJob.budget.min), max: Number(selectedJob.budget.max) },
+        status: selectedJob.isActive ? "active" : "inactive",
+        unlockCount: Number(selectedJob.unlockCount),
+        isFeatured: selectedJob.isFeatured,
+        images: selectedJob.existingImages // NOTE: Image upload logic still needs to be implemented here to send newImages
       };
       await updateJob(selectedJob._id, payload);
       toast.success("Job updated successfully!");
       setIsEditModalOpen(false);
-      fetchData(); 
+      fetchData();
     } catch (err) {
       toast.error(err.message || "Failed to update job.");
     } finally {
-      setSaveLoading(false); 
+      setSaveLoading(false);
     }
   };
 
   const handleCreateNewJob = async () => {
+    if (!newJob.title || !newJob.jobRole || !newJob.minPay || !newJob.maxPay) {
+        toast.error("Title, Job Role, Min Pay, and Max Pay are required.");
+        return;
+    }
     try {
       setSaveLoading(true);
       const payload = {
@@ -204,6 +209,7 @@ const PartTimeJobManagement = () => {
         workType: newJob.jobRole,
         jobRole: newJob.jobRole
       };
+      // NOTE: Image upload logic is missing here for createImages
       await createNewJob(payload);
       toast.success("New Part-time Job posted successfully!");
       setIsCreateModalOpen(false);
@@ -227,7 +233,7 @@ const PartTimeJobManagement = () => {
           <h1 className="text-2xl font-extrabold text-slate-800 tracking-tight">Part-time Job Management</h1>
           <p className="text-slate-500 text-sm">Manage all Part-time postings</p>
         </div>
-        <button 
+        <button
           onClick={() => setIsCreateModalOpen(true)}
           className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg text-sm font-medium shadow-md flex items-center gap-2 transition-transform active:scale-95"
         >
@@ -253,19 +259,27 @@ const PartTimeJobManagement = () => {
               <tbody className="divide-y divide-slate-100">
                 {loading ? (
                     <tr><td colSpan="7" className="p-10 text-center"><Loader2 className="animate-spin mx-auto text-blue-600" /></td></tr>
+                ) : filteredJobs.length === 0 ? (
+                    <tr><td colSpan="7" className="p-10 text-center text-slate-500">No Part-time jobs found.</td></tr>
                 ) : filteredJobs.map((job) => (
                   <tr key={job._id} className="hover:bg-slate-50/80 transition-colors">
                     <td className="p-4 align-top max-w-[250px]">
                       <div className="flex items-start gap-3">
-                        <img src={job.images?.[0] || "https://placehold.co/150"} alt="job" className="w-10 h-10 rounded-lg object-cover border border-slate-100 bg-slate-50" />                        
-                        <div>
-                          <p className="font-bold text-slate-800 text-sm leading-tight mb-1">{job.title}</p>
-                          <p className="text-xs text-slate-500">{job.location || "N/A"}</p>
+                        <img src={job.images?.[0] || "https://placehold.co/150"} alt="job" className="w-10 h-10 rounded-lg object-cover border border-slate-100 bg-slate-50" />
+                        {/* --- FIX APPLIED HERE --- */}
+                        <div className="flex flex-col">
+                          <div className="font-bold text-slate-800 text-sm leading-tight mb-1">{job.title || "Untitled Job"}</div>
+                          <div className="text-xs text-slate-500">
+                            {typeof job.location === 'object' && job.location !== null && job.location.address ?
+                                job.location.address
+                                : (job.location || "N/A")}
+                          </div>
                         </div>
+                        {/* --- END FIX --- */}
                       </div>
                     </td>
                     <td className="p-4 align-top"><span className="text-sm font-medium text-blue-700 bg-blue-50 px-2 py-1 rounded-md">{job.workType || job.jobRole || "N/A"}</span></td>
-                    <td className="p-4 align-top font-bold text-slate-700 text-sm">₹{job.salaryRange?.min} - ₹{job.salaryRange?.max}</td>
+                    <td className="p-4 align-top font-bold text-slate-700 text-sm">₹{job.salaryRange?.min || 0} - ₹{job.salaryRange?.max || 0}</td>
                     <td className="p-4 align-top text-center"><Star size={20} className={job.isFeatured ? "text-amber-400 fill-amber-400 mx-auto" : "text-slate-300 mx-auto"} /></td>
                     <td className="p-4 align-top text-center text-xs font-bold text-slate-600">{job.unlockCount || 0}</td>
                     <td className="p-4 align-top text-center">
@@ -296,7 +310,7 @@ const PartTimeJobManagement = () => {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-200">
             <div className="sticky top-0 bg-white z-10 flex items-center justify-between px-6 py-4 border-b border-slate-100">
               <h2 className="text-xl font-bold text-slate-800">Post New Part-time Job</h2>
-              <button onClick={() => setIsCreateModalOpen(false)} className="p-1 hover:bg-slate-100 rounded-full"><X size={20} className="text-slate-400" /></button>
+              <button type="button" onClick={() => setIsCreateModalOpen(false)} className="p-1 hover:bg-slate-100 rounded-full"><X size={20} className="text-slate-400" /></button>
             </div>
 
             <div className="p-6 space-y-6">
@@ -308,7 +322,7 @@ const PartTimeJobManagement = () => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Input label="Job Role" value={newJob.jobRole} onChange={(v)=>setNewJob({...newJob, jobRole:v, workType:v})} />
+                  <Input label="Job Role / Type (e.g., Data Entry, Tutor)" value={newJob.jobRole} onChange={(v)=>setNewJob({...newJob, jobRole:v, workType:v})} />
                   <div className="grid grid-cols-2 gap-2">
                     <Input label="Min Pay (₹)" type="number" value={newJob.minPay} onChange={(v)=>setNewJob({...newJob, minPay:v})} />
                     <Input label="Max Pay (₹)" type="number" value={newJob.maxPay} onChange={(v)=>setNewJob({...newJob, maxPay:v})} />
@@ -340,10 +354,10 @@ const PartTimeJobManagement = () => {
                         {createImages.map((file, idx) => (
                             <div key={idx} className="relative aspect-square rounded-xl overflow-hidden border-2 border-blue-200">
                                 <img src={URL.createObjectURL(file)} className="w-full h-full object-cover" alt="New" />
-                                <button onClick={() => removeCreateImage(idx)} className="absolute top-1 right-1 bg-white text-red-500 rounded-full p-0.5 shadow-md"><X size={14} /></button>
+                                <button type="button" onClick={() => removeCreateImage(idx)} className="absolute top-1 right-1 bg-white text-red-500 rounded-full p-0.5 shadow-md"><X size={14} /></button>
                             </div>
                         ))}
-                        <button onClick={() => createFileInputRef.current.click()} className="aspect-square border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center text-slate-400 hover:border-blue-400 hover:text-blue-500 transition-all bg-slate-50">
+                        <button type="button" onClick={() => createFileInputRef.current.click()} className="aspect-square border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center text-slate-400 hover:border-blue-400 hover:text-blue-500 transition-all bg-slate-50">
                             <Upload size={20} /> <span className="text-[10px] font-bold mt-1">Upload</span>
                         </button>
                     </div>
@@ -351,8 +365,8 @@ const PartTimeJobManagement = () => {
                 </div>
 
                 <div className="sticky bottom-0 bg-white pt-4 pb-2 flex justify-end gap-3 border-t border-slate-100">
-                  <button onClick={() => setIsCreateModalOpen(false)} className="px-6 py-2 text-sm font-bold text-slate-400">Cancel</button>
-                  <button onClick={handleCreateNewJob} disabled={saveLoading} className="bg-blue-600 text-white px-8 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 shadow-lg shadow-blue-100">
+                  <button type="button" onClick={() => setIsCreateModalOpen(false)} className="px-6 py-2 text-sm font-bold text-slate-400">Cancel</button>
+                  <button type="button" onClick={handleCreateNewJob} disabled={saveLoading} className="bg-blue-600 text-white px-8 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 shadow-lg shadow-blue-100">
                     {saveLoading ? <Loader2 size={16} className="animate-spin" /> : "Post Job Now"}
                   </button>
                 </div>
@@ -362,22 +376,22 @@ const PartTimeJobManagement = () => {
       )}
 
       {/* --- Advanced Edit Modal --- */}
-      {isEditModalOpen && (
+      {isEditModalOpen && selectedJob && ( // Added check for selectedJob
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-200">
             <div className="sticky top-0 bg-white z-10 flex items-center justify-between px-6 py-4 border-b border-slate-100">
               <h2 className="text-xl font-bold text-slate-800">Advanced Job Editor</h2>
-              <button onClick={() => setIsEditModalOpen(false)} className="p-1 hover:bg-slate-100 rounded-full"><X size={20} className="text-slate-400" /></button>
+              <button type="button" onClick={() => setIsEditModalOpen(false)} className="p-1 hover:bg-slate-100 rounded-full"><X size={20} className="text-slate-400" /></button>
             </div>
 
             {fetchLoading ? (
               <div className="p-20 flex flex-col items-center justify-center"><Loader2 className="animate-spin text-blue-600 mb-2" size={30} /><p className="text-sm font-bold text-slate-400">Loading Job Data...</p></div>
-            ) : selectedJob && (
+            ) : (
               <div className="p-6 space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Input label="Job Title" value={selectedJob.title} onChange={(v)=>setSelectedJob({...selectedJob, title:v})} />
                   <Input label="Company Name" value={selectedJob.companyName} onChange={(v)=>setSelectedJob({...selectedJob, companyName:v})} />
-                  <Input label="Location" value={selectedJob.location} onChange={(v)=>setSelectedJob({...selectedJob, location:v})} />
+                  <Input label="Location" value={selectedJob.location} onChange={(v)=>setSelectedJob({...selectedJob, location:v})} /> {/* Now ensures location is a string */}
                   <Input label="Vacancies" type="number" value={selectedJob.vacancies} onChange={(v)=>setSelectedJob({...selectedJob, vacancies:v})} />
                 </div>
 
@@ -414,17 +428,17 @@ const PartTimeJobManagement = () => {
                         {selectedJob.existingImages.map((img, idx) => (
                             <div key={idx} className="relative group aspect-square rounded-xl overflow-hidden border-2 border-slate-100">
                                 <img src={img} className="w-full h-full object-cover" alt="Job" />
-                                <button onClick={() => removeExistingImage(img)} className="absolute inset-0 bg-red-500/80 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"><Trash2 size={18} /></button>
+                                <button type="button" onClick={() => removeExistingImage(img)} className="absolute inset-0 bg-red-500/80 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"><Trash2 size={18} /></button>
                             </div>
                         ))}
                         {newImages.map((file, idx) => (
                             <div key={idx} className="relative aspect-square rounded-xl overflow-hidden border-2 border-blue-200">
                                 <img src={URL.createObjectURL(file)} className="w-full h-full object-cover opacity-60" alt="New" />
-                                <button onClick={() => removeNewImage(idx)} className="absolute top-1 right-1 bg-white text-red-500 rounded-full p-0.5 shadow-md"><X size={14} /></button>
+                                <button type="button" onClick={() => removeNewImage(idx)} className="absolute top-1 right-1 bg-white text-red-500 rounded-full p-0.5 shadow-md"><X size={14} /></button>
                                 <div className="absolute bottom-0 left-0 right-0 bg-blue-500 text-[8px] text-white text-center py-0.5">NEW</div>
                             </div>
                         ))}
-                        <button onClick={() => fileInputRef.current.click()} className="aspect-square border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center text-slate-400 hover:border-blue-400 hover:text-blue-500 transition-all bg-slate-50">
+                        <button type="button" onClick={() => fileInputRef.current.click()} className="aspect-square border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center text-slate-400 hover:border-blue-400 hover:text-blue-500 transition-all bg-slate-50">
                             <Upload size={20} /> <span className="text-[10px] font-bold mt-1">Upload</span>
                         </button>
                     </div>
@@ -432,8 +446,8 @@ const PartTimeJobManagement = () => {
                 </div>
 
                 <div className="sticky bottom-0 bg-white pt-4 pb-2 flex justify-end gap-3 border-t border-slate-100">
-                  <button onClick={() => setIsEditModalOpen(false)} className="px-6 py-2 text-sm font-bold text-slate-400">Cancel</button>
-                  <button onClick={handleSaveChanges} disabled={saveLoading} className="bg-blue-600 text-white px-8 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-blue-100 flex items-center gap-2">
+                  <button type="button" onClick={() => setIsEditModalOpen(false)} className="px-6 py-2 text-sm font-bold text-slate-400">Cancel</button>
+                  <button type="button" onClick={handleSaveChanges} disabled={saveLoading} className="bg-blue-600 text-white px-8 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-blue-100 flex items-center gap-2">
                     {saveLoading ? <Loader2 size={16} className="animate-spin" /> : "Update Everything"}
                   </button>
                 </div>
@@ -476,7 +490,7 @@ const ActionBtn = ({ text, variant, onClick, icon }) => {
     blue: "bg-blue-50 text-blue-600 border-blue-100 hover:bg-blue-600 hover:text-white",
   };
   return (
-    <button onClick={onClick} className={`flex items-center gap-1 px-3 py-1.5 text-[10px] font-bold rounded-md border transition-all ${styles[variant]}`}>
+    <button type="button" onClick={onClick} className={`flex items-center gap-1 px-3 py-1.5 text-[10px] font-bold rounded-md border transition-all ${styles[variant]}`}>
       {icon} {text}
     </button>
   );

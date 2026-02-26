@@ -195,6 +195,35 @@ const PartTimeJobManagement = () => {
     }
   };
 
+  const handleUpdateJob = async () => {
+    try {
+      setSaveLoading(true);
+      const formData = new FormData();
+
+      // Data append karein (exactly same as create, but from selectedJob)
+      formData.append("title", selectedJob.title);
+      formData.append("description", selectedJob.description);
+      formData.append("details", selectedJob.details);
+      formData.append("companyName", selectedJob.companyName);
+      formData.append("jobRole", selectedJob.jobRole);
+      formData.append("vacancies", selectedJob.vacancies);
+      formData.append("salaryRange[min]", selectedJob.salaryRange?.min);
+      formData.append("salaryRange[max]", selectedJob.salaryRange?.max);
+      formData.append("location[address]", selectedJob.location?.address);
+      // ... baki fields bhi add karein
+
+      const response = await updateJob(selectedJob._id, formData);
+      if (response.success) {
+        toast.success("Job updated!");
+        setIsEditModalOpen(false);
+        fetchData();
+      }
+    } catch (err) {
+      toast.error("Update failed");
+    } finally {
+      setSaveLoading(false);
+    }
+  };
   return (
     <div className="p-4 md:p-8 bg-[#f8fafc] min-h-screen font-sans relative">
       <Toaster position="top-center" />
@@ -247,6 +276,15 @@ const PartTimeJobManagement = () => {
                     <div className="flex justify-center gap-2">
                       <ActionBtn text="View" variant="blue" icon={<Eye size={12} />} onClick={() => { setSelectedJob(job); setIsViewModalOpen(true) }} />
                       <ActionBtn text="Delete" variant="red" icon={<Trash2 size={12} />} onClick={async () => { if (window.confirm("Delete?")) { await deleteJob(job._id); fetchData(); } }} />
+                      <ActionBtn
+                        text="Edit"
+                        variant="blue"
+                        icon={<PlusCircle size={12} />}
+                        onClick={() => {
+                          setSelectedJob(job);
+                          setIsEditModalOpen(true);
+                        }}
+                      />
                     </div>
                   </td>
                 </tr>
@@ -319,7 +357,7 @@ const PartTimeJobManagement = () => {
 
               <div>
                 <label className="label-text">Full Job Details/Description*</label>
-                    
+
                 <textarea
                   className="input-field"
                   value={newJob.details}
@@ -361,6 +399,71 @@ const PartTimeJobManagement = () => {
         </div>
       )}
 
+
+      {/* EDIT JOB MODAL */}
+      {isEditModalOpen && selectedJob && (
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white z-10 flex items-center justify-between px-6 py-4 border-b">
+              <h2 className="text-xl font-bold text-slate-800">Edit Part-time Job</h2>
+              <button onClick={() => setIsEditModalOpen(false)} className="p-1 hover:bg-slate-100 rounded-full"><X size={20} /></button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* User Selection (Read Only typically) */}
+              <div className="md:col-span-2">
+                <label className="label-text">Job Poster (User)</label>
+                <input className="input-field bg-slate-100" value={selectedJob.userId?.fullName || "Assigned User"} readOnly />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Input label="Job Title" value={selectedJob.title} onChange={(v) => setSelectedJob({ ...selectedJob, title: v })} />
+                <Input label="Short Description" value={selectedJob.description} onChange={(v) => setSelectedJob({ ...selectedJob, description: v })} />
+              </div>
+
+              {/* Location */}
+              <div className="p-5 bg-blue-50/50 rounded-2xl border border-blue-100 space-y-4">
+                <label className="label-text text-blue-700">Job Location</label>
+                <Input label="Full Address" value={selectedJob.location?.address} onChange={(v) => setSelectedJob({ ...selectedJob, location: { ...selectedJob.location, address: v } })} />
+                <div className="grid grid-cols-2 gap-4">
+                  <Input label="Latitude" value={selectedJob.location?.coordinates?.[1]} onChange={(v) => { }} />
+                  <Input label="Longitude" value={selectedJob.location?.coordinates?.[0]} onChange={(v) => { }} />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Input label="Company Name" value={selectedJob.companyName} onChange={(v) => setSelectedJob({ ...selectedJob, companyName: v })} />
+                <Input label="Job Role" value={selectedJob.jobRole} onChange={(v) => setSelectedJob({ ...selectedJob, jobRole: v })} />
+                <Input label="Min Pay (₹)" value={selectedJob.salaryRange?.min} onChange={(v) => setSelectedJob({ ...selectedJob, salaryRange: { ...selectedJob.salaryRange, min: v } })} />
+                <Input label="Max Pay (₹)" value={selectedJob.salaryRange?.max} onChange={(v) => setSelectedJob({ ...selectedJob, salaryRange: { ...selectedJob.salaryRange, max: v } })} />
+                <Input label="Vacancies" value={selectedJob.vacancies} onChange={(v) => setSelectedJob({ ...selectedJob, vacancies: v })} />
+                <Input label="Whatsapp Number" value={selectedJob.whatsappNumber} onChange={(v) => setSelectedJob({ ...selectedJob, whatsappNumber: v })} />
+              </div>
+
+              <div>
+                <label className="label-text">Experience</label>
+                <select className="input-field" value={selectedJob.experience} onChange={(e) => setSelectedJob({ ...selectedJob, experience: e.target.value })}>
+                  <option value="Fresher">Fresher</option>
+                  <option value="1+ Year">1+ Year</option>
+                  <option value="2+ Year">2+ Year</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="label-text">Full Job Details/Description*</label>
+                <textarea className="input-field h-32" value={selectedJob.details} onChange={(e) => setSelectedJob({ ...selectedJob, details: e.target.value })} />
+              </div>
+
+              <div className="sticky bottom-0 bg-white pt-4 pb-2 flex justify-end gap-3 border-t">
+                <button onClick={() => setIsEditModalOpen(false)} className="px-6 py-2 text-sm font-bold text-slate-400">Cancel</button>
+                <button onClick={handleUpdateJob} disabled={saveLoading} className="bg-blue-600 text-white px-8 py-2.5 rounded-xl text-sm font-bold shadow-lg">
+                  {saveLoading ? <Loader2 size={16} className="animate-spin" /> : "Update Job Now"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       <JobViewModal isOpen={isViewModalOpen} onClose={() => setIsViewModalOpen(false)} job={selectedJob} />
 
       <style>{`

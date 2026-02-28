@@ -1,816 +1,27 @@
-
-// import React, { useState, useEffect, useCallback } from "react";
-// import { Loader2, AlertCircle, X, Star, Lock, CheckCircle, Plus, ChevronDown } from "lucide-react";
-
-// import { getAllFullTimeJobs, createNewFullTimeJob, getAllUsersAPI } from "../../auth/adminLogin";
-
-// const normalizeJobData = (job) => {
-//   const salaryField = job.salaryRange || job.budget;
-
-//   return {
-//     _id: job._id,
-//     title: job.title,
-//     companyName: job.companyName || (job.userId?.companyName || 'Individual'),
-//     location: job.location,
-//     jobRole: job.jobRole || job.workType || "Not Specified",
-
-//     budget: {
-//       min: salaryField?.min || 0,
-//       max: salaryField?.max || 0
-//     },
-
-//     isFeatured: job.isFeatured || false,
-//     unlockCount: job.unlockCount || 0,
-//     isActive: job.status === 'active',
-//     images: job.images || [],
-//   };
-// };
-
-// const FullTimeJobManagement = () => {
-//   const [allJobs, setAllJobs] = useState([]);
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState(null);
-
-//   const [isModalOpen, setIsModalOpen] = useState(false);
-//   const [selectedJob, setSelectedJob] = useState(null);
-
-//   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-//   const [isSubmitting, setIsSubmitting] = useState(false);
-//   const [submitError, setSubmitError] = useState(null);
-
-//   // New state for success popup
-//   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
-//   // Existing states ke neeche ye add karein:
-//   const [usersList, setUsersList] = useState([]);
-//   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
-
-//   // Users fetch karne ke liye useEffect add karein
-//   useEffect(() => {
-//     const fetchUsers = async () => {
-//       try {
-//         const response = await getAllUsersAPI();
-//         setUsersList(response.data || response || []);
-//       } catch (err) {
-//         console.error("Failed to fetch users:", err);
-//       }
-//     };
-//     fetchUsers();
-//   }, []);
-//   const initialNewJobForm = {
-//     userName: "",
-//     title: "",
-//     experience: "",
-//     whatsappNumber: "",
-//     jobDescription: "",
-//     location: "",
-//     jobRole: "",
-//     budgetMin: 0,
-//     budgetMax: 0,
-//     unlockCount: 0,
-//     isFeatured: false,
-//     isActive: true,
-//     images: null,
-//   };
-//   const [newJobForm, setNewJobForm] = useState(initialNewJobForm);
-
-//   const handleNewJobChange = (e) => {
-//     const { name, value, type, checked } = e.target;
-//     setNewJobForm(prev => ({
-//       ...prev,
-//       [name]: type === 'checkbox' ? checked : value,
-//     }));
-//   };
-
-//   const handleNewJobImageChange = (file) => {
-//     setNewJobForm(prev => ({
-//       ...prev,
-//       images: file,
-//     }));
-//   };
-
-//   const handleNewJobSubmit = async (e) => {
-//     e.preventDefault();
-//     setSubmitError(null);
-//     setIsSubmitting(true);
-
-//     const formData = new FormData();
-//     formData.append('companyName', newJobForm.userName);
-//     formData.append('title', newJobForm.title);
-//     formData.append('details', newJobForm.jobDescription);
-//     formData.append('location', newJobForm.location);
-//     formData.append('jobRole', newJobForm.jobRole);
-//     formData.append('isFeatured', newJobForm.isFeatured);
-//     formData.append('status', newJobForm.isActive ? 'active' : 'inactive');
-
-//     formData.append('salaryRangeMin', newJobForm.budgetMin);
-//     formData.append('salaryRangeMax', newJobForm.budgetMax);
-
-//     formData.append('experience', newJobForm.experience);
-//     formData.append('whatsappNumber', newJobForm.whatsappNumber);
-//     formData.append('unlockCount', newJobForm.unlockCount);
-
-//     if (newJobForm.images) {
-//       formData.append('images', newJobForm.images);
-//     }
-
-//     try {
-//       const response = await createNewFullTimeJob(formData);
-//       console.log("Job Posted Successfully:", response);
-
-//       await fetchJobs();
-
-//       setIsAddModalOpen(false); // Close the add job modal
-
-//       setNewJobForm(initialNewJobForm);
-
-//       // alert("New Full-time Job posted successfully!"); // <-- REMOVED THIS ALERT
-//       setIsSuccessModalOpen(true); // <-- ADDED CUSTOM POPUP
-
-//     } catch (err) {
-//       console.error("Failed to post new job:", err);
-//       setSubmitError(err.message || err.error || "An error occurred during submission.");
-//     } finally {
-//       setIsSubmitting(false);
-//     }
-//   };
-
-
-//   const fetchJobs = useCallback(async () => {
-//     setLoading(true);
-//     setError(null);
-//     try {
-//       const response = await getAllFullTimeJobs();
-
-//       const jobsArray = Array.isArray(response.data) ? response.data : [];
-//       setAllJobs(jobsArray.map(normalizeJobData));
-
-//     } catch (err) {
-//       console.error("Failed to fetch full-time jobs:", err);
-//       setError(err.message || err.error || "An error occurred while fetching jobs.");
-//     } finally {
-//       setLoading(false);
-//     }
-//   }, []);
-
-//   useEffect(() => {
-//     fetchJobs();
-//   }, [fetchJobs]);
-
-//   const handleEditClick = (job) => {
-//     setSelectedJob({
-//       ...job,
-//       budget: {
-//         min: parseInt(job.budget?.min) || 0,
-//         max: parseInt(job.budget?.max) || 0
-//       }
-//     });
-//     setIsModalOpen(true);
-//   };
-
-
-//   return (
-//     <div className="p-4 md:p-8 bg-[#f8fafc] min-h-screen font-sans relative">
-//       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-//         <div>
-//           <h1 className="text-2xl font-extrabold text-slate-800 tracking-tight">
-//             Full-time Job Management
-//           </h1>
-//           <p className="text-slate-500 text-sm">Manage all Full-time postings</p>
-//         </div>
-//         <button
-//           onClick={() => {
-//             setNewJobForm(initialNewJobForm);
-//             setSubmitError(null);
-//             setIsAddModalOpen(true);
-//           }}
-//           className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg text-sm font-medium shadow-md transition-transform active:scale-95"
-//         >
-//           + Post New Job
-//         </button>
-//       </div>
-
-//       {loading ? (
-//         <div className="flex flex-col items-center justify-center h-64 bg-white rounded-2xl border border-slate-200">
-//           <Loader2 className="w-8 h-8 text-blue-600 animate-spin mb-2" />
-//           <span className="text-slate-400 text-sm">Loading jobs...</span>
-//         </div>
-//       ) : error ? (
-//         <div className="flex flex-col items-center justify-center h-64 bg-white rounded-2xl border border-red-200 p-4">
-//           <AlertCircle className="w-8 h-8 text-red-500 mb-2" />
-//           <span className="text-red-700 text-center font-semibold">Error: {error}</span>
-//           <button
-//             onClick={fetchJobs}
-//             className="mt-4 bg-red-500 hover:bg-red-600 text-white px-4 py-1.5 rounded-lg text-sm font-medium transition-colors"
-//           >
-//             Try Again
-//           </button>
-//         </div>
-//       ) : (
-//         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-//           <div className="overflow-x-auto">
-//             <table className="w-full text-left border-collapse">
-//               <thead>
-//                 <tr className="bg-white border-b border-slate-200">
-//                   <th className="p-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Job Title & Details</th>
-//                   <th className="p-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Job Role</th>
-//                   <th className="p-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Salary Range</th>
-//                   <th className="p-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider text-center">Featured</th>
-//                   <th className="p-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider text-center">Unlock Count</th>
-//                   <th className="p-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider text-center">Status</th>
-//                   <th className="p-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider text-center">Actions</th>
-//                 </tr>
-//               </thead>
-//               <tbody className="divide-y divide-slate-50">
-              
-//                 {allJobs.map((job) => (
-//                   <tr key={job._id} className="hover:bg-slate-50/80 transition-colors group">
-//                     <td className="p-4 align-top max-w-[280px]">
-//                       <div className="flex items-start gap-3">
-//                         <div className="w-10 h-10 rounded-lg border border-slate-100 bg-white p-1 flex-shrink-0 flex items-center justify-center">
-//                           <img
-//                             src={job.images?.[0] || "https://via.placeholder.com/150/f0f0f0/cccccc?text=Logo"}
-//                             alt="logo"
-//                             className="w-full h-full object-contain"
-//                           />
-//                         </div>
-//                         <div>
-//                           <p className="font-bold text-slate-800 text-sm leading-tight mb-1">{job.title}</p>
-//                           <p className="text-xs text-slate-500 mb-1.5">{job.companyName}</p>
-//                           <span className="inline-block text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded border border-slate-200 font-medium">
-//                             {job.location}
-//                           </span>
-//                         </div>
-//                       </div>
-//                     </td>
-
-//                     <td className="p-4 align-top">
-//                       <span className="inline-block text-xs font-semibold text-slate-600 bg-blue-50/80 px-2.5 py-1 rounded text-blue-800">
-//                         {job.jobRole}
-//                       </span>
-//                     </td>
-
-//                     <td className="p-4 align-top font-bold text-slate-700 text-sm whitespace-nowrap">
-//                       ₹{job.budget?.min?.toLocaleString()} - ₹{job.budget?.max?.toLocaleString()}
-//                     </td>
-
-//                     <td className="p-4 align-top text-center">
-//                       <div
-//                         className={`transition-all duration-200 cursor-default ${job.isFeatured ? 'text-amber-400' : 'text-slate-200'}`}
-//                       >
-//                         <Star size={18} fill={job.isFeatured ? "currentColor" : "none"} />
-//                       </div>
-//                     </td>
-
-//                     <td className="p-4 align-top text-center">
-//                       <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-50 rounded-full border border-slate-100">
-//                         <Lock size={11} className="text-slate-400" />
-//                         <span className="text-xs font-bold text-slate-600">{job.unlockCount}</span>
-//                       </div>
-//                     </td>
-
-//                     <td className="p-4 align-top text-center">
-//                       {job.isActive ? (
-//                         <span className="inline-flex items-center gap-1 px-3 py-1 text-[10px] font-bold bg-emerald-100 text-emerald-600 rounded-full uppercase tracking-wide">
-//                           <CheckCircle size={10} fill="currentColor" className="text-emerald-600" /> ACTIVE
-//                         </span>
-//                       ) : (
-//                         <span className="inline-flex items-center gap-1 px-3 py-1 text-[10px] font-bold bg-red-100 text-red-600 rounded-full uppercase tracking-wide">
-//                           <X size={10} fill="currentColor" className="text-red-600" /> INACTIVE
-//                         </span>
-//                       )}
-//                     </td>
-
-//                     <td className="p-4 align-top">
-//                       <div className="flex flex-col items-center gap-2">
-//                         <button
-//                           onClick={() => handleEditClick(job)}
-//                           className="w-24 py-1.5 text-[11px] font-bold text-amber-500 border border-amber-200 rounded hover:bg-amber-50 transition-colors"
-//                         >
-//                           View Details
-//                         </button>
-
-//                         <button
-//                           disabled
-//                           className={`w-24 py-1.5 text-[11px] font-bold border rounded transition-colors flex items-center justify-center gap-1 cursor-not-allowed
-//                                 ${job.isActive
-//                               ? "text-red-300 border-red-100 bg-red-50/50"
-//                               : "text-emerald-300 border-emerald-100 bg-emerald-50/50"
-//                             }`}
-//                         >
-//                           {job.isActive ? <>Deactivate</> : <>Activate</>}
-//                         </button>
-//                       </div>
-//                     </td>
-//                   </tr>
-//                 ))}
-//               </tbody>
-//             </table>
-//           </div>
-//         </div>
-//       )}
-
-//       {/* Post New Job Modal (isAddModalOpen) - KEPT THE SAME */}
-//       {isAddModalOpen && (
-//         <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-slate-900/20 backdrop-blur-sm">
-//           <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in duration-200 max-h-[90vh] flex flex-col">
-
-//             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-white sticky top-0 flex-shrink-0">
-//               <h2 className="text-xl font-bold text-slate-800">Post New Full-time Job</h2>
-//               <button
-//                 onClick={() => {
-//                   setIsAddModalOpen(false);
-//                   setSubmitError(null);
-//                 }}
-//                 className="p-1 hover:bg-slate-100 rounded-full transition-colors"
-//               >
-//                 <X size={20} className="text-slate-400" />
-//               </button>
-//             </div>
-
-//             <form onSubmit={handleNewJobSubmit} id="newJobForm" className="p-6 space-y-6 overflow-y-auto custom-scrollbar flex-grow">
-
-//               {submitError && (
-//                 <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm font-medium rounded-lg flex items-center gap-3">
-//                   <AlertCircle size={18} />
-//                   <p>{submitError}</p>
-//                 </div>
-//               )}
-//             {/* --- START OF USER NAME DROPDOWN --- */}
-//               <div className="relative">
-//                 <label className="label-text">User Name</label>
-                
-//                 {/* Dropdown Button */}
-//                 <div 
-//                   onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
-//                   className="input-field cursor-pointer bg-white flex items-center justify-between"
-//                 >
-//                   <span className={`truncate ${!newJobForm.userName ? "text-slate-400" : "text-slate-800"}`}>
-//                     {newJobForm.userName || "Select a User"}
-//                   </span>
-//                   <ChevronDown size={16} className={`text-slate-400 transition-transform ${isUserDropdownOpen ? 'rotate-180' : ''}`} />
-//                 </div>
-
-//                 {/* Dropdown List */}
-//                 {isUserDropdownOpen && (
-//                   <>
-//                     <div className="fixed inset-0 z-10" onClick={() => setIsUserDropdownOpen(false)}></div>
-                    
-//                     <div className="absolute top-full left-0 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-xl z-20 max-h-[200px] overflow-y-auto">
-//                       {usersList.length > 0 ? (
-//                         usersList.map((user, index) => {
-//                           const displayName = user.fullName || user.name || user.userName || user.email || user.mobile;
-//                           if (!displayName) return null;
-
-//                           return (
-//                             <div
-//                               key={user._id || index}
-//                               onClick={() => {
-//                                 setNewJobForm(prev => ({ ...prev, userName: displayName }));
-//                                 setIsUserDropdownOpen(false);
-//                               }}
-//                               className="px-4 py-2.5 hover:bg-blue-50 cursor-pointer text-sm text-slate-700 border-b border-slate-50 last:border-none transition-colors"
-//                             >
-//                               {displayName}
-//                             </div>
-//                           );
-//                         })
-//                       ) : (
-//                         <div className="p-3 text-xs text-center text-slate-400">No users found</div>
-//                       )}
-//                     </div>
-//                   </>
-//                 )}
-//               </div>
-//               {/* --- END OF USER NAME DROPDOWN --- */}
-//               <div className="grid grid-cols-3 gap-4">
-//                 <div>
-//                   <label className="label-text">Job Title</label>
-//                   <input
-//                     type="text"
-//                     name="title"
-//                     value={newJobForm.title}
-//                     onChange={handleNewJobChange}
-//                     placeholder="E.g., Sales Manager"
-//                     className="input-field"
-//                     required
-//                   />
-//                 </div>
-//                 <div>
-//                   <label className="label-text">Job Role</label>
-//                   <input
-//                     type="text"
-//                     name="jobRole"
-//                     value={newJobForm.jobRole}
-//                     onChange={handleNewJobChange}
-//                     placeholder="E.g., Field Work"
-//                     className="input-field"
-//                     required
-//                   />
-//                 </div>
-//                 <div>
-//                   <label className="label-text">Location/Tag</label>
-//                   <input
-//                     type="text"
-//                     name="location"
-//                     value={newJobForm.location}
-//                     onChange={handleNewJobChange}
-//                     placeholder="E.g., Bangalore"
-//                     className="input-field"
-//                     required
-//                   />
-//                 </div>
-//               </div>
-
-//               <div className="grid grid-cols-3 gap-4">
-//                 <div>
-//                   <label className="label-text">WhatsApp Number</label>
-//                   <input
-//                     type="tel"
-//                     name="whatsappNumber"
-//                     value={newJobForm.whatsappNumber}
-//                     onChange={handleNewJobChange}
-//                     placeholder="9876543210"
-//                     className="input-field"
-//                     required
-//                   />
-//                 </div>
-//                 <div>
-//                   <label className="label-text">Experience</label>
-//                   <input
-//                     type="text"
-//                     name="experience"
-//                     value={newJobForm.experience}
-//                     onChange={handleNewJobChange}
-//                     placeholder="E.g., 2-5 Years"
-//                     className="input-field"
-//                     required
-//                   />
-//                 </div>
-//                 <div className="grid grid-cols-2 gap-2">
-//                   <div>
-//                     <label className="label-text">Min Pay (₹)</label>
-//                     <input
-//                       type="number"
-//                       name="budgetMin"
-//                       value={newJobForm.budgetMin}
-//                       onChange={handleNewJobChange}
-//                       className="input-field"
-//                     />
-//                   </div>
-//                   <div>
-//                     <label className="label-text">Max Pay (₹)</label>
-//                     <input
-//                       type="number"
-//                       name="budgetMax"
-//                       value={newJobForm.budgetMax}
-//                       onChange={handleNewJobChange}
-//                       className="input-field"
-//                     />
-//                   </div>
-//                 </div>
-//               </div>
-
-//               <div>
-//                 <label className="label-text">Job Description</label>
-//                 <textarea
-//                   name="jobDescription"
-//                   value={newJobForm.jobDescription}
-//                   onChange={handleNewJobChange}
-//                   rows={5}
-//                   placeholder="Enter detailed job description and requirements..."
-//                   className="input-field resize-none"
-//                   required
-//                 ></textarea>
-//               </div>
-
-//               <div className="flex items-center gap-6 py-2 px-4 bg-slate-50 border border-slate-100 rounded-lg">
-//                 <div className="flex-shrink-0">
-//                   <label className="label-text !mb-1">Unlock Count</label>
-//                   <input
-//                     type="number"
-//                     name="unlockCount"
-//                     value={newJobForm.unlockCount}
-//                     onChange={handleNewJobChange}
-//                     className="w-20 px-3 py-1.5 text-sm border border-slate-200 rounded-md text-center font-bold text-slate-700"
-//                   />
-//                 </div>
-
-//                 <div className="flex items-center gap-6">
-//                   <label className="flex items-center gap-2 cursor-pointer select-none">
-//                     <input
-//                       type="checkbox"
-//                       name="isFeatured"
-//                       checked={newJobForm.isFeatured}
-//                       onChange={handleNewJobChange}
-//                       className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-//                     />
-//                     <span className="text-sm text-slate-700 font-semibold">Featured</span>
-//                   </label>
-//                   <label className="flex items-center gap-2 cursor-pointer select-none">
-//                     <input
-//                       type="checkbox"
-//                       name="isActive"
-//                       checked={newJobForm.isActive}
-//                       onChange={handleNewJobChange}
-//                       className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-//                     />
-//                     <span className="text-sm text-blue-600 font-bold flex items-center gap-1">
-//                       <Plus size={14} className="text-blue-600" /> Active
-//                     </span>
-//                   </label>
-//                 </div>
-//               </div>
-
-//               <div>
-//                 <label className="label-text flex items-center gap-2">
-//                   Job Images <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-image"><rect width="18" height="18" x="3" y="3" rx="2" ry="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" /></svg>
-//                 </label>
-//                 <div className="mt-2 flex items-center gap-4">
-//                   <div
-//                     className="w-32 h-32 border-2 border-dashed border-slate-200 rounded-lg bg-slate-50/70 flex flex-col items-center justify-center cursor-pointer hover:bg-slate-100 transition-colors"
-//                     onClick={() => document.getElementById('newJobImageInput').click()}
-//                   >
-//                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-upload text-slate-400"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" x2="12" y1="3" y2="15" /></svg>
-//                     <span className="text-sm text-slate-500 mt-1">Upload</span>
-//                   </div>
-//                   <input
-//                     id="newJobImageInput"
-//                     type="file"
-//                     accept="image/*"
-//                     onChange={(e) => handleNewJobImageChange(e.target.files[0])}
-//                     className="hidden"
-//                   />
-
-//                   {newJobForm.images && (
-//                     <div className="relative w-32 h-32 rounded-lg border border-slate-200 overflow-hidden">
-//                       <img
-//                         src={URL.createObjectURL(newJobForm.images)}
-//                         alt="Job Preview"
-//                         className="w-full h-full object-cover"
-//                       />
-//                       <button
-//                         type="button"
-//                         onClick={() => handleNewJobImageChange(null)}
-//                         className="absolute top-1 right-1 bg-red-500/80 hover:bg-red-600 rounded-full p-0.5 text-white transition-colors"
-//                       >
-//                         <X size={12} />
-//                       </button>
-//                     </div>
-//                   )}
-//                 </div>
-//               </div>
-
-//               <div className="h-4"></div>
-//             </form>
-
-//             <div className="px-6 py-4 bg-slate-50 flex justify-end gap-3 border-t border-slate-100 flex-shrink-0">
-//               <button
-//                 type="button"
-//                 onClick={() => {
-//                   setIsAddModalOpen(false);
-//                   setSubmitError(null);
-//                 }}
-//                 className="px-4 py-2 text-sm font-bold text-slate-500 hover:text-slate-700 transition-colors"
-//               >
-//                 Cancel
-//               </button>
-//               <button
-//                 type="submit"
-//                 form="newJobForm"
-//                 onClick={handleNewJobSubmit}
-//                 disabled={isSubmitting}
-//                 className={`px-6 py-2 rounded-lg text-sm font-bold shadow-md transition-colors flex items-center justify-center gap-2
-//                     ${isSubmitting
-//                     ? "bg-blue-400 text-white cursor-not-allowed"
-//                     : "bg-blue-600 hover:bg-blue-700 text-white"
-//                   }`}
-//               >
-//                 {isSubmitting ? (
-//                   <>
-//                     <Loader2 size={16} className="animate-spin" />
-//                     Posting...
-//                   </>
-//                 ) : (
-//                   "Post Job Now"
-//                 )}
-//               </button>
-//             </div>
-//           </div>
-//         </div>
-//       )}
-
-
-//       {/* Job Details Modal (isModalOpen) - KEPT THE SAME */}
-//       {isModalOpen && selectedJob && (
-//         <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-slate-900/20 backdrop-blur-sm">
-//           <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
-//             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-white sticky top-0">
-//               <h2 className="text-lg font-bold text-slate-800">Job Details (Read-Only)</h2>
-//               <button onClick={() => setIsModalOpen(false)} className="p-1 hover:bg-slate-100 rounded-full transition-colors">
-//                 <X size={20} className="text-slate-400" />
-//               </button>
-//             </div>
-
-//             <div className="p-6 space-y-4">
-//               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-//                 <div>
-//                   <label className="label-text">Job Title</label>
-//                   <input
-//                     type="text"
-//                     value={selectedJob.title || ""}
-//                     readOnly
-//                     className="input-field"
-//                   />
-//                 </div>
-//                 <div>
-//                   <label className="label-text">Tag / Location</label>
-//                   <input
-//                     type="text"
-//                     value={selectedJob.location || ""}
-//                     readOnly
-//                     className="input-field"
-//                   />
-//                 </div>
-//               </div>
-
-//               <div>
-//                 <label className="label-text">Job Role</label>
-//                 <input
-//                   type="text"
-//                   value={selectedJob.jobRole || ""}
-//                   readOnly
-//                   className="input-field"
-//                 />
-//               </div>
-
-//               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-//                 <div>
-//                   <label className="label-text">Min Pay (₹)</label>
-//                   <input
-//                     type="number"
-//                     value={selectedJob.budget?.min || 0}
-//                     readOnly
-//                     className="input-field"
-//                   />
-//                 </div>
-//                 <div>
-//                   <label className="label-text">Max Pay (₹)</label>
-//                   <input
-//                     type="number"
-//                     value={selectedJob.budget?.max || 0}
-//                     readOnly
-//                     className="input-field"
-//                   />
-//                 </div>
-//               </div>
-
-//               <div className="flex items-center justify-between pt-2 border-t border-slate-50 mt-2">
-//                 <div className="flex items-center gap-4">
-//                   <label className="flex items-center gap-2 cursor-default select-none">
-//                     <input
-//                       type="checkbox"
-//                       checked={selectedJob.isFeatured || false}
-//                       disabled
-//                       className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 cursor-not-allowed"
-//                     />
-//                     <span className="text-sm text-slate-700 font-semibold">Featured</span>
-//                   </label>
-//                 </div>
-
-//                 <div className="flex items-center gap-2">
-//                   <span className="text-xs font-bold text-slate-400 uppercase">Unlock Count:</span>
-//                   <input
-//                     type="number"
-//                     value={selectedJob.unlockCount || 0}
-//                     readOnly
-//                     className="w-16 px-2 py-1 text-sm border border-slate-200 rounded-md text-center font-bold text-slate-700 bg-slate-50 cursor-default"
-//                   />
-//                 </div>
-//               </div>
-//             </div>
-
-//             <div className="px-6 py-4 bg-slate-50 flex justify-end gap-3 border-t border-slate-100">
-//               <button
-//                 onClick={() => setIsModalOpen(false)}
-//                 className="px-4 py-2 text-sm font-bold text-slate-500 hover:text-slate-700 transition-colors"
-//               >
-//                 Close
-//               </button>
-//               <button
-//                 disabled
-//                 className="px-6 py-2 bg-slate-300 text-slate-500 rounded-lg text-sm font-bold shadow-md cursor-not-allowed"
-//               >
-//                 Save Changes (Disabled)
-//               </button>
-//             </div>
-//           </div>
-//         </div>
-//       )}
-
-//       {/* NEW: Custom Job Post Success Modal */}
-//       {isSuccessModalOpen && (
-//         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-//           <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in duration-200">
-
-//             <div className="p-8 flex flex-col items-center text-center">
-//               <CheckCircle size={48} className="text-emerald-500 mb-4" />
-//               <h3 className="text-xl font-bold text-slate-800 mb-2">Job Posted Successfully!</h3>
-//               <p className="text-slate-500 text-sm">The new full-time job has been successfully created and added to the list.</p>
-//             </div>
-
-//             <div className="px-6 py-4 bg-slate-50 flex justify-end">
-//               <button
-//                 onClick={() => setIsSuccessModalOpen(false)}
-//                 className="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-bold shadow-md transition-colors active:scale-[0.98]"
-//               >
-//                 OK
-//               </button>
-//             </div>
-//           </div>
-//         </div>
-//       )}
-
-
-//       <style jsx>{`
-//         .label-text {
-//             display: block;
-//             font-size: 0.7rem; 
-//             font-weight: 700;
-//             color: #0c0c0c; 
-//             text-transform: uppercase;
-//             letter-spacing: 0.05em;
-//             margin-bottom: 0.4rem;
-//         }
-//         .input-field {
-//             width: 100%;
-//             padding: 0.6rem 0.9rem;
-//             background-color: #ffffff;
-//             border: 1px solid #e2e8f0;
-//             border-radius: 0.5rem;
-//             outline: none;
-//             font-size: 0.9rem;
-//             transition: all 0.2s;
-//             color: #334155;
-//             font-weight: 500;
-//         }
-//         .input-field[readonly] {
-//             background-color: #f8fafc; 
-//             border-color: #f0f4f8; 
-//             cursor: default;
-//         }
-//         .input-field:focus {
-//             border-color: #3b82f6;
-//             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-//         }
-//         .input-field[readonly]:focus {
-//              box-shadow: none; 
-//              border-color: #f0f4f8; 
-//         }
-        
-//         .custom-scrollbar::-webkit-scrollbar {
-//             width: 8px;
-//         }
-//         .custom-scrollbar::-webkit-scrollbar-thumb {
-//             background-color: #cbd5e1;
-//             border-radius: 4px;
-//         }
-//         .custom-scrollbar::-webkit-scrollbar-track {
-//             background-color: #f8fafc;
-//         }
-//       `}</style>
-//     </div>
-//   );
-// };
-
-// export default FullTimeJobManagement;
-
-import React, { useState, useEffect, useCallback } from "react";
-import { Loader2, AlertCircle, X, Star, Lock, CheckCircle, Plus, ChevronDown } from "lucide-react";
-
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import {
+  Loader2, AlertCircle, X, Star, CheckCircle, Plus,
+  ChevronDown, Upload, MapPin, Briefcase, IndianRupee,
+  Users, GraduationCap, Phone, Info, Layout, Navigation, FileText
+} from "lucide-react";
 import { getAllFullTimeJobs, createNewFullTimeJob, getAllUsersAPI } from "../../auth/adminLogin";
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
-// 1. EXTRA SAFE NORMALIZE FUNCTION
 const normalizeJobData = (job) => {
   if (!job) return null;
-  
-  // Safe way to get salary (Protects against null/undefined)
-  const salary = job.salaryRange || job.budget || {};
-
+  const salary = job.salaryRange || {};
   return {
     _id: job._id || Math.random().toString(),
     title: job.title || "Untitled Job",
-    // SAFE CHECK: Use ?. to prevent crash if userId is missing
-    companyName: job.companyName || job.userId?.companyName || 'Individual',
-    location: job.location || "Location Not Set",
-    jobRole: job.jobRole || job.workType || "Not Specified",
+    companyName: job.companyName || 'Individual',
+    location: job.location?.address || "Location Not Set",
+    jobRole: job.jobRole || "Not Specified",
     budget: {
       min: salary.min || 0,
       max: salary.max || 0
     },
     isFeatured: !!job.isFeatured,
-    unlockCount: job.unlockCount || 0,
     isActive: job.status === 'active',
-    images: Array.isArray(job.images) ? job.images : [],
   };
 };
 
@@ -818,89 +29,52 @@ const FullTimeJobManagement = () => {
   const [allJobs, setAllJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedJob, setSelectedJob] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState(null);
+  const [isFetchingLocation, setIsFetchingLocation] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [usersList, setUsersList] = useState([]);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
+  const [imagePreview, setImagePreview] = useState(null);
+  const fileInputRef = useRef(null);
 
-  // FETCH USERS
+  const initialNewJobForm = {
+    userId: "",
+    title: "",
+    companyName: "",
+    description: "",
+    details: "", // Image wala 'details' field
+    jobRole: "",
+    vacancies: "",
+    whatsappNumber: "",
+    experience: "",
+    qualification: "",
+    salaryMin: "",
+    salaryMax: "",
+    address: "",
+    lng: import.meta.env.VITE_DEFAULT_LNG || "77.2090",
+    lat: import.meta.env.VITE_DEFAULT_LAT || "28.6139",
+    images: null,
+  };
+
+  const [newJobForm, setNewJobForm] = useState(initialNewJobForm);
+
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         const response = await getAllUsersAPI();
-        const data = response?.data || response || [];
-        setUsersList(Array.isArray(data) ? data : []);
-      } catch (err) {
-        console.error("User fetch error:", err);
-      }
+        setUsersList(Array.isArray(response?.data) ? response.data : []);
+      } catch (err) { console.error(err); }
     };
     fetchUsers();
   }, []);
 
-  const initialNewJobForm = {
-    userName: "", title: "", experience: "", whatsappNumber: "",
-    jobDescription: "", location: "", jobRole: "", budgetMin: 0,
-    budgetMax: 0, unlockCount: 0, isFeatured: false, isActive: true, images: null,
-  };
-  const [newJobForm, setNewJobForm] = useState(initialNewJobForm);
-
-  const handleNewJobChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setNewJobForm(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
-  };
-
-  const handleNewJobSubmit = async (e) => {
-    e.preventDefault();
-    setSubmitError(null);
-    setIsSubmitting(true);
-    const formData = new FormData();
-    formData.append('companyName', newJobForm.userName);
-    formData.append('title', newJobForm.title);
-    formData.append('details', newJobForm.jobDescription);
-    formData.append('location', newJobForm.location);
-    formData.append('jobRole', newJobForm.jobRole);
-    formData.append('isFeatured', newJobForm.isFeatured);
-    formData.append('status', newJobForm.isActive ? 'active' : 'inactive');
-    formData.append('salaryRangeMin', newJobForm.budgetMin);
-    formData.append('salaryRangeMax', newJobForm.budgetMax);
-    formData.append('experience', newJobForm.experience);
-    formData.append('whatsappNumber', newJobForm.whatsappNumber);
-    formData.append('unlockCount', newJobForm.unlockCount);
-    if (newJobForm.images) formData.append('images', newJobForm.images);
-
-    try {
-      await createNewFullTimeJob(formData);
-      await fetchJobs();
-      setIsAddModalOpen(false);
-      setNewJobForm(initialNewJobForm);
-      setIsSuccessModalOpen(true);
-    } catch (err) {
-      setSubmitError(err.message || "Failed to post job");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // FETCH JOBS
   const fetchJobs = useCallback(async () => {
     setLoading(true);
-    setError(null);
     try {
       const response = await getAllFullTimeJobs();
-      // Ensure we always have an array
-      const rawJobs = response?.data || response || [];
-      const jobsArray = Array.isArray(rawJobs) ? rawJobs : [];
-      
-      const cleanJobs = jobsArray
-        .map(normalizeJobData)
-        .filter(j => j !== null);
-
-      setAllJobs(cleanJobs);
+      const jobsArray = Array.isArray(response?.data) ? response.data : [];
+      setAllJobs(jobsArray.map(normalizeJobData).filter(Boolean));
     } catch (err) {
       setError(err.message || "Something went wrong");
     } finally {
@@ -910,60 +84,170 @@ const FullTimeJobManagement = () => {
 
   useEffect(() => { fetchJobs(); }, [fetchJobs]);
 
-  const handleEditClick = (job) => {
-    setSelectedJob(job);
-    setIsModalOpen(true);
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewJobForm(prev => ({ ...prev, [name]: value }));
   };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setNewJobForm(prev => ({ ...prev, images: file }));
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleAutoFetchLocation = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser");
+      return;
+    }
+    setIsFetchingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        setNewJobForm(prev => ({
+          ...prev,
+          lat: latitude.toFixed(6),
+          lng: longitude.toFixed(6)
+        }));
+
+        try {
+          const response = await fetch(
+            `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${GOOGLE_MAPS_API_KEY}`
+          );
+          const data = await response.json();
+
+          if (data.status === "OK" && data.results[0]) {
+            setNewJobForm(prev => ({ ...prev, address: data.results[0].formatted_address }));
+          } else {
+            alert("Coordinates fetched! Please enter address manually.");
+          }
+        } catch (error) {
+          alert("Failed to get address. Please type it manually.");
+        } finally {
+          setIsFetchingLocation(false);
+        }
+      },
+      (error) => {
+        setIsFetchingLocation(false);
+        alert("Location access denied. Please enable GPS.");
+      },
+      { enableHighAccuracy: true, timeout: 5000 }
+    );
+  };
+
+  const handleNewJobSubmit = async (e) => {
+    e.preventDefault();
+    if (!newJobForm.userId) {
+      alert("Please select a posting user");
+      return;
+    }
+
+    setIsSubmitting(true);
+    const formData = new FormData();
+
+    if (newJobForm.images) {
+      formData.append('images', newJobForm.images);
+    }
+
+    formData.append('title', newJobForm.title);
+    formData.append('description', newJobForm.description);
+    formData.append('companyName', newJobForm.companyName);
+    formData.append('details', newJobForm.details); // Adding Details here
+    formData.append('salaryRange', JSON.stringify({ min: Number(newJobForm.salaryMin), max: Number(newJobForm.salaryMax) }));
+    formData.append('jobRole', newJobForm.jobRole);
+    formData.append('vacancies', newJobForm.vacancies);
+    formData.append('whatsappNumber', newJobForm.whatsappNumber);
+    formData.append('experience', newJobForm.experience);
+    formData.append('qualification', newJobForm.qualification);
+    formData.append('location[coordinates][0]', newJobForm.lng);
+    formData.append('location[coordinates][1]', newJobForm.lat);
+    formData.append('location[address]', newJobForm.address);
+    formData.append('userId', newJobForm.userId);
+
+    try {
+      await createNewFullTimeJob(formData);
+      await fetchJobs();
+      setIsAddModalOpen(false);
+      setNewJobForm(initialNewJobForm);
+      setImagePreview(null);
+      setIsSuccessModalOpen(true);
+    } catch (err) {
+      alert(err.message || "Failed to post job");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const InputField = ({ icon: Icon, label, ...props }) => (
+    <div className="space-y-1">
+      <label className="text-[11px] font-bold text-slate-500 uppercase flex items-center gap-1 ml-1">
+        {Icon && <Icon size={12} />} {label}
+      </label>
+      <input
+        {...props}
+        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+      />
+    </div>
+  );
 
   return (
     <div className="p-4 md:p-8 bg-[#f8fafc] min-h-screen font-sans">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold text-slate-800">Full-time Jobs</h1>
-        <button onClick={() => { setNewJobForm(initialNewJobForm); setIsAddModalOpen(true); }} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold">+ Post New Job</button>
+        <div>
+          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Job Board</h1>
+          <p className="text-slate-500 text-sm">Manage and post full-time opportunities</p>
+        </div>
+        <button
+          onClick={() => { setNewJobForm(initialNewJobForm); setIsAddModalOpen(true); }}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-blue-200 transition-all active:scale-95"
+        >
+          <Plus size={20} /> Post New Job
+        </button>
       </div>
 
       {loading ? (
-        <div className="flex justify-center p-20"><Loader2 className="animate-spin text-blue-600" size={40} /></div>
-      ) : error ? (
-        <div className="bg-red-50 p-10 text-center rounded-xl border border-red-200">
-          <AlertCircle className="mx-auto text-red-500 mb-2" />
-          <p className="text-red-700 font-bold">{error}</p>
-          <button onClick={fetchJobs} className="mt-4 bg-red-600 text-white px-4 py-1 rounded">Try Again</button>
+        <div className="flex flex-col items-center justify-center p-20">
+          <Loader2 className="animate-spin text-blue-600 mb-4" size={48} />
+          <p className="text-slate-500 font-medium">Loading records...</p>
         </div>
       ) : (
-        <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
           <table className="w-full text-left">
-            <thead className="bg-slate-50 border-b">
+            <thead className="bg-slate-50 border-b border-slate-100">
               <tr>
-                <th className="p-4 text-xs font-bold text-slate-400 uppercase">Job Title</th>
-                <th className="p-4 text-xs font-bold text-slate-400 uppercase">Role</th>
-                <th className="p-4 text-xs font-bold text-slate-400 uppercase">Salary</th>
+                <th className="p-4 text-xs font-bold text-slate-400 uppercase">Role & Company</th>
+                <th className="p-4 text-xs font-bold text-slate-400 uppercase">Category</th>
                 <th className="p-4 text-xs font-bold text-slate-400 uppercase text-center">Featured</th>
                 <th className="p-4 text-xs font-bold text-slate-400 uppercase text-center">Status</th>
-                <th className="p-4 text-xs font-bold text-slate-400 uppercase text-center">Actions</th>
+                <th className="p-4 text-xs font-bold text-slate-400 uppercase text-right">Action</th>
               </tr>
             </thead>
-            <tbody>
-              {/* CHECK IF NO JOBS */}
+            <tbody className="divide-y divide-slate-50">
               {allJobs.length === 0 ? (
-                <tr>
-                  <td colSpan="6" className="p-20 text-center">
-                    <AlertCircle className="mx-auto text-slate-300 mb-2" size={40} />
-                    <p className="text-slate-500 font-bold text-lg">No records available.</p>
-                  </td>
-                </tr>
+                <tr><td colSpan="5" className="p-20 text-center text-slate-400">No jobs found.</td></tr>
               ) : (
                 allJobs.map((job) => (
-                  <tr key={job._id} className="border-b hover:bg-slate-50">
+                  <tr key={job._id} className="hover:bg-slate-50/50 transition-colors">
                     <td className="p-4">
-                      <p className="font-bold text-slate-800">{job.title}</p>
-                      <p className="text-xs text-slate-400">{job.companyName}</p>
+                      <div className="font-bold text-slate-800">{job.title}</div>
+                      <div className="text-xs text-slate-400 flex items-center gap-1"><Briefcase size={12} /> {job.companyName}</div>
                     </td>
-                    <td className="p-4"><span className="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs font-bold">{job.jobRole}</span></td>
-                    <td className="p-4 text-sm font-bold">₹{job.budget.min} - ₹{job.budget.max}</td>
-                    <td className="p-4 text-center"><Star size={18} fill={job.isFeatured ? "#fbbf24" : "none"} color={job.isFeatured ? "#fbbf24" : "#cbd5e1"} /></td>
-                    <td className="p-4 text-center">{job.isActive ? <span className="text-emerald-500 text-xs font-bold">ACTIVE</span> : <span className="text-red-400 text-xs font-bold">INACTIVE</span>}</td>
-                    <td className="p-4 text-center"><button onClick={() => handleEditClick(job)} className="text-amber-600 border px-3 py-1 rounded text-xs font-bold">Details</button></td>
+                    <td className="p-4">
+                      <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-[10px] font-bold tracking-wider">{job.jobRole}</span>
+                    </td>
+                    <td className="p-4 text-center">
+                      <Star size={18} className="mx-auto" fill={job.isFeatured ? "#fbbf24" : "none"} color={job.isFeatured ? "#fbbf24" : "#cbd5e1"} />
+                    </td>
+                    <td className="p-4 text-center">
+                      <span className={`text-[10px] font-black px-2 py-0.5 rounded ${job.isActive ? 'text-emerald-500 bg-emerald-50' : 'text-red-400 bg-red-50'}`}>
+                        {job.isActive ? 'ACTIVE' : 'INACTIVE'}
+                      </span>
+                    </td>
+                    <td className="p-4 text-right">
+                      <button className="text-blue-600 font-bold text-xs hover:underline">View Details</button>
+                    </td>
                   </tr>
                 ))
               )}
@@ -974,52 +258,178 @@ const FullTimeJobManagement = () => {
 
       {/* --- ADD JOB MODAL --- */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-[999] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
-            <div className="p-4 border-b flex justify-between items-center">
-              <h2 className="font-bold text-lg">Post New Job</h2>
-              <X onClick={() => setIsAddModalOpen(false)} className="cursor-pointer text-slate-400" />
+        <div className="fixed inset-0 z-[999] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl w-full max-w-4xl max-h-[92vh] overflow-hidden flex flex-col shadow-2xl">
+            <div className="p-6 border-b flex justify-between items-center bg-slate-50/50">
+              <h2 className="font-black text-2xl text-slate-800 flex items-center gap-2">
+                <Layout className="text-blue-600" /> Create Full-Time Listing
+              </h2>
+              <button onClick={() => setIsAddModalOpen(false)} className="p-2 hover:bg-slate-200 rounded-full"><X size={24} /></button>
             </div>
-            <form onSubmit={handleNewJobSubmit} className="p-6 overflow-y-auto space-y-4">
-              <div className="relative">
-                <label className="text-[10px] font-bold uppercase">Select User</label>
-                <div onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)} className="border p-2 rounded flex justify-between items-center cursor-pointer">
-                  <span>{newJobForm.userName || "Choose User"}</span>
-                  <ChevronDown size={16} />
+
+            <form onSubmit={handleNewJobSubmit} className="p-8 overflow-y-auto custom-scrollbar space-y-6">
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="relative">
+                  <label className="text-[11px] font-bold text-slate-500 uppercase flex items-center gap-1 mb-1">
+                    <Users size={12} /> Posting User ID
+                  </label>
+                  <div
+                    onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
+                    className="border border-slate-200 bg-slate-50 p-2.5 rounded-lg flex justify-between items-center cursor-pointer text-sm"
+                  >
+                    <span>{usersList.find(u => u._id === newJobForm.userId)?.fullName || "Select User"}</span>
+                    <ChevronDown size={16} />
+                  </div>
+                  {isUserDropdownOpen && (
+                    <div className="absolute z-[100] w-full bg-white border border-slate-100 mt-1 rounded-xl shadow-2xl max-h-48 overflow-y-auto">
+                      {usersList.map((u) => (
+                        <div key={u._id} onClick={() => { setNewJobForm({ ...newJobForm, userId: u._id }); setIsUserDropdownOpen(false); }} className="p-3 hover:bg-blue-50 cursor-pointer border-b text-xs flex flex-col">
+                          <span className="font-bold">{u.fullName}</span>
+                          <span className="text-slate-400">{u._id}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-                {isUserDropdownOpen && (
-                  <div className="absolute z-50 w-full bg-white border mt-1 rounded shadow-lg max-h-40 overflow-y-auto">
-                    {usersList.map((u, i) => (
-                      <div key={i} onClick={() => { setNewJobForm({...newJobForm, userName: u.fullName || u.userName}); setIsUserDropdownOpen(false); }} className="p-2 hover:bg-blue-50 cursor-pointer border-b text-sm">
-                        {u.fullName || u.userName || "Unnamed User"}
-                      </div>
-                    ))}
+                <InputField label="Company Name" name="companyName" icon={Briefcase} placeholder="Tech Solutions Ltd" required value={newJobForm.companyName} onChange={handleInputChange} />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="md:col-span-2">
+                  <InputField label="Job Title" name="title" icon={Info} placeholder="Senior Software Engineer" required value={newJobForm.title} onChange={handleInputChange} />
+                </div>
+                <InputField label="Job Role" name="jobRole" icon={Layout} placeholder="Developer" required value={newJobForm.jobRole} onChange={handleInputChange} />
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <InputField label="Min Salary" name="salaryMin" icon={IndianRupee} type="number" required value={newJobForm.salaryMin} onChange={handleInputChange} />
+                <InputField label="Max Salary" name="salaryMax" icon={IndianRupee} type="number" required value={newJobForm.salaryMax} onChange={handleInputChange} />
+                <InputField label="Experience" name="experience" icon={Briefcase} placeholder="3-5 Years" required value={newJobForm.experience} onChange={handleInputChange} />
+                <InputField label="Vacancies" name="vacancies" icon={Users} type="number" placeholder="5" required value={newJobForm.vacancies} onChange={handleInputChange} />
+              </div>
+
+              {/* LOCATION SECTION */}
+              <div className="bg-blue-50/50 p-6 rounded-2xl border border-blue-100 space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-xs font-black text-blue-600 uppercase tracking-widest flex items-center gap-2">
+                    <MapPin size={14} /> Location Details
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={handleAutoFetchLocation}
+                    disabled={isFetchingLocation}
+                    className="flex items-center gap-1.5 bg-white border border-blue-200 text-blue-600 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-blue-100 transition-all active:scale-95 disabled:opacity-50 shadow-sm"
+                  >
+                    {isFetchingLocation ? <Loader2 size={14} className="animate-spin" /> : <Navigation size={14} />}
+                    {isFetchingLocation ? "Fetching..." : "Auto-fetch (No API Key needed)"}
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="md:col-span-2">
+                    <InputField label="Full Address" name="address" placeholder="New Delhi, India" required value={newJobForm.address} onChange={handleInputChange} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <InputField label="Longitude" name="lng" required value={newJobForm.lng} onChange={handleInputChange} />
+                    <InputField label="Latitude" name="lat" required value={newJobForm.lat} onChange={handleInputChange} />
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <InputField label="Qualification" name="qualification" icon={GraduationCap} placeholder="B.Tech / MCA" required value={newJobForm.qualification} onChange={handleInputChange} />
+                <InputField label="WhatsApp Number" name="whatsappNumber" icon={Phone} placeholder="9123456789" required value={newJobForm.whatsappNumber} onChange={handleInputChange} />
+              </div>
+
+              {/* DESCRIPTION & DETAILS (Both from image added here) */}
+              <div className="grid grid-cols-1 gap-6">
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-slate-500 uppercase flex items-center gap-1">
+                    <Info size={12} /> Short Description
+                  </label>
+                  <textarea
+                    name="description"
+                    placeholder="Full-time role for MERN stack developer."
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm h-20 outline-none focus:ring-2 focus:ring-blue-500"
+                    required value={newJobForm.description} onChange={handleInputChange}
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-slate-500 uppercase flex items-center gap-1">
+                    <FileText size={12} /> Full Role Details (Benefits, Timing, etc.)
+                  </label>
+                  <textarea
+                    name="details"
+                    placeholder="Full details about the role, benefits, and timing."
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm h-32 outline-none focus:ring-2 focus:ring-blue-500"
+                    required value={newJobForm.details} onChange={handleInputChange}
+                  />
+                </div>
+              </div>
+
+              {/* IMAGE UPLOAD */}
+              <div
+                onClick={() => fileInputRef.current.click()}
+                className="border-2 border-dashed border-slate-200 rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 transition-colors"
+              >
+                <input type="file" hidden ref={fileInputRef} onChange={handleFileChange} accept="image/*" />
+                {imagePreview ? (
+                  <div className="relative group">
+                    <img src={imagePreview} alt="Preview" className="h-40 object-cover rounded-xl" />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded-xl transition-opacity">
+                      <p className="text-white text-xs font-bold">Change Image</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center">
+                    <div className="bg-slate-100 p-3 rounded-full inline-block mb-2 text-slate-400">
+                      <Upload size={24} />
+                    </div>
+                    <p className="text-sm font-bold text-slate-500">Upload Job Banner (Images)</p>
+                    <p className="text-[10px] text-slate-400 uppercase tracking-wider">JPG, PNG up to 5MB</p>
                   </div>
                 )}
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <input placeholder="Job Title" name="title" className="border p-2 rounded w-full" onChange={handleNewJobChange} required />
-                <input placeholder="Job Role" name="jobRole" className="border p-2 rounded w-full" onChange={handleNewJobChange} required />
-              </div>
-              <textarea placeholder="Description" name="jobDescription" className="border p-2 rounded w-full h-32" onChange={handleNewJobChange} required />
-              <button type="submit" disabled={isSubmitting} className="w-full bg-blue-600 text-white font-bold py-3 rounded-lg">
-                {isSubmitting ? "Posting..." : "Post Now"}
+
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full bg-slate-900 text-white font-black py-4 rounded-2xl transition-all hover:bg-slate-800 flex items-center justify-center gap-2 disabled:opacity-50 shadow-xl"
+              >
+                {isSubmitting ? <Loader2 className="animate-spin" /> : <CheckCircle size={20} />}
+                {isSubmitting ? "PUBLISHING..." : "PUBLISH JOB NOW"}
               </button>
             </form>
           </div>
         </div>
       )}
 
-      {/* --- SUCCESS POPUP --- */}
+      {/* --- SUCCESS MODAL --- */}
       {isSuccessModalOpen && (
-        <div className="fixed inset-0 z-[1000] bg-slate-900/50 flex items-center justify-center">
-          <div className="bg-white p-8 rounded-2xl text-center shadow-xl">
-            <CheckCircle className="text-emerald-500 mx-auto mb-4" size={50} />
-            <h2 className="text-xl font-bold">Job Posted Successfully!</h2>
-            <button onClick={() => setIsSuccessModalOpen(false)} className="mt-6 bg-slate-800 text-white px-8 py-2 rounded-lg font-bold">Close</button>
+        <div className="fixed inset-0 z-[1000] bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white p-10 rounded-[32px] text-center shadow-2xl max-w-xs w-full animate-in zoom-in-95 duration-200">
+            <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6">
+              <CheckCircle className="text-emerald-500" size={48} />
+            </div>
+            <h2 className="text-2xl font-black text-slate-900 mb-2">Live Now!</h2>
+            <p className="text-slate-500 text-sm mb-8">Your job listing has been successfully posted.</p>
+            <button
+              onClick={() => setIsSuccessModalOpen(false)}
+              className="w-full bg-slate-900 text-white py-3.5 rounded-xl font-bold hover:shadow-lg transition-all"
+            >
+              Great, thanks!
+            </button>
           </div>
         </div>
       )}
+
+      <style>{`
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+      `}</style>
     </div>
   );
 };

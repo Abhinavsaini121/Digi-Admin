@@ -57,11 +57,20 @@ export const getJobById = async (id) => {
 // --- UPDATE JOB (Part-Time) ---
 export const updateJob = async (id, jobData) => {
     try {
-        // Payload mein adminId add kar sakte hain agar backend require karta hai
         const adminId = localStorage.getItem("id");
-        const finalData = { ...jobData, updatedBy: adminId };
+
+       
+        let dataToSend;
+        if (jobData instanceof FormData) {
+            dataToSend = jobData;
+         
+            if (adminId) dataToSend.append("updatedBy", adminId);
+        } else {
+            dataToSend = { ...jobData, updatedBy: adminId };
+        }
         
-        const response = await apiClient.put(`/admin/part-time/job/update/${id}`, finalData);
+        
+        const response = await apiClient.put(`/admin/part-time/job/update/${id}`, dataToSend);
         return response.data;
     } catch (error) {
         throw error.response ? error.response.data : new Error("Network Error");
@@ -81,11 +90,28 @@ export const deleteJob = async (id) => {
 export const createNewJob = async (jobData) => {
     try {
         const adminId = localStorage.getItem("id");
-        const finalData = { ...jobData, createdBy: adminId };
 
-        const response = await apiClient.post(`/admin/part-time/job/create`, finalData);
-        return response.data;
+      
+        if (jobData instanceof FormData) {
+            
+            if (adminId) {
+                jobData.append("createdBy", adminId);
+            }
+
+            const response = await apiClient.post(`/admin/part-time/job/create`, jobData, {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+            });
+            return response.data;
+        } else {
+           
+            const finalData = { ...jobData, createdBy: adminId };
+            const response = await apiClient.post(`/admin/part-time/job/create`, finalData);
+            return response.data;
+        }
     } catch (error) {
+        console.error("API Error Details:", error);
         throw error.response ? error.response.data : new Error("Network Error");
     }
 };

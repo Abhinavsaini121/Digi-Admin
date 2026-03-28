@@ -93,10 +93,13 @@ const menuItems = [
     route: "/business",
   },
 
-  {
+ {
     label: "Categories",
     icon: Layers,
-     route: "/category" ,
+    children: [
+      { label: "All Category", route: "/category" },
+      { label: "Subcategory", route: "/subcategory" },
+    ],
   },
   {
     label: "Content Moderation",

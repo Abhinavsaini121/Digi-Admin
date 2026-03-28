@@ -15,6 +15,7 @@ import Marketplace from "./pages/Marketplace/Marketplace";
 import Credit from "./pages/Credits-Management/Credits";
 // import SosAlert from "./pages/Safety/SOS Alert";
 import Category from "./pages/Categories/Categories";
+import SubCategory from "./pages/Categories/SubCategories";
 import Notification from "./pages/Notifications/Notification";
 import ShopManage from "./pages/ShopManagement/shopmanage";
 import Moderation from "./pages/ModerationBlocking/Moderationblocking";
@@ -54,6 +55,7 @@ function App() {
         {/* <Route path="/sosAlert" element={< SosAlert />} /> */}
         <Route path="/credit" element={<Credit />} />
         <Route path="/category" element={<Category />} />
+        <Route path="/subcategory" element={<SubCategory />} />
         <Route path="/notifications" element={<Notification />} />
         <Route path="/moderationblocking" element={<Moderation />} />
         <Route path="/systemsetting" element={<Setting />} />

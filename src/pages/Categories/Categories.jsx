@@ -1,45 +1,45 @@
 
 
 // import React, { useState, useEffect } from 'react';
-// import { 
-//   Layers, GitMerge, Edit3, Trash2, PlusCircle, 
+// import {
+//   Layers, GitMerge, Edit3, Trash2, PlusCircle,
 //   Search, Power, X, Move, GripVertical, CheckCircle, ShieldAlert
 // } from 'lucide-react';
 // // Import new and existing API functions
-// import { addCategory, getAllCategories, deleteCategory } from "../../auth/adminLogin"; // <-- deleteCategory is added
+// import { addCategory, getAllCategories, deleteCategory } from "../../auth/adminLogin";
 
 // // Component: Simple Toast Simulation
 // const Toast = ({ message, type, onClose }) => {
-//     const color = type === 'success' ? 'bg-green-500' : 'bg-red-500';
-//     return (
-//         <div className={`fixed bottom-5 right-5 ${color} text-white p-4 rounded-lg shadow-xl z-[9999] transition-opacity duration-300 animate-in fade-in slide-in-from-right-4`}>
-//             <div className="flex items-center gap-2">
-//                 {type === 'success' ? <CheckCircle size={20} /> : <ShieldAlert size={20} />}
-//                 <span className="font-semibold text-sm">{message}</span>
-//             </div>
-//             <button onClick={onClose} className="absolute top-1 right-1 text-white/80 hover:text-white">
-//                 <X size={16} />
-//             </button>
-//         </div>
-//     );
+//   const color = type === 'success' ? 'bg-green-500' : 'bg-red-500';
+//   return (
+//     <div className={`fixed bottom-5 right-5 ${color} text-white p-4 rounded-lg shadow-xl z-[9999] transition-opacity duration-300 animate-in fade-in slide-in-from-right-4`}>
+//       <div className="flex items-center gap-2">
+//         {type === 'success' ? <CheckCircle size={20} /> : <ShieldAlert size={20} />}
+//         <span className="font-semibold text-sm">{message}</span>
+//       </div>
+//       <button onClick={onClose} className="absolute top-1 right-1 text-white/80 hover:text-white">
+//         <X size={16} />
+//       </button>
+//     </div>
+//   );
 // };
 
 // // Component to display image and name
 // const ImageCell = ({ name, imageUrl }) => (
-//     <div className="flex items-center gap-3">
-//         {imageUrl ? (
-//             <img 
-//                 src={imageUrl} 
-//                 alt={name} 
-//                 className="w-10 h-10 object-cover rounded-md border border-gray-200"
-//             />
-//         ) : (
-//             <div className="w-10 h-10 bg-gray-100 text-gray-400 flex items-center justify-center rounded-md">
-//                 <Layers size={18} />
-//             </div>
-//         )}
-//         <span className="font-bold text-slate-800">{name}</span>
-//     </div>
+//   <div className="flex items-center gap-3">
+//     {imageUrl ? (
+//       <img
+//         src={imageUrl}
+//         alt={name}
+//         className="w-10 h-10 object-cover rounded-md border border-gray-200"
+//       />
+//     ) : (
+//       <div className="w-10 h-10 bg-gray-100 text-gray-400 flex items-center justify-center rounded-md">
+//         <Layers size={18} />
+//       </div>
+//     )}
+//     <span className="font-bold text-slate-800">{name}</span>
+//   </div>
 // );
 
 
@@ -56,34 +56,38 @@
 //   const [modalConfig, setModalConfig] = useState({ isOpen: false, type: '', data: null });
 //   const [toastConfig, setToastConfig] = useState({ message: '', type: '', show: false });
 
-//   // --- DATA FETCHING EFFECT ---
+//   // --- DATA FETCHING FUNCTION ---
 //   const fetchCategories = async () => {
 //     setIsLoading(true);
 //     try {
-//         const data = await getAllCategories();
-//         setCategoriesData(data); 
+//       const data = await getAllCategories();
+//       setCategoriesData(data.data);
 //     } catch (err) {
-//         setToastConfig({ message: `Failed to fetch categories: ${err.message || 'Error'}`, type: 'error', show: true });
+//       // More robust error message extraction
+//       const errorMessage = err.response?.data?.message || err.message || 'Error';
+//       setToastConfig({ message: `Failed to fetch categories: ${errorMessage}`, type: 'error', show: true });
 //     } finally {
-//         setIsLoading(false);
+//       setIsLoading(false);
 //     }
 //   };
 
+//   // --- DATA FETCHING EFFECT (FIXED) ---
 //   useEffect(() => {
+//     // FIX: Calling fetchCategories on initial component mount
 //     fetchCategories();
-//     // eslint-disable-next-line react-hooks/exhaustive-deps
-//   }, [/* activeTab */]); // Re-fetch on tab change if data is tab-specific
+//   }, []); // Run only once on component mount
 
 //   // --- HELPERS (rest of helpers remain the same) ---
 //   const getCurrentData = () => {
+//     // Note: If the backend supports it, you might filter 'categoriesData' here based on 'activeTab'.
 //     return categoriesData.map(item => ({
-//         id: item._id,
-//         name: item.name,
-//         image: item.image,
-//         status: item.status ? 'Active' : 'Disabled', // Convert boolean status to string
-//         createdAt: new Date(item.createdAt).toLocaleDateString(),
-//         // Mock sub-categories for displaying in the table structure (since API lacks it)
-//         subs: ['Sub 1', 'Sub 2'], 
+//       id: item._id,
+//       name: item.name,
+//       image: item.image,
+//       status: item.status ? 'Active' : 'Disabled', // Convert boolean status to string
+//       createdAt: new Date(item.createdAt).toLocaleDateString(),
+//       // Mock sub-categories for displaying in the table structure (since API lacks it)
+//       subs: ['Sub 1', 'Sub 2'],
 //     }));
 //   };
 
@@ -96,8 +100,8 @@
 //   // --- MODAL HANDLERS (remain the same) ---
 //   const openModal = (type, data = null) => {
 //     if (type === 'add') {
-//         setCategoryNameState('');
-//         setImageFileState(null);
+//       setCategoryNameState('');
+//       setImageFileState(null);
 //     }
 //     setModalConfig({ isOpen: true, type, data });
 //   };
@@ -111,67 +115,67 @@
 
 //     // --- ADD CATEGORY LOGIC (remains the same) ---
 //     if (modalConfig.type === 'add') {
-//         if (!categoryNameState.trim() || !imageFileState) {
-//             setToastConfig({ message: "Name and Image are required.", type: 'error', show: true });
-//             return;
-//         }
+//       if (!categoryNameState.trim() || !imageFileState) {
+//         setToastConfig({ message: "Name and Image are required.", type: 'error', show: true });
+//         return;
+//       }
 
-//         try {
-//             const formData = new FormData();
-//             formData.append('name', categoryNameState); 
-//             formData.append('image', imageFileState);   
+//       try {
+//         const formData = new FormData();
+//         formData.append('name', categoryNameState);
+//         formData.append('image', imageFileState);
 
-//             await addCategory(formData); 
+//         await addCategory(formData);
 
-//             setToastConfig({ message: "Category added successfully!", type: 'success', show: true });
+//         setToastConfig({ message: "Category added successfully!", type: 'success', show: true });
 
-//             setCategoryNameState('');
-//             setImageFileState(null);
-//             closeModal();
-//             fetchCategories(); // Refresh list
+//         setCategoryNameState('');
+//         setImageFileState(null);
+//         closeModal();
+//         fetchCategories(); // Refresh list
 
-//         } catch (err) {
-//             setToastConfig({ message: `Error adding category: ${err.message || 'API Error'}`, type: 'error', show: true });
-//         }
-//         return; // Exit function after handling add
-//     } 
+//       } catch (err) {
+//         const errorMessage = err.response?.data?.message || err.message || 'API Error';
+//         setToastConfig({ message: `Error adding category: ${errorMessage}`, type: 'error', show: true });
+//       }
+//       return; // Exit function after handling add
+//     }
 
 //     // --- DELETE CATEGORY LOGIC (NEW) ---
 //     if (modalConfig.type === 'delete') {
-//         const categoryId = modalConfig.data?.id; 
+//       const categoryId = modalConfig.data?.id;
 
-//         if (!categoryId) {
-//             setToastConfig({ message: "Category ID is missing for deletion.", type: 'error', show: true });
-//             return;
-//         }
+//       if (!categoryId) {
+//         setToastConfig({ message: "Category ID is missing for deletion.", type: 'error', show: true });
+//         return;
+//       }
 
-//         try {
-//             await deleteCategory(categoryId); // Call the new API function
+//       try {
+//         await deleteCategory(categoryId); // Call the new API function
 
-//             setToastConfig({ message: "Category deleted successfully!", type: 'success', show: true });
+//         setToastConfig({ message: "Category deleted successfully!", type: 'success', show: true });
 
-//             closeModal();
-//             fetchCategories(); // Refresh list after deletion
-
-//         } catch (err) {
-//             setToastConfig({ message: `Error deleting category: ${err.message || 'API Error'}`, type: 'error', show: true });
-//         }
-//         return; // Exit function after handling delete
-//     }
-
-//     // --- PLACEHOLDER LOGIC FOR OTHER MODAL TYPES (remains the same) ---
-//     else {
-//         // Placeholder for edit, status, reorder save actions
-//         console.log(`Handling Save Changes for: ${modalConfig.type}`);
 //         closeModal();
-//         setToastConfig({ message: `${getTabLabel()} ${modalConfig.type} updated successfully (Simulated).`, type: 'success', show: true });
+//         fetchCategories(); // Refresh list after deletion
+
+//       } catch (err) {
+//         const errorMessage = err.response?.data?.message || err.message || 'API Error';
+//         setToastConfig({ message: `Error deleting category: ${errorMessage}`, type: 'error', show: true });
+//       }
+//       return; // Exit function after handling delete
 //     }
-// };
+//     else {
+//       // Placeholder for edit, status, reorder save actions
+//       console.log(`Handling Save Changes for: ${modalConfig.type}`);
+//       closeModal();
+//       setToastConfig({ message: `${getTabLabel()} ${modalConfig.type} updated successfully (Simulated).`, type: 'success', show: true });
+//     }
+//   };
 
 //   // --- COMPONENT: Action Button (unchanged) ---
 //   const ActionBtn = ({ icon: Icon, color, onClick, tooltip }) => (
-//     <button 
-//       onClick={onClick} 
+//     <button
+//       onClick={onClick}
 //       title={tooltip}
 //       className={`p-2 rounded-lg border hover:bg-gray-50 transition-colors ${color} bg-white border-gray-200`}
 //     >
@@ -184,12 +188,11 @@
 //     const isActive = status === 'Active' || status === true;
 //     const label = isActive ? 'Active' : 'Disabled';
 //     return (
-//         <span className={`px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 w-fit ${
-//           isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+//       <span className={`px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 w-fit ${isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
 //         }`}>
-//           <span className={`w-2 h-2 rounded-full ${isActive ? 'bg-green-500' : 'bg-gray-400'}`}></span>
-//           {label}
-//         </span>
+//         <span className={`w-2 h-2 rounded-full ${isActive ? 'bg-green-500' : 'bg-gray-400'}`}></span>
+//         {label}
+//       </span>
 //     );
 //   };
 
@@ -212,11 +215,10 @@
 //           <button
 //             key={tab.id}
 //             onClick={() => setActiveTab(tab.id)}
-//             className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
-//               activeTab === tab.id 
-//                 ? 'bg-slate-900 text-white shadow-md' 
+//             className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${activeTab === tab.id
+//                 ? 'bg-slate-900 text-white shadow-md'
 //                 : 'bg-white text-slate-600 hover:bg-slate-100 border border-gray-200'
-//             }`}
+//               }`}
 //           >
 //             {tab.label}
 //           </button>
@@ -230,25 +232,25 @@
 //         <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-white">
 //           <div className="relative w-80">
 //             <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
-//             <input 
-//               type="text" 
+//             <input
+//               type="text"
 //               placeholder={`Search ${getTabLabel()}...`}
 //               className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-100 text-sm"
 //             />
 //           </div>
 //           <div className="flex gap-2">
-//              <button 
-//                 onClick={() => openModal('reorder', getCurrentData())}
-//                 className="flex items-center gap-2 px-4 py-2 text-sm border border-gray-200 rounded-lg text-slate-700 hover:bg-gray-50 font-medium"
-//              >
-//                 <Move size={16} /> Reorder List
-//              </button>
-//              <button 
-//                 onClick={() => openModal('add')}
-//                 className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition shadow-sm"
-//              >
-//                <PlusCircle size={16} /> Add Category
-//              </button>
+//             <button
+//               onClick={() => openModal('reorder', getCurrentData())}
+//               className="flex items-center gap-2 px-4 py-2 text-sm border border-gray-200 rounded-lg text-slate-700 hover:bg-gray-50 font-medium"
+//             >
+//               <Move size={16} /> Reorder List
+//             </button>
+//             <button
+//               onClick={() => openModal('add')}
+//               className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition shadow-sm"
+//             >
+//               <PlusCircle size={16} /> Add Category
+//             </button>
 //           </div>
 //         </div>
 
@@ -265,13 +267,13 @@
 //           </thead>
 //           <tbody>
 //             {isLoading ? (
-//                 <tr>
-//                     <td colSpan={5} className="p-4 text-center text-gray-500">Loading categories...</td>
-//                 </tr>
+//               <tr>
+//                 <td colSpan={5} className="p-4 text-center text-gray-500">Loading categories...</td>
+//               </tr>
 //             ) : getCurrentData().length === 0 ? (
-//                  <tr>
-//                     <td colSpan={5} className="p-4 text-center text-gray-500">No categories found.</td>
-//                 </tr>
+//               <tr>
+//                 <td colSpan={5} className="p-4 text-center text-gray-500">No categories found.</td>
+//               </tr>
 //             ) : (
 //               getCurrentData().map((item) => (
 //                 <tr key={item.id} className="border-b border-gray-50 hover:bg-blue-50/30 transition-colors group">
@@ -307,11 +309,11 @@
 //             <div className="flex justify-between items-start p-6 pb-0">
 //               <div>
 //                 <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-//                   {modalConfig.type === 'add' && <><PlusCircle className="text-blue-500" size={20}/> Add New Category</>}
-//                   {modalConfig.type === 'edit' && <><Edit3 className="text-amber-500" size={20}/> Edit Category</>}
-//                   {modalConfig.type === 'reorder' && <><Move className="text-slate-500" size={20}/> Reorder Categories</>}
-//                   {modalConfig.type === 'delete' && <><ShieldAlert className="text-red-500" size={20}/> Delete Category</>}
-//                   {modalConfig.type === 'status' && <><Power className="text-green-500" size={20}/> Update Status</>}
+//                   {modalConfig.type === 'add' && <><PlusCircle className="text-blue-500" size={20} /> Add New Category</>}
+//                   {modalConfig.type === 'edit' && <><Edit3 className="text-amber-500" size={20} /> Edit Category</>}
+//                   {modalConfig.type === 'reorder' && <><Move className="text-slate-500" size={20} /> Reorder Categories</>}
+//                   {modalConfig.type === 'delete' && <><ShieldAlert className="text-red-500" size={20} /> Delete Category</>}
+//                   {modalConfig.type === 'status' && <><Power className="text-green-500" size={20} /> Update Status</>}
 //                 </h2>
 //                 <p className="text-xs text-gray-500 mt-1 ml-7">
 //                   {getTabLabel()} Section
@@ -330,8 +332,8 @@
 //                 <>
 //                   <div>
 //                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">Category Name (Main)</label>
-//                     <input 
-//                       type="text" 
+//                     <input
+//                       type="text"
 //                       value={modalConfig.type === 'add' ? categoryNameState : undefined}
 //                       onChange={(e) => modalConfig.type === 'add' && setCategoryNameState(e.target.value)}
 //                       defaultValue={modalConfig.type === 'edit' ? modalConfig.data?.name || '' : undefined}
@@ -342,18 +344,18 @@
 
 //                   {/* Category Image Input */}
 //                   {modalConfig.type === 'add' && (
-//                       <div>
-//                           <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">Category Image</label>
-//                           <input
-//                               type="file"
-//                               accept="image/*"
-//                               onChange={(e) => setImageFileState(e.target.files[0])}
-//                               className="w-full text-sm text-slate-700 border border-gray-300 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition duration-150 ease-in-out"
-//                           />
-//                           {imageFileState && (
-//                               <p className="text-[10px] text-gray-400 mt-1">Selected: {imageFileState.name}</p>
-//                           )}
-//                       </div>
+//                     <div>
+//                       <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">Category Image</label>
+//                       <input
+//                         type="file"
+//                         accept="image/*"
+//                         onChange={(e) => setImageFileState(e.target.files[0])}
+//                         className="w-full text-sm text-slate-700 border border-gray-300 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition duration-150 ease-in-out"
+//                       />
+//                       {imageFileState && (
+//                         <p className="text-[10px] text-gray-400 mt-1">Selected: {imageFileState.name}</p>
+//                       )}
+//                     </div>
 //                   )}
 
 //                   <div className="flex items-center gap-2 mt-2">
@@ -366,15 +368,15 @@
 //               {/* --- REORDER LIST UI (unchanged) --- */}
 //               {modalConfig.type === 'reorder' && (
 //                 <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
-//                    <p className="text-sm text-gray-500 mb-3">Drag items to reorder (Simulation)</p>
-//                    {(modalConfig.data || []).map((item, idx) => (
-//                      <div key={item.id} className="flex items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg cursor-move hover:bg-gray-100 transition">
-//                         <span className="text-gray-400 font-mono text-xs">{idx + 1}</span>
-//                         <GripVertical size={16} className="text-gray-400" />
-//                         <span className="font-medium text-slate-700 text-sm flex-1">{item.name}</span>
-//                         <div className="text-xs text-gray-400 px-2 bg-white rounded border border-gray-200">{item.id}</div>
-//                      </div>
-//                    ))}
+//                   <p className="text-sm text-gray-500 mb-3">Drag items to reorder (Simulation)</p>
+//                   {(modalConfig.data || []).map((item, idx) => (
+//                     <div key={item.id} className="flex items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg cursor-move hover:bg-gray-100 transition">
+//                       <span className="text-gray-400 font-mono text-xs">{idx + 1}</span>
+//                       <GripVertical size={16} className="text-gray-400" />
+//                       <span className="font-medium text-slate-700 text-sm flex-1">{item.name}</span>
+//                       <div className="text-xs text-gray-400 px-2 bg-white rounded border border-gray-200">{item.id}</div>
+//                     </div>
+//                   ))}
 //                 </div>
 //               )}
 
@@ -402,17 +404,16 @@
 
 //             {/* Modal Footer (unchanged) */}
 //             <div className="p-6 pt-0 flex gap-3">
-//               <button 
+//               <button
 //                 onClick={closeModal}
 //                 className="flex-1 bg-gray-100 hover:bg-gray-200 text-slate-700 text-sm font-semibold py-2.5 rounded-lg transition"
 //               >
 //                 Cancel
 //               </button>
-//               <button 
+//               <button
 //                 onClick={handleSaveChanges}
-//                 className={`flex-1 text-white text-sm font-semibold py-2.5 rounded-lg shadow-md transition ${
-//                   modalConfig.type === 'delete' ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-600 hover:bg-blue-700'
-//                 }`}
+//                 className={`flex-1 text-white text-sm font-semibold py-2.5 rounded-lg shadow-md transition ${modalConfig.type === 'delete' ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-600 hover:bg-blue-700'
+//                   }`}
 //               >
 //                 {modalConfig.type === 'delete' ? 'Delete' : 'Save Changes'}
 //               </button>
@@ -424,10 +425,10 @@
 
 //       {/* ================= TOAST RENDERER (unchanged) ================= */}
 //       {toastConfig.show && (
-//         <Toast 
-//             message={toastConfig.message} 
-//             type={toastConfig.type} 
-//             onClose={() => setToastConfig({ ...toastConfig, show: false })} 
+//         <Toast
+//           message={toastConfig.message}
+//           type={toastConfig.type}
+//           onClose={() => setToastConfig({ ...toastConfig, show: false })}
 //         />
 //       )}
 
@@ -436,6 +437,8 @@
 // };
 
 // export default Categories;
+
+
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -481,10 +484,12 @@ const ImageCell = ({ name, imageUrl }) => (
 
 
 const Categories = () => {
+
   const [activeTab, setActiveTab] = useState('local'); // 'local' | 'marketplace' | 'shops'
   const [categoryNameState, setCategoryNameState] = useState('');
   const [imageFileState, setImageFileState] = useState(null);
-
+  const [categoryType, setCategoryType] = useState('jobs');
+  const [categoryRaw, setCategoryRaw] = useState('');
   // --- NEW STATE FOR API DATA ---
   const [categoriesData, setCategoriesData] = useState([]); // Holds API data
   const [isLoading, setIsLoading] = useState(true);
@@ -547,33 +552,40 @@ const Categories = () => {
     setModalConfig({ isOpen: false, type: '', data: null });
   };
 
-  // --- API / SAVE HANDLER (UPDATED) ---
   const handleSaveChanges = async () => {
-
-    // --- ADD CATEGORY LOGIC (remains the same) ---
     if (modalConfig.type === 'add') {
-      if (!categoryNameState.trim() || !imageFileState) {
-        setToastConfig({ message: "Name and Image are required.", type: 'error', show: true });
+      if (!categoryNameState.trim() || !imageFileState || !categoryType.trim() || !categoryRaw.trim()) {
+        setToastConfig({ message: "All fields are required (Name, Type, Category, Image).", type: 'error', show: true });
         return;
       }
 
       try {
         const formData = new FormData();
         formData.append('name', categoryNameState);
+        formData.append('type', categoryType);      // Mapping 'type'
+        formData.append('category', categoryRaw);  // Mapping 'category'
         formData.append('image', imageFileState);
+        formData.append('status', true);           // Default true
 
         await addCategory(formData);
 
         setToastConfig({ message: "Category added successfully!", type: 'success', show: true });
 
-        setCategoryNameState('');
+        setTimeout(() => {
+          setToastConfig((prev) => ({ ...prev, show: false }));
+        }, 3000); setCategoryNameState('');
+        setCategoryType('jobs');
+        setCategoryRaw('');
         setImageFileState(null);
         closeModal();
-        fetchCategories(); // Refresh list
-
+        fetchCategories();
       } catch (err) {
         const errorMessage = err.response?.data?.message || err.message || 'API Error';
-        setToastConfig({ message: `Error adding category: ${errorMessage}`, type: 'error', show: true });
+        setToastConfig({ message: `Error: ${errorMessage}`, type: 'error', show: true });
+        setTimeout(() => {
+          setToastConfig((prev) => ({ ...prev, show: false }));
+        }, 3000);
+
       }
       return; // Exit function after handling add
     }
@@ -584,6 +596,9 @@ const Categories = () => {
 
       if (!categoryId) {
         setToastConfig({ message: "Category ID is missing for deletion.", type: 'error', show: true });
+        setTimeout(() => {
+          setToastConfig((prev) => ({ ...prev, show: false }));
+        }, 3000);
         return;
       }
 
@@ -591,6 +606,9 @@ const Categories = () => {
         await deleteCategory(categoryId); // Call the new API function
 
         setToastConfig({ message: "Category deleted successfully!", type: 'success', show: true });
+        setTimeout(() => {
+          setToastConfig((prev) => ({ ...prev, show: false }));
+        }, 3000);
 
         closeModal();
         fetchCategories(); // Refresh list after deletion
@@ -653,8 +671,8 @@ const Categories = () => {
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${activeTab === tab.id
-                ? 'bg-slate-900 text-white shadow-md'
-                : 'bg-white text-slate-600 hover:bg-slate-100 border border-gray-200'
+              ? 'bg-slate-900 text-white shadow-md'
+              : 'bg-white text-slate-600 hover:bg-slate-100 border border-gray-200'
               }`}
           >
             {tab.label}
@@ -779,6 +797,27 @@ const Categories = () => {
                     />
                   </div>
 
+                  <div className="mt-4">
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">Type</label>
+                    <input
+                      type="text"
+                      value={categoryType}
+                      onChange={(e) => setCategoryType(e.target.value)}
+                      placeholder="e.g. jobs or business"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-slate-700 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition"
+                    />
+                  </div>
+
+                  <div className="mt-4">
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">Category Label (Raw)</label>
+                    <input
+                      type="text"
+                      value={categoryRaw}
+                      onChange={(e) => setCategoryRaw(e.target.value)}
+                      placeholder="e.g. Raw wheats"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-slate-700 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition"
+                    />
+                  </div>
                   {/* Category Image Input */}
                   {modalConfig.type === 'add' && (
                     <div>

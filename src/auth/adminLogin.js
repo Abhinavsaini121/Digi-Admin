@@ -126,16 +126,16 @@ export const getAllFullTimeJobs = async () => {
     }
 };
 
-export const addCategory = async (formData) => {
-    // FormData ke case mein adminId aise append karte hain
-    const adminId = localStorage.getItem("id");
-    if(adminId) formData.append('adminId', adminId);
+// export const addCategory = async (formData) => {
+//     // FormData ke case mein adminId aise append karte hain
+//     const adminId = localStorage.getItem("id");
+//     if(adminId) formData.append('adminId', adminId);
 
-    const response = await apiClient.post("/admin/category/add", formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-    });
-    return response.data;
-};
+//     const response = await apiClient.post("/admin/category/add", formData, {
+//         headers: { 'Content-Type': 'multipart/form-data' }
+//     });
+//     return response.data;
+// };
 
 export const getAllCategories = async () => {
     try {
@@ -146,15 +146,15 @@ export const getAllCategories = async () => {
     }
 };
 
-// --- Delete Category ---
-export const deleteCategory = async (categoryId) => {
-    try {
-        const response = await apiClient.delete(`/admin/category/delete/${categoryId}`); 
-        return response.data; 
-    } catch (error) {
-        throw error.response ? error.response.data : new Error("Network Error");
-    }
-};
+// // --- Delete Category ---
+// export const deleteCategory = async (categoryId) => {
+//     try {
+//         const response = await apiClient.delete(`/admin/category/delete/${categoryId}`); 
+//         return response.data; 
+//     } catch (error) {
+//         throw error.response ? error.response.data : new Error("Network Error");
+//     }
+// };
 
 
 // --- Get Pending Businesses ---
@@ -426,5 +426,63 @@ export const deleteBusinessServiceAPI = async (businessId, serviceId) => {
         return response.data;
     } catch (error) {
         throw error.response ? error.response.data : new Error("An unexpected error occurred");
+    }
+};
+
+
+
+export const addCategory = async (formData) => {
+    try {
+        const adminId = localStorage.getItem("id") || localStorage.getItem("userId");
+
+        // Agar image upload ho rahi hai (FormData use ho raha hai)
+        if (formData instanceof FormData) {
+            if (adminId) formData.append("createdBy", adminId);
+            const response = await apiClient.post("/admin/category/add", formData, {
+                headers: { "Content-Type": "multipart/form-data" }
+            });
+            return response.data;
+        } 
+        // Agar normal JSON data bhej rahe hain
+        else {
+            const finalData = { ...formData, createdBy: adminId };
+            const response = await apiClient.post("/admin/category/add", finalData);
+            return response.data;
+        }
+    } catch (error) {
+        throw error.response ? error.response.data : new Error("Network Error or Category Creation Failed");
+    }
+};
+
+// --- DELETE CATEGORY CONTROLLER ---
+export const deleteCategory = async (categoryId) => {
+  const token = localStorage.getItem("token");
+
+  const response = await apiClient.delete(
+    `/admin/category/delete/${categoryId}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  return response.data;
+};
+
+export const createSubCategory = async (categoryName, subCategoryName) => {
+    try {
+        // Payload as per your requirement
+        const payload = {
+            category: categoryName,
+            subCategory: subCategoryName
+        };
+
+        const response = await apiClient.post("/admin/category/create-subCategory", payload);
+        
+        return response.data; 
+    } catch (error) {
+        console.error("Error creating sub-category:", error);
+        throw error.response ? error.response.data : new Error("Network Error");
     }
 };

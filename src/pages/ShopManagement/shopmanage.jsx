@@ -15,7 +15,7 @@ import {
     getAllCategories,
     createBusinessForUserAPI,
     addServiceToBusinessAPI,
-    getBusinessServicesAPI 
+    getBusinessServicesAPI
 } from "../../auth/adminLogin";
 
 import ShopEditForm from "./ShopEditForm";
@@ -38,13 +38,14 @@ const DetailItem = ({ label, value, fullWidth = false }) => (
 const StatusBadge = ({ status }) => {
     const configs = {
         Approved: "bg-emerald-50 text-emerald-600 border-emerald-200 ring-emerald-500/20",
+        active: "bg-emerald-50 text-emerald-600 border-emerald-200 ring-emerald-500/20", // Add this
         Pending: "bg-amber-50 text-amber-600 border-amber-200 ring-emerald-500/20",
         Rejected: "bg-rose-50 text-rose-600 border-rose-200 ring-emerald-500/20",
         Blocked: "bg-slate-100 text-slate-600 border-slate-300 ring-slate-500/10",
     };
     return (
         <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase border ring-2 tracking-wider ${configs[status] || configs.Pending}`}>
-            {status}
+            {status === 'active' ? 'Approved' : status}
         </span>
     );
 };
@@ -81,7 +82,7 @@ const ShopListManagement = () => {
         serviceDetails: ""
     });
     const [serviceImages, setServiceImages] = useState([]);
-    const [businessServices, setBusinessServices] = useState([]); 
+    const [businessServices, setBusinessServices] = useState([]);
     const [servicesLoading, setServicesLoading] = useState(false);
 
     const showFeedback = (message, type = "success") => {
@@ -95,20 +96,17 @@ const ShopListManagement = () => {
         setLoading(true);
         try {
             const shopRes = await getAllShopsForAdmin();
-            setShops(Array.isArray(shopRes) ? shopRes : (shopRes.data || []));
+            // Check if shopRes is the direct array or contains .data
+            const shopData = Array.isArray(shopRes) ? shopRes : (shopRes.data || []);
+            setShops(shopData);
 
-            const userRes = await getAllUsersAPI();
-            setUsers(userRes.data || []);
-
-            const catRes = await getAllCategories();
-            setCategories(catRes.data || []);
+            // ... rest of the code
         } catch (err) {
             showFeedback("Failed to load data", "error");
         } finally {
             setLoading(false);
         }
     }, []);
-
     useEffect(() => { fetchInitialData(); }, [fetchInitialData]);
 
     const handleInputChange = (e) => {
@@ -174,7 +172,7 @@ const ShopListManagement = () => {
 
         if (serviceImages.length > 0) {
             serviceImages.forEach(file => {
-                data.append('serviceImage', file); 
+                data.append('serviceImage', file);
             });
         }
 
@@ -279,9 +277,15 @@ const ShopListManagement = () => {
     };
 
     const filteredShops = shops.filter(shop => {
-        const matchesSearch = shop.businessName?.toLowerCase().includes(searchTerm.toLowerCase()) || shop.ownerName?.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesSearch = shop.businessName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            shop.ownerName?.toLowerCase().includes(searchTerm.toLowerCase());
+
         if (!matchesSearch) return false;
-        return activeFilter === "All" || shop.status === activeFilter;
+        if (activeFilter === "All") return true;
+
+        // Status normalization for filtering
+        const currentStatus = (shop.status === "active") ? "Approved" : shop.status;
+        return currentStatus === activeFilter;
     });
 
     return (
@@ -345,8 +349,10 @@ const ShopListManagement = () => {
                                         <div className="text-base font-bold text-slate-900">{shop.businessName}</div>
                                         <div className="flex items-center gap-2 mt-1.5">
                                             <span className="text-[10px] text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded uppercase">{shop.category}</span>
-                                            <span className="text-[10px] text-slate-400 font-bold flex items-center gap-1"><MapPin size={10} /> {shop.location}</span>
-                                        </div>
+                                            <span className="text-[10px] text-slate-400 font-bold flex items-center gap-1">
+                                                <MapPin size={10} />
+                                                {shop.location?.address || shop.address || "N/A"}
+                                            </span>                                        </div>
                                     </td>
                                     <td className="p-6">
                                         <div className="text-sm font-bold text-slate-700">{shop.ownerName}</div>
@@ -387,12 +393,12 @@ const ShopListManagement = () => {
                             <div>
                                 <h3 className="text-xl font-black text-slate-800 uppercase tracking-tight">
                                     {modalType === 'view' ? 'Verify Listing' :
-                                     modalType === 'editService' ? `Manage Services: ${selectedShop?.businessName}` :
-                                     modalType === 'edit' ? `Edit Listing: ${selectedShop?.businessName}` : 
-                                     modalType === 'add' ? 'Add New Business' :
-                                     modalType === 'addService' ? `Add Service to ${selectedShop?.businessName}` :
-                                     modalType === 'approve' ? 'Approve Listing' :
-                                     modalType === 'reject' ? 'Reject Listing' : 'Confirm Delete'}
+                                        modalType === 'editService' ? `Manage Services: ${selectedShop?.businessName}` :
+                                            modalType === 'edit' ? `Edit Listing: ${selectedShop?.businessName}` :
+                                                modalType === 'add' ? 'Add New Business' :
+                                                    modalType === 'addService' ? `Add Service to ${selectedShop?.businessName}` :
+                                                        modalType === 'approve' ? 'Approve Listing' :
+                                                            modalType === 'reject' ? 'Reject Listing' : 'Confirm Delete'}
                                 </h3>
                             </div>
                             <button onClick={closeModal} className="p-2 hover:bg-slate-100 rounded-xl transition-all text-slate-400"><X size={20} /></button>
@@ -617,8 +623,9 @@ const ShopListManagement = () => {
                                                     <DetailItem label="Representative" value={shopDetail.ownerName} />
                                                     <DetailItem label="Contact No." value={shopDetail.mobileNumber} />
                                                     <DetailItem label="WhatsApp" value={shopDetail.whatsappNumber} />
-                                                    <DetailItem label="Location" value={shopDetail.location} />
-                                                    <DetailItem label="Full Address" value={shopDetail.address} fullWidth />
+                                                    {/* Update this: */}
+                                                    <DetailItem label="Location" value={shopDetail.location?.address || shopDetail.location} />
+                                                    <DetailItem label="Full Address" value={shopDetail.address || shopDetail.location?.address} fullWidth />
                                                     <DetailItem label="Description" value={shopDetail.details} fullWidth />
                                                 </DetailSection>
                                                 <DetailSection title="Documents Preview">

@@ -5,16 +5,16 @@ import apiClient from './apiClient';
 export const adminLogin = async (email, password) => {
     try {
         const response = await apiClient.post('/admin/login', { email, password });
-          
+
         console.log("login success", response);
-                    
-        if (response.data.token) { 
+
+        if (response.data.token) {
             localStorage.setItem("token", response.data.token);
-            if (response.data.userId) { 
-                localStorage.setItem("userId", response.data.userId); 
+            if (response.data.userId) {
+                localStorage.setItem("userId", response.data.userId);
             }
         }
-        return response.data; 
+        return response.data;
     } catch (error) {
         throw error.response ? error.response.data : new Error("Network Error");
     }
@@ -22,23 +22,23 @@ export const adminLogin = async (email, password) => {
 
 // --- Dashboard Stats ---
 export const getDashboardStats = async () => {
-  try {
-    const response = await apiClient.get("/admin/dashboard-stats", {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-    });
-    return response.data.data; 
-  } catch (error) {
-    throw error.response ? error.response.data : new Error("Network Error");
-  }
+    try {
+        const response = await apiClient.get("/admin/dashboard-stats", {
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+        });
+        return response.data.data;
+    } catch (error) {
+        throw error.response ? error.response.data : new Error("Network Error");
+    }
 };
 
 // --- Get All Jobs (Part-Time) ---
 export const getAllJobs = async () => {
     try {
-        const response = await apiClient.get("/admin/part-time/jobs"); 
-        return response.data; 
+        const response = await apiClient.get("/admin/part-time/jobs");
+        return response.data;
     } catch (error) {
         throw error.response ? error.response.data : new Error("Network Error");
     }
@@ -59,17 +59,17 @@ export const updateJob = async (id, jobData) => {
     try {
         const adminId = localStorage.getItem("id");
 
-       
+
         let dataToSend;
         if (jobData instanceof FormData) {
             dataToSend = jobData;
-         
+
             if (adminId) dataToSend.append("updatedBy", adminId);
         } else {
             dataToSend = { ...jobData, updatedBy: adminId };
         }
-        
-        
+
+
         const response = await apiClient.put(`/admin/part-time/job/update/${id}`, dataToSend);
         return response.data;
     } catch (error) {
@@ -91,9 +91,9 @@ export const createNewJob = async (jobData) => {
     try {
         const adminId = localStorage.getItem("id");
 
-      
+
         if (jobData instanceof FormData) {
-            
+
             if (adminId) {
                 jobData.append("createdBy", adminId);
             }
@@ -105,7 +105,7 @@ export const createNewJob = async (jobData) => {
             });
             return response.data;
         } else {
-           
+
             const finalData = { ...jobData, createdBy: adminId };
             const response = await apiClient.post(`/admin/part-time/job/create`, finalData);
             return response.data;
@@ -119,8 +119,8 @@ export const createNewJob = async (jobData) => {
 // --- Get All Full-Time Jobs ---
 export const getAllFullTimeJobs = async () => {
     try {
-        const response = await apiClient.get("/admin/full-time/all"); 
-        return response.data; 
+        const response = await apiClient.get("/admin/full-time/all");
+        return response.data;
     } catch (error) {
         throw error.response ? error.response.data : new Error("Network Error or Server Unreachable");
     }
@@ -139,10 +139,11 @@ export const getAllFullTimeJobs = async () => {
 
 export const getAllCategories = async () => {
     try {
-        const response = await apiClient.get("/admin/category/all"); 
-        return response.data; 
+        const response = await apiClient.get("/admin/category/all");
+        return response.data;
     } catch (error) {
-        throw error.response ? error.response.data : new Error("Network Error");
+        const errorMessage = error.response?.data?.message || "Network Error";
+        throw new Error(errorMessage);
     }
 };
 
@@ -159,36 +160,36 @@ export const getAllCategories = async () => {
 
 // --- Get Pending Businesses ---
 export const getPendingBusinesses = async () => {
-  try {
-    const response = await apiClient.get("/admin/business/pending");
-    return response.data;
-  } catch (error) {
-    console.error("Error fetching pending businesses:", error);
-    throw error;
-  }
+    try {
+        const response = await apiClient.get("/admin/business/pending");
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching pending businesses:", error);
+        throw error;
+    }
 };
 
 // --- Verify Business ---
 export const verifyBusiness = async (id, action) => {
-  try {
-    const adminId = localStorage.getItem("id");
-    const response = await apiClient.put(`/admin/business/verify/${id}`, { action, verifiedBy: adminId });
-    return response.data;
-  } catch (error) {
-    console.error("Error verifying business:", error);
-    throw error;
-  }
+    try {
+        const adminId = localStorage.getItem("id");
+        const response = await apiClient.put(`/admin/business/verify/${id}`, { action, verifiedBy: adminId });
+        return response.data;
+    } catch (error) {
+        console.error("Error verifying business:", error);
+        throw error;
+    }
 };
 
 
 export const createNewFullTimeJob = async (formData) => {
     try {
         const adminId = localStorage.getItem("id");
-        if(adminId) formData.append('adminId', adminId);
+        if (adminId) formData.append('adminId', adminId);
 
         const response = await apiClient.post(`/admin/full-time/create`, formData, {
             headers: {
-                'Content-Type': 'multipart/form-data' 
+                'Content-Type': 'multipart/form-data'
             }
         });
         return response.data;
@@ -200,8 +201,8 @@ export const createNewFullTimeJob = async (formData) => {
 // GET /api/admin/users
 export const getAllUsersAPI = async () => {
     try {
-        const response = await apiClient.get("/admin/users"); 
-        return response.data; 
+        const response = await apiClient.get("/admin/users");
+        return response.data;
     } catch (error) {
         throw error.response ? error.response.data : new Error("Network Error");
     }
@@ -233,7 +234,7 @@ export const updateBloodRequestAPI = async (id, requestData) => {
     try {
         const adminId = localStorage.getItem("id");
         const finalData = { ...requestData, updatedBy: adminId };
-        
+
         const response = await apiClient.put(`/admin/blood-requests/${id}`, finalData);
         return response.data;
     } catch (error) {
@@ -254,7 +255,7 @@ export const deleteBloodRequestAPI = async (id) => {
 export const getBloodRequestByIdAPI = async (id) => {
     try {
         const response = await apiClient.get(`/admin/blood-requests/${id}`);
-        return response.data.data || response.data; 
+        return response.data.data || response.data;
     } catch (error) {
         throw error.response ? error.response.data : new Error("Network Error");
     }
@@ -264,7 +265,7 @@ export const createNewBloodRequestFromAdminAPI = async (requestDataWithUserId) =
     try {
         const adminId = localStorage.getItem("id");
         const finalData = { ...requestDataWithUserId, adminId };
-        const response = await apiClient.post('/admin/blood-requests', finalData); 
+        const response = await apiClient.post('/admin/blood-requests', finalData);
         return response.data;
     } catch (error) {
         throw error.response ? error.response.data : new Error("Network Error");
@@ -272,21 +273,21 @@ export const createNewBloodRequestFromAdminAPI = async (requestDataWithUserId) =
 };
 
 export const getAllAdminData = async () => {
-try {
-// Fetching data from the newly specified endpoint /api/admin/all
-const response = await apiClient.get("/admin/all");
-return response.data; 
-}
-catch (error) {
-throw error.response ? error.response.data : new Error("Network Error");
-}
+    try {
+        // Fetching data from the newly specified endpoint /api/admin/all
+        const response = await apiClient.get("/admin/all");
+        return response.data;
+    }
+    catch (error) {
+        throw error.response ? error.response.data : new Error("Network Error");
+    }
 };
 // --- Modified Shop Management API Function ---
 
 export const getAllShopsForAdmin = async () => {
     try {
-        const response = await apiClient.get("/admin/manage-business/all"); 
-        return response.data.data || response.data; 
+        const response = await apiClient.get("/admin/manage-business/all");
+        return response.data.data || response.data;
     } catch (error) {
         console.error("Error fetching shops:", error);
         throw error.response ? error.response.data : new Error("Network Error or Shop Service Unreachable");
@@ -296,12 +297,12 @@ export const getAllShopsForAdmin = async () => {
 export const getShopDetailsById = async (id) => {
     try {
         const response = await apiClient.get(`/admin/manage-business/${id}`);
-        
-        return response.data.data || response.data; 
+
+        return response.data.data || response.data;
     } catch (error) {
         console.error(`Error fetching shop details for ID ${id}:`, error);
-        throw error.response 
-            ? error.response.data 
+        throw error.response
+            ? error.response.data
             : new Error("Network Error or Shop Details Service Unreachable");
     }
 };
@@ -319,15 +320,15 @@ export const toggleBusinessStatusAPI = async (businessId, status) => {
     try {
         const adminId = localStorage.getItem("id");
 
-      
+
         const response = await apiClient.patch(
-            `/admin/manage-business/toggle-status/${businessId}`, 
+            `/admin/manage-business/toggle-status/${businessId}`,
             { status, adminId }
         );
 
         return response.data;
     } catch (error) {
-      
+
         throw error.response ? error.response.data : new Error("Network Error");
     }
 };
@@ -335,10 +336,10 @@ export const toggleBusinessStatusAPI = async (businessId, status) => {
 
 export const createNewShopAPI = async (formData) => {
     try {
-       
+
         const response = await apiClient.post("/admin/manage-business/create", formData, {
-            headers: { 
-                'Content-Type': 'multipart/form-data' 
+            headers: {
+                'Content-Type': 'multipart/form-data'
             }
         });
         return response.data;
@@ -386,10 +387,10 @@ export const getBusinessServicesAPI = async (businessId) => {
 
 export const updateBusinessDetailsAPI = async (businessId, formData) => {
     try {
-  
+
         const response = await apiClient.put(`/admin/manage-business/update/${businessId}`, formData, {
             headers: {
-                'Content-Type': 'multipart/form-data', 
+                'Content-Type': 'multipart/form-data',
             },
         });
         return response.data;
@@ -403,11 +404,11 @@ export const updateBusinessDetailsAPI = async (businessId, formData) => {
 export const updateBusinessServiceAPI = async (businessId, serviceId, formData) => {
     try {
         const response = await apiClient.put(
-            `/admin/manage-business/update-service/${businessId}/${serviceId}`, 
-            formData, 
+            `/admin/manage-business/update-service/${businessId}/${serviceId}`,
+            formData,
             {
                 headers: {
-                    'Content-Type': 'multipart/form-data', 
+                    'Content-Type': 'multipart/form-data',
                 },
             }
         );
@@ -442,7 +443,7 @@ export const addCategory = async (formData) => {
                 headers: { "Content-Type": "multipart/form-data" }
             });
             return response.data;
-        } 
+        }
         // Agar normal JSON data bhej rahe hain
         else {
             const finalData = { ...formData, createdBy: adminId };
@@ -456,18 +457,18 @@ export const addCategory = async (formData) => {
 
 // --- DELETE CATEGORY CONTROLLER ---
 export const deleteCategory = async (categoryId) => {
-  const token = localStorage.getItem("token");
+    const token = localStorage.getItem("token");
 
-  const response = await apiClient.delete(
-    `/admin/category/delete/${categoryId}`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
+    const response = await apiClient.delete(
+        `/admin/category/delete/${categoryId}`,
+        {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        }
+    );
 
-  return response.data;
+    return response.data;
 };
 
 export const createSubCategory = async (categoryName, subCategoryName) => {
@@ -479,10 +480,85 @@ export const createSubCategory = async (categoryName, subCategoryName) => {
         };
 
         const response = await apiClient.post("/admin/category/create-subCategory", payload);
-        
-        return response.data; 
+
+        return response.data;
     } catch (error) {
         console.error("Error creating sub-category:", error);
+        throw error.response ? error.response.data : new Error("Network Error");
+    }
+};
+
+// --- DELETE SUB-CATEGORY ---
+export const deleteSubCategoryAPI = async (categoryName, subCategoryName) => {
+    try {
+        const response = await apiClient.delete("/admin/category/delete-subCategory", {
+            data: {
+                category: categoryName,
+                subCategoryToDelete: subCategoryName
+            }
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Error deleting sub-category:", error);
+        throw error.response ? error.response.data : new Error("Network Error");
+    }
+};
+
+// --- UPDATE CATEGORY ---
+export const updateCategoryAPI = async (id, categoryName, subCategoryName) => {
+    try {
+        const adminId = localStorage.getItem("id") || localStorage.getItem("userId");
+
+        // Payload जैसा आपने बताया: category और name
+        const payload = {
+            category: categoryName, // e.g. Electronics
+            name: subCategoryName,   // e.g. MUSICS
+            updatedBy: adminId
+        };
+
+        // URL: /admin/category/update/:id
+        const response = await apiClient.put(`/admin/category/update/${id}`, payload);
+
+        return response.data;
+    } catch (error) {
+        console.error("Error updating category:", error);
+        throw error.response ? error.response.data : new Error("Network Error");
+    }
+};
+
+
+// --- Add Sub Category ---
+export const addSubCategory = async (categoryName, subCategoryName) => {
+    try {
+        // Payload as per your requirement
+        const payload = {
+            category: categoryName,    // e.g., "electronics"
+            subCategory: subCategoryName // e.g., "Laptops"
+        };
+
+        const response = await apiClient.post("/admin/category/create-subCategory", payload);
+
+        // Success response logic
+        return response.data;
+    } catch (error) {
+        // Error handling consistency check
+        console.error("Error adding sub-category:", error);
+        throw error.response ? error.response.data : new Error("Network Error");
+    }
+};
+
+
+export const getSubCategoriesByCategory = async (categoryName) => {
+    try {
+        const token = localStorage.getItem("token");
+        const response = await apiClient.get(`/admin/category/get-subCategories`, {
+            params: { categoryName }, headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching sub-categories:", error);
         throw error.response ? error.response.data : new Error("Network Error");
     }
 };

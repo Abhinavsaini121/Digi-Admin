@@ -126,16 +126,7 @@ export const getAllFullTimeJobs = async () => {
     }
 };
 
-// export const addCategory = async (formData) => {
-//     // FormData ke case mein adminId aise append karte hain
-//     const adminId = localStorage.getItem("id");
-//     if(adminId) formData.append('adminId', adminId);
 
-//     const response = await apiClient.post("/admin/category/add", formData, {
-//         headers: { 'Content-Type': 'multipart/form-data' }
-//     });
-//     return response.data;
-// };
 
 export const getAllCategories = async () => {
     try {
@@ -147,15 +138,6 @@ export const getAllCategories = async () => {
     }
 };
 
-// // --- Delete Category ---
-// export const deleteCategory = async (categoryId) => {
-//     try {
-//         const response = await apiClient.delete(`/admin/category/delete/${categoryId}`); 
-//         return response.data; 
-//     } catch (error) {
-//         throw error.response ? error.response.data : new Error("Network Error");
-//     }
-// };
 
 
 // --- Get Pending Businesses ---
@@ -560,5 +542,59 @@ export const getSubCategoriesByCategory = async (categoryName) => {
     } catch (error) {
         console.error("Error fetching sub-categories:", error);
         throw error.response ? error.response.data : new Error("Network Error");
+    }
+};
+
+
+export const getAllMasterUsers = async () => {
+    try {
+        const response = await apiClient.get("/admin/users/all-users");
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : new Error("Network Error or Server Unreachable");
+    }
+};
+
+export const updateUserProfileAPI = async (userId, userData) => {
+    try {
+        const adminId = localStorage.getItem("id") || localStorage.getItem("userId");
+
+        let dataToSend;
+        let headers = {};
+
+        if (userData instanceof FormData) {
+            dataToSend = userData;
+            if (adminId) dataToSend.append("updatedBy", adminId);
+            headers = { "Content-Type": "multipart/form-data" };
+        } else {
+            dataToSend = { ...userData, updatedBy: adminId };
+        }
+
+        const response = await apiClient.put(`/admin/users/update-profile/${userId}`, dataToSend, {
+            headers: headers
+        });
+
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : new Error("Network Error");
+    }
+};
+
+
+export const deleteUserAPI = async (id) => {
+    try {
+        const response = await apiClient.delete(`/admin/users/delete/${id}`);
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : new Error("Network Error");
+    }
+};
+
+export const getDashboardUsers = async () => {
+    try {
+        const response = await apiClient.get("/admin/users/all-users");
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : new Error("Network Error or Server Unreachable");
     }
 };

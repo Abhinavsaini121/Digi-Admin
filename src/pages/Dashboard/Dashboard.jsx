@@ -23,7 +23,7 @@ import {
   TrendingUp,
   Loader2, // Loading icon ke liye
 } from "lucide-react";
-import {getDashboardStats} from "../../auth/adminLogin"
+import { getDashboardStats, getDashboardUsers } from "../../auth/adminLogin"
 
 const OTHER_STATIC_STATS = {
   shops: "184",
@@ -108,7 +108,21 @@ function Dashboard() {
       </div>
     );
   }
+  const [users, setUsers] = useState([]);
 
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await getDashboardUsers();
+        if (response.success) {
+          setUsers(response.data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch users", error);
+      }
+    };
+    fetchUsers();
+  }, []);
   return (
     <div className="p-8 bg-[#F8FAFC] min-h-screen font-sans">
       {/* -------------------- HEADER -------------------- */}

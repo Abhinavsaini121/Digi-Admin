@@ -1,62 +1,75 @@
-import React, { useState } from "react";
-import { 
-  Search, Ban, CheckCircle, UserCircle, 
-  Edit, Trash2, X, Save, Phone, MessageCircle 
+import React, { useState, useEffect } from "react";
+import {
+  Search, Ban, CheckCircle, UserCircle,
+  Edit, Trash2, X, Save, Phone, MessageCircle
 } from "lucide-react";
+import { getAllMasterUsers, updateUserProfileAPI, deleteUserAPI } from "../../auth/adminLogin";
 
-// Initial Data based on your requirements
-const initialUsers = [
-  {
-    id: 101,
-    name: "Rahul Sharma",
-    photo: "", // Empty string implies default placeholder
-    mobile: "9712121212",
-    whatsapp: "9712121212",
-    gender: "Male",
-    location: "Delhi",
-    blood: "O+",
-    role: "Job Seeker", // Role
-    credits: 120,
-    status: "Active",
-    joined: "2025-06-12",
-    lastActive: "2026-01-21 10:30 AM",
-  },
-  {
-    id: 102,
-    name: "Priya Singh",
-    photo: "https://i.pravatar.cc/150?u=a042581f4e29026704d",
-    mobile: "9876543210",
-    whatsapp: "9876543210",
-    gender: "Female",
-    location: "Mumbai",
-    blood: "B+",
-    role: "Recruiter",
-    credits: 500,
-    status: "Blocked",
-    joined: "2025-07-01",
-    lastActive: "Yesterday",
-  },
-];
-
+import toast, { Toaster } from 'react-hot-toast';
 export default function UserMasterProfile() {
-  const [users, setUsers] = useState(initialUsers);
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, userId: null, userName: "" });
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      const response = await getAllMasterUsers();
+      if (response.success) {
+        // Mapping API fields to your Component fields
+        const mappedData = response.data.map(u => ({
+          id: u._id,
+          name: u.fullName || u.name || "Unknown User",
+          photo: u.profilePhoto || "",
+          mobile: u.mobile || "N/A",
+          whatsapp: u.mobile || "N/A", // API doesn't have whatsapp separately
+          gender: u.gender,
+          location: typeof u.location === 'object' ? u.location.address || "Point" : u.location,
+          blood: u.bloodGroup,
+          role: u.role,
+          credits: u.credits,
+          status: u.status,
+          joined: new Date(u.createdAt).toLocaleDateString(),
+          lastActive: new Date(u.updatedAt).toLocaleString()
+        }));
+        setUsers(mappedData);
+      }
+    } catch (error) {
+      console.error("Failed to fetch users", error);
+    } finally {
+      setLoading(false);
+    }
+  };
   const [search, setSearch] = useState("");
-  
+
   // State for Edit Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
 
   // Filter Logic
   const filteredUsers = users.filter((u) =>
-    u.name.toLowerCase().includes(search.toLowerCase())
+    (u.name || "").toLowerCase().includes(search.toLowerCase())
   );
 
   // --- ACTIONS ---
 
   // 1. Delete User
-  const handleDelete = (id) => {
-    if (window.confirm("Are you sure you want to permanently delete this user?")) {
-      setUsers(users.filter((user) => user.id !== id));
+  const handleDelete = (user) => {
+    setDeleteModal({ isOpen: true, userId: user.id, userName: user.name });
+  };
+
+  const confirmDelete = async () => {
+    try {
+      const loadingToast = toast.loading("Deleting user...");
+      await deleteUserAPI(deleteModal.userId);
+      setUsers(users.filter((u) => u.id !== deleteModal.userId));
+      toast.success("User deleted successfully!", { id: loadingToast });
+    } catch (error) {
+      toast.error(error.message || "Failed to delete user");
+    } finally {
+      setDeleteModal({ isOpen: false, userId: null, userName: "" });
     }
   };
 
@@ -78,13 +91,34 @@ export default function UserMasterProfile() {
     setIsModalOpen(true);
   };
 
-  // 4. Save Changes (From Modal)
-  const handleSaveUser = () => {
-    setUsers(users.map((u) => (u.id === currentUser.id ? currentUser : u)));
-    setIsModalOpen(false);
-    setCurrentUser(null);
-  };
+  const handleSaveUser = async () => {
+    try {
+      const formData = new FormData();
+      formData.append("fullName", currentUser.name);
+      formData.append("mobile", currentUser.mobile);
+      formData.append("gender", currentUser.gender);
+      formData.append("bloodGroup", currentUser.blood);
+      formData.append("role", currentUser.role);
+      formData.append("credits", currentUser.credits);
 
+      if (currentUser.profileImageFile) {
+        formData.append("profilePhoto", currentUser.profileImageFile);
+      }
+
+      // Ek "Loading" toast dikhayega jab tak update ho raha hai
+      const loadingToast = toast.loading("Updating profile...");
+
+      const response = await updateUserProfileAPI(currentUser.id, formData);
+
+      if (response.status) {
+        toast.success("Profile updated successfully!", { id: loadingToast }); // Success message
+        fetchUsers();
+        setIsModalOpen(false);
+      }
+    } catch (error) {
+      toast.error(error.message || "Failed to update profile"); // Error message
+    }
+  };
   // Handle Input Changes in Modal
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -92,7 +126,8 @@ export default function UserMasterProfile() {
   };
 
   return (
-    <div className="p-6 bg-orange-50 min-h-screen font-sans">
+    <div className="p-6 bg-neutral-50 min-h-screen font-sans">
+      <Toaster position="top-right" reverseOrder={false} />
       {/* Header */}
       <div className="mb-6 flex justify-between items-center">
         <div>
@@ -120,7 +155,7 @@ export default function UserMasterProfile() {
         <table className="min-w-[1400px] w-full text-sm">
           <thead className="bg-orange-100/50 text-gray-700 font-semibold uppercase tracking-wider">
             <tr>
-              <th className="px-4 py-4 text-left">ID</th>
+              <th className="px-4 py-4 text-left">SNo.</th>
               <th className="px-4 py-4 text-left">Profile</th>
               <th className="px-4 py-4 text-left">Name</th>
               <th className="px-4 py-4 text-left">Contact Info</th>
@@ -135,10 +170,9 @@ export default function UserMasterProfile() {
           </thead>
 
           <tbody className="divide-y divide-orange-50">
-            {filteredUsers.map((u) => (
+            {filteredUsers.map((u, index) => (
               <tr key={u.id} className="hover:bg-orange-50/50 transition-colors">
-                <td className="px-4 py-3 text-gray-500">#{u.id}</td>
-                
+                <td className="px-4 py-3 text-gray-500">{index + 1}</td>
                 {/* Profile Photo */}
                 <td className="px-4 py-3">
                   {u.photo ? (
@@ -149,7 +183,7 @@ export default function UserMasterProfile() {
                 </td>
 
                 <td className="px-4 py-3 font-medium text-gray-800">{u.name}</td>
-                
+
                 {/* Contact Info (Mobile & WhatsApp) */}
                 <td className="px-4 py-3">
                   <div className="flex flex-col gap-1 text-xs">
@@ -172,7 +206,7 @@ export default function UserMasterProfile() {
                 <td className="px-4 py-3 text-gray-600">{u.location}</td>
                 <td className="px-4 py-3 text-gray-600 font-medium">{u.blood || "-"}</td>
                 <td className="px-4 py-3 font-bold text-orange-600">{u.credits}</td>
-                
+
                 {/* Dates */}
                 <td className="px-4 py-3 text-xs text-gray-500">
                   <div>Joined: {u.joined}</div>
@@ -182,11 +216,10 @@ export default function UserMasterProfile() {
                 {/* Status Badge */}
                 <td className="px-4 py-3">
                   <span
-                    className={`px-3 py-1 rounded-full text-xs font-semibold border ${
-                      u.status === "Active"
-                        ? "bg-green-50 text-green-700 border-green-200"
-                        : "bg-red-50 text-red-700 border-red-200"
-                    }`}
+                    className={`px-3 py-1 rounded-full text-xs font-semibold border ${u.status === "Active"
+                      ? "bg-green-50 text-green-700 border-green-200"
+                      : "bg-red-50 text-red-700 border-red-200"
+                      }`}
                   >
                     {u.status}
                   </span>
@@ -196,7 +229,7 @@ export default function UserMasterProfile() {
                 <td className="px-4 py-3">
                   <div className="flex items-center justify-center gap-2">
                     {/* Edit */}
-                    <button 
+                    <button
                       onClick={() => handleEditClick(u)}
                       className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors"
                       title="Edit Fields"
@@ -205,21 +238,20 @@ export default function UserMasterProfile() {
                     </button>
 
                     {/* Block/Unblock */}
-                    <button 
+                    <button
                       onClick={() => handleBlockToggle(u.id)}
-                      className={`p-2 rounded-lg transition-colors ${
-                        u.status === "Active" 
-                        ? "bg-yellow-50 text-yellow-600 hover:bg-yellow-100" 
+                      className={`p-2 rounded-lg transition-colors ${u.status === "Active"
+                        ? "bg-yellow-50 text-yellow-600 hover:bg-yellow-100"
                         : "bg-green-50 text-green-600 hover:bg-green-100"
-                      }`}
+                        }`}
                       title={u.status === "Active" ? "Block User" : "Unblock User"}
                     >
                       {u.status === "Active" ? <Ban size={16} /> : <CheckCircle size={16} />}
                     </button>
 
                     {/* Delete */}
-                    <button 
-                      onClick={() => handleDelete(u.id)}
+                    <button
+                      onClick={() => handleDelete(u)}
                       className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
                       title="Permanently Delete"
                     >
@@ -233,6 +265,53 @@ export default function UserMasterProfile() {
         </table>
       </div>
 
+      {deleteModal.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden">
+            {/* Header */}
+            <div className="px-6 py-4 bg-red-50 border-b border-red-100 flex justify-between items-center">
+              <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                <Trash2 size={18} className="text-red-500" /> Delete User
+              </h2>
+              <button onClick={() => setDeleteModal({ isOpen: false, userId: null, userName: "" })}
+                className="text-gray-400 hover:text-gray-600">
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="px-6 py-6 text-center">
+              <div className="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Trash2 size={26} className="text-red-500" />
+              </div>
+              <p className="text-gray-700 font-semibold text-base mb-1">
+                Are you sure?
+              </p>
+              <p className="text-gray-500 text-sm">
+                You are about to permanently delete{" "}
+                <span className="font-bold text-red-600">{deleteModal.userName}</span>.
+                This action cannot be undone.
+              </p>
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-3 bg-white">
+              <button
+                onClick={() => setDeleteModal({ isOpen: false, userId: null, userName: "" })}
+                className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-4 py-2 text-sm font-medium bg-red-500 hover:bg-red-600 text-white rounded-lg flex items-center gap-2 transition-colors shadow-sm"
+              >
+                <Trash2 size={16} /> Yes, Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* --- EDIT MODAL --- */}
       {isModalOpen && currentUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
@@ -247,17 +326,15 @@ export default function UserMasterProfile() {
 
             {/* Modal Body - Grid Form */}
             <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[70vh] overflow-y-auto">
-              
+
               {/* Photo URL */}
               <div className="md:col-span-2">
-                <label className="text-xs font-semibold text-gray-500 mb-1 block">Profile Photo URL</label>
+                <label className="text-xs font-semibold text-gray-500 mb-1 block">Profile Photo</label>
                 <input
-                  type="text"
-                  name="photo"
-                  value={currentUser.photo}
-                  onChange={handleChange}
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setCurrentUser({ ...currentUser, profileImageFile: e.target.files[0] })}
                   className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-200 outline-none text-sm"
-                  placeholder="Paste image link here"
                 />
               </div>
 
@@ -280,9 +357,10 @@ export default function UserMasterProfile() {
                   onChange={handleChange}
                   className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-200 outline-none text-sm bg-white"
                 >
-                  <option value="Job Seeker">Job Seeker</option>
-                  <option value="Recruiter">Recruiter</option>
-                  <option value="Admin">Admin</option>
+                  {/* Value wahi rakhein jo backend accept karta hai */}
+                  <option value="GENERAL_USER">Job Seeker (General User)</option>
+                  <option value="RECRUITER">Recruiter</option>
+                  <option value="ADMIN">Admin</option>
                 </select>
               </div>
 
@@ -378,13 +456,13 @@ export default function UserMasterProfile() {
 
             {/* Modal Footer */}
             <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-3 bg-white">
-              <button 
+              <button
                 onClick={() => setIsModalOpen(false)}
                 className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 Cancel
               </button>
-              <button 
+              <button
                 onClick={handleSaveUser}
                 className="px-4 py-2 text-sm font-medium bg-orange-500 hover:bg-orange-600 text-white rounded-lg flex items-center gap-2 transition-colors shadow-sm"
               >
@@ -393,6 +471,7 @@ export default function UserMasterProfile() {
             </div>
           </div>
         </div>
+
       )}
     </div>
   );

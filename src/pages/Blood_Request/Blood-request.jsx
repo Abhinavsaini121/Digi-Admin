@@ -2,33 +2,33 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { Table, Tag, Space, Button, Input, message, Avatar, Tooltip, Modal, Select, Row, Col } from 'antd';
-import { 
-    SearchOutlined, 
-    EyeOutlined, 
-    DeleteOutlined, 
+import {
+    SearchOutlined,
+    EyeOutlined,
+    DeleteOutlined,
     UserOutlined,
     EnvironmentOutlined,
     PlusOutlined,
     EditOutlined
 } from '@ant-design/icons';
-import dayjs from 'dayjs'; 
+import dayjs from 'dayjs';
 
-import { 
-    getAllBloodRequestsAPI, 
-    updateBloodRequestAPI, 
+import {
+    getAllBloodRequestsAPI,
+    updateBloodRequestAPI,
     deleteBloodRequestAPI,
-    getBloodRequestByIdAPI, 
-    createNewBloodRequestFromAdminAPI 
-} from '../../auth/adminLogin'; 
+    getBloodRequestByIdAPI,
+    createNewBloodRequestFromAdminAPI
+} from '../../auth/adminLogin';
 
 const { Option } = Select;
 const { TextArea } = Input;
 
 // --- Helper function to reset form data ---
 const getInitialFormData = () => ({
-    patientName: '', age: '', gender: 'Male', bloodGroup: '', 
-    units: 1, hospitalName: '', location: '', contactNumber: '', 
-    urgency: 'Normal', description: '', whatsappNumber: '' 
+    patientName: '', age: '', gender: 'Male', bloodGroup: '',
+    units: 1, hospitalName: '', location: '', contactNumber: '',
+    urgency: 'Normal', description: '', whatsappNumber: ''
 });
 
 const BloodRequests = () => {
@@ -42,8 +42,8 @@ const BloodRequests = () => {
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
     const [submitLoading, setSubmitLoading] = useState(false);
     const [viewLoading, setViewLoading] = useState(false);
-    
-    const [editingRecord, setEditingRecord] = useState(null); 
+
+    const [editingRecord, setEditingRecord] = useState(null);
     const [viewingData, setViewingData] = useState(null);
     const [formData, setFormData] = useState(getInitialFormData());
 
@@ -88,16 +88,16 @@ const BloodRequests = () => {
             message.error("Please fill in all required fields: Name, Blood Group, Contact, and Hospital.");
             return;
         }
-        
+
         if (!currentAdminId) {
-             message.error("Admin ID is missing or not set. Cannot create request.");
-             return;
+            message.error("Admin ID is missing or not set. Cannot create request.");
+            return;
         }
-        
+
         setSubmitLoading(true);
         try {
             const dataToSend = {
-                userId: currentAdminId, 
+                userId: currentAdminId,
                 patientName: formData.patientName,
                 bloodGroup: formData.bloodGroup,
                 urgency: formData.urgency,
@@ -108,13 +108,13 @@ const BloodRequests = () => {
                 additionalInfo: formData.description, // Assuming API uses 'additionalInfo'
             };
 
-            const response = await createNewBloodRequestFromAdminAPI(dataToSend); 
-            
+            const response = await createNewBloodRequestFromAdminAPI(dataToSend);
+
             if (response && (response.success || response._id)) {
                 message.success("Blood Request Posted Successfully!");
                 setIsAddModalOpen(false);
                 setFormData(getInitialFormData()); // Reset Form
-                fetchData(); 
+                fetchData();
             } else {
                 message.error(response.message || "Failed to post request");
             }
@@ -124,24 +124,25 @@ const BloodRequests = () => {
             setSubmitLoading(false);
         }
     };
-    
+
     // --- PUT (Edit) Handlers ---
     const handleEditClick = (record) => {
         setEditingRecord(record);
         setIsEditModalOpen(true);
         setFormData({
-            patientName: record.patientName || '', 
-            age: record.age || '', 
-            gender: record.gender || 'Male', 
-            bloodGroup: record.bloodGroup || '', 
-            units: record.units || 1, 
-            hospitalName: record.hospitalName || '', 
-            location: record.location || record.city || '', 
-            contactNumber: record.contactNumber || record.mobile || '', 
-            urgency: record.urgency || 'Normal', 
+            patientName: record.patientName || '',
+            age: record.age || '',
+            gender: record.gender || 'Male',
+            bloodGroup: record.bloodGroup || '',
+            units: record.units || 1,
+            hospitalName: record.hospitalName || '',
+            location: record.location?.address || record.location || record.city || '',
+
+            contactNumber: record.contactNumber || record.mobile || '',
+            urgency: record.urgency || 'Normal',
             description: record.description || '',
-            whatsappNumber: record.whatsappNumber || record.contactNumber || '', 
-            userId: record.userId || '' 
+            whatsappNumber: record.whatsappNumber || record.contactNumber || '',
+            userId: record.userId || ''
         });
     };
 
@@ -152,16 +153,16 @@ const BloodRequests = () => {
         try {
             const dataToSend = {
                 ...formData,
-                whatsappNumber: formData.whatsappNumber, 
-                userId: editingRecord.userId || formData.userId, 
+                whatsappNumber: formData.whatsappNumber,
+                userId: editingRecord.userId || formData.userId,
             };
-            
-            const response = await updateBloodRequestAPI(editingRecord._id, dataToSend); 
-            
+
+            const response = await updateBloodRequestAPI(editingRecord._id, dataToSend);
+
             if (response.success) {
                 message.success("Blood Request Updated Successfully!");
                 setIsEditModalOpen(false);
-                fetchData(); 
+                fetchData();
             } else {
                 message.error(response.message || "Failed to update request");
             }
@@ -171,7 +172,7 @@ const BloodRequests = () => {
             setSubmitLoading(false);
         }
     };
-    
+
     // --- DELETE Handler ---
     const handleDeleteClick = (id) => {
         Modal.confirm({
@@ -182,10 +183,10 @@ const BloodRequests = () => {
             cancelText: 'Cancel',
             onOk: async () => {
                 try {
-                    const response = await deleteBloodRequestAPI(id); 
+                    const response = await deleteBloodRequestAPI(id);
                     if (response.success) {
                         message.success("Blood Request Deleted Successfully!");
-                        fetchData(); 
+                        fetchData();
                     } else {
                         message.error(response.message || "Failed to delete request");
                     }
@@ -202,7 +203,7 @@ const BloodRequests = () => {
         setIsViewModalOpen(true);
         try {
             const fetchedData = await getBloodRequestByIdAPI(record._id);
-            
+
             setViewingData({
                 ...fetchedData,
                 description: fetchedData.additionalInfo || fetchedData.description || 'N/A',
@@ -219,7 +220,7 @@ const BloodRequests = () => {
     };
 
     // --- Filtering ---
-    const filteredData = data.filter(item => 
+    const filteredData = data.filter(item =>
         (item.patientName && item.patientName.toLowerCase().includes(searchText.toLowerCase())) ||
         (item.hospitalName && item.hospitalName.toLowerCase().includes(searchText.toLowerCase())) ||
         (item.bloodGroup && item.bloodGroup.toLowerCase().includes(searchText.toLowerCase()))
@@ -267,7 +268,8 @@ const BloodRequests = () => {
                 <div className="flex flex-col">
                     <span className="font-medium">{record.hospitalName}</span>
                     <span className="text-xs text-gray-500 flex items-center gap-1">
-                        <EnvironmentOutlined /> {record.location || record.city}
+                        <EnvironmentOutlined /> {record.location?.address || record.location || record.city || 'N/A'}
+
                     </span>
                 </div>
             ),
@@ -277,9 +279,9 @@ const BloodRequests = () => {
             dataIndex: 'status',
             key: 'status',
             render: (status) => {
-                let color = 'gold'; 
+                let color = 'gold';
                 const s = status ? status.toLowerCase() : 'pending';
-                
+
                 if (s === 'fulfilled' || s === 'resolved') color = 'green';
                 if (s === 'expired') color = 'gray';
                 if (s === 'urgent') color = 'red';
@@ -293,7 +295,7 @@ const BloodRequests = () => {
         },
         {
             title: 'DATE',
-            dataIndex: 'createdAt', 
+            dataIndex: 'createdAt',
             key: 'date',
             render: (date) => (
                 <div className="flex flex-col text-xs text-gray-500">
@@ -308,26 +310,26 @@ const BloodRequests = () => {
             render: (_, record) => (
                 <Space size="middle">
                     <Tooltip title="View Details">
-                        <Button 
-                            type="text" 
+                        <Button
+                            type="text"
                             shape="circle"
                             icon={<EyeOutlined style={{ color: '#1890ff' }} />}
                             onClick={() => handleViewClick(record)}
                         />
                     </Tooltip>
-                    
+
                     <Tooltip title="Edit Request">
-                        <Button 
-                            type="text" 
+                        <Button
+                            type="text"
                             shape="circle"
                             icon={<EditOutlined style={{ color: '#108ee9' }} />}
                             onClick={() => handleEditClick(record)}
                         />
                     </Tooltip>
-                    
+
                     <Tooltip title="Delete Request">
-                        <Button 
-                            type="text" 
+                        <Button
+                            type="text"
                             shape="circle"
                             icon={<DeleteOutlined style={{ color: '#ff4d4f' }} />}
                             onClick={() => handleDeleteClick(record._id)}
@@ -346,7 +348,7 @@ const BloodRequests = () => {
 
     return (
         <div className="p-6 bg-white rounded-lg shadow-sm max-w-7xl mx-auto mb-8 mt-2">
-            
+
             <div className="flex justify-between items-start mb-6">
                 <div className="flex flex-col gap-4">
                     <h1 className="text-2xl font-bold text-gray-800">Blood Requests</h1>
@@ -357,15 +359,15 @@ const BloodRequests = () => {
                         <Button style={tabButtonStyle}>Fulfilled</Button>
                     </Space>
                 </div>
-                <Button 
-                    type="primary" 
-                    icon={<PlusOutlined />} 
+                <Button
+                    type="primary"
+                    icon={<PlusOutlined />}
                     size="large"
                     style={{ backgroundColor: '#1890ff', borderRadius: '6px' }}
                     onClick={() => {
-                        setEditingRecord(null); 
+                        setEditingRecord(null);
                         setFormData(getInitialFormData());
-                        setIsAddModalOpen(true); 
+                        setIsAddModalOpen(true);
                     }}
                 >
                     Add Blood Request
@@ -373,9 +375,9 @@ const BloodRequests = () => {
             </div>
 
             <div className="mb-6">
-                <Input 
-                    placeholder="Search by Patient Name, Hospital or Blood Group..." 
-                    prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />} 
+                <Input
+                    placeholder="Search by Patient Name, Hospital or Blood Group..."
+                    prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
                     size="large"
                     style={{ borderRadius: '8px', maxWidth: '500px' }}
                     value={searchText}
@@ -383,13 +385,13 @@ const BloodRequests = () => {
                 />
             </div>
 
-            <Table 
-                columns={columns} 
-                dataSource={filteredData} 
-                loading={loading} 
-                rowKey={(record) => record._id || Math.random()} 
+            <Table
+                columns={columns}
+                dataSource={filteredData}
+                loading={loading}
+                rowKey={(record) => record._id || Math.random()}
                 pagination={{ pageSize: 8 }}
-                className="ant-table-striped" 
+                className="ant-table-striped"
             />
 
             {/* ADD MODAL (POST) */}
@@ -401,10 +403,10 @@ const BloodRequests = () => {
                     <Button key="cancel" type="text" onClick={() => setIsAddModalOpen(false)} style={{ color: '#999', fontWeight: 'bold' }}>
                         Cancel
                     </Button>,
-                    <Button 
-                        key="submit" 
-                        type="primary" 
-                        loading={submitLoading} 
+                    <Button
+                        key="submit"
+                        type="primary"
+                        loading={submitLoading}
                         onClick={handlePostRequest}
                         style={{ backgroundColor: '#1890ff', borderRadius: '6px', padding: '0 25px', height: '38px', fontWeight: 'bold' }}
                     >
@@ -414,7 +416,7 @@ const BloodRequests = () => {
                 width={700}
                 centered
             >
-                 <div style={{ marginTop: '20px' }}>
+                <div style={{ marginTop: '20px' }}>
                     <Row gutter={16} style={{ marginBottom: '15px' }}>
                         <Col span={12}><label style={labelStyle}>Patient Name</label><Input placeholder="Enter patient name" name="patientName" value={formData.patientName} onChange={handleInputChange} style={inputStyle} /></Col>
                         <Col span={12}><label style={labelStyle}>Age</label><Input placeholder="Enter age" type="number" name="age" value={formData.age} onChange={handleInputChange} style={inputStyle} /></Col>
@@ -441,7 +443,7 @@ const BloodRequests = () => {
                             </Select>
                         </Col>
                     </Row>
-                  <Row style={{ marginBottom: '15px' }}>
+                    <Row style={{ marginBottom: '15px' }}>
                         <Col span={24}><label style={labelStyle}>Whatsapp Number</label><Input placeholder="Enter whatsapp number" name="whatsappNumber" value={formData.whatsappNumber} onChange={handleInputChange} style={inputStyle} /></Col>
                     </Row>
                     <Row style={{ marginBottom: '10px' }}>
@@ -459,10 +461,10 @@ const BloodRequests = () => {
                     <Button key="cancel" type="text" onClick={() => setIsEditModalOpen(false)} style={{ color: '#999', fontWeight: 'bold' }}>
                         Cancel
                     </Button>,
-                    <Button 
-                        key="submit" 
-                        type="primary" 
-                        loading={submitLoading} 
+                    <Button
+                        key="submit"
+                        type="primary"
+                        loading={submitLoading}
                         onClick={handleUpdateRequest}
                         style={{ backgroundColor: '#007bff', borderRadius: '6px', padding: '0 25px', height: '38px', fontWeight: 'bold' }}
                     >
@@ -472,7 +474,7 @@ const BloodRequests = () => {
                 width={700}
                 centered
             >
-                
+
                 {editingRecord && (
                     <div style={{ marginTop: '20px' }}>
                         <Row gutter={16} style={{ marginBottom: '15px' }}>
@@ -507,24 +509,24 @@ const BloodRequests = () => {
                     </div>
                 )}
             </Modal>
-            
+
             {/* VIEW MODAL */}
-             <Modal
+            <Modal
                 title={<span style={{ fontSize: '18px', fontWeight: 'bold', color: '#1f2937' }}>Blood Request Details</span>}
                 open={isViewModalOpen}
-                onCancel={() => {setIsViewModalOpen(false); setViewingData(null);}}
+                onCancel={() => { setIsViewModalOpen(false); setViewingData(null); }}
                 footer={
-                    <Button key="close" type="primary" onClick={() => {setIsViewModalOpen(false); setViewingData(null);}} style={{ backgroundColor: '#1890ff', borderRadius: '6px', padding: '0 25px', height: '38px', fontWeight: 'bold' }}>
+                    <Button key="close" type="primary" onClick={() => { setIsViewModalOpen(false); setViewingData(null); }} style={{ backgroundColor: '#1890ff', borderRadius: '6px', padding: '0 25px', height: '38px', fontWeight: 'bold' }}>
                         Close
                     </Button>
                 }
                 width={600}
-                centered 
+                centered
                 confirmLoading={viewLoading}
             >
                 {viewLoading && <div className="text-center py-8"><p>Loading Details...</p></div>}
                 {!viewLoading && viewingData && (
-                    <div style={{ padding: '10px' }}> 
+                    <div style={{ padding: '10px' }}>
                         <h3 style={{ borderBottom: '2px solid #f0f0f0', paddingBottom: '10px', marginBottom: '15px', fontSize: '16px', fontWeight: '600' }}>
                             {viewingData.patientName} (<Tag color="#cd201f">{viewingData.bloodGroup}</Tag>)
                         </h3>
@@ -535,10 +537,12 @@ const BloodRequests = () => {
                         </Row>
 
                         <p><span style={labelStyle}>Hospital:</span> {viewingData.hospitalName || 'N/A'}</p>
-                        <p><span style={labelStyle}>Location:</span> {viewingData.location || viewingData.city || 'N/A'}</p>
-                        <p><span style={labelStyle}>Contact:</span> {viewingData.contactNumber || 'N/A'}</p>
+                        <p>
+                            <span style={labelStyle}>Location:</span>
+                            {typeof viewingData.location === 'object' ? viewingData.location?.address : (viewingData.location || viewingData.city || 'N/A')}
+                        </p>                        <p><span style={labelStyle}>Contact:</span> {viewingData.contactNumber || 'N/A'}</p>
                         <p><span style={labelStyle}>Urgency:</span> <Tag color={viewingData.urgency === 'Urgent' ? 'red' : viewingData.urgency === 'Critical' ? 'magenta' : 'green'}>{viewingData.urgency}</Tag></p>
-                        
+
                         <div style={{ marginTop: '20px' }}>
                             <p><span style={labelStyle}>Description:</span></p>
                             <div style={{ border: '1px solid #eee', padding: '10px', borderRadius: '4px', background: '#fafafa' }}>

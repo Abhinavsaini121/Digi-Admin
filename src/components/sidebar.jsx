@@ -137,7 +137,7 @@ const menuItems = [
   
 ];
 
-export default function Sidebar({ sidebarOpen, closeSidebar }) {
+const Sidebar=({ sidebarOpen, closeSidebar })=> {
   const navigate = useNavigate();
   const location = useLocation();
   const [openMenu, setOpenMenu] = useState(null);
@@ -268,3 +268,4 @@ export default function Sidebar({ sidebarOpen, closeSidebar }) {
     </>
   );
 }
+export default Sidebar;

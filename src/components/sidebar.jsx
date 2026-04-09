@@ -268,4 +268,5 @@ const Sidebar=({ sidebarOpen, closeSidebar })=> {
     </>
   );
 }
+
 export default Sidebar;

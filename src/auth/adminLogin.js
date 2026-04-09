@@ -28,6 +28,7 @@ export const getDashboardStats = async () => {
                 Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
         });
+        // Returning response.data.data to directly access the stats object
         return response.data.data;
     } catch (error) {
         throw error.response ? error.response.data : new Error("Network Error");
@@ -590,11 +591,18 @@ export const deleteUserAPI = async (id) => {
     }
 };
 
-export const getDashboardUsers = async () => {
+
+export const searchUsersAPI = async (name) => {
     try {
-        const response = await apiClient.get("/admin/users/all-users");
-        return response.data;
+        const response = await apiClient.get("/admin/users/search", {
+            params: { name }, // This will append ?name=... to the URL
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+        });
+        return response.data; // Returns { status, message, data }
     } catch (error) {
-        throw error.response ? error.response.data : new Error("Network Error or Server Unreachable");
+        throw error.response ? error.response.data : new Error("Network Error");
     }
 };
+

@@ -3,7 +3,7 @@ import {
   Search, Ban, CheckCircle, UserCircle,
   Edit, Trash2, X, Save, Phone, MessageCircle
 } from "lucide-react";
-import { getAllMasterUsers, updateUserProfileAPI, deleteUserAPI } from "../../auth/adminLogin";
+import { getAllMasterUsers, updateUserProfileAPI, deleteUserAPI, searchUsersAPI } from "../../auth/adminLogin";
 
 import toast, { Toaster } from 'react-hot-toast';
 export default function UserMasterProfile() {
@@ -13,6 +13,25 @@ export default function UserMasterProfile() {
   useEffect(() => {
     fetchUsers();
   }, []);
+
+
+  const mapUserData = (apiData) => {
+    return apiData.map(u => ({
+      id: u._id,
+      name: u.fullName || u.name || "Unknown User",
+      photo: u.profilePhoto || "",
+      mobile: u.mobile || "N/A",
+      whatsapp: u.mobile || "N/A",
+      gender: u.gender,
+      location: typeof u.location === 'object' ? u.location.address || "Point" : u.location,
+      blood: u.bloodGroup,
+      role: u.role,
+      credits: u.credits,
+      status: u.status,
+      joined: new Date(u.createdAt).toLocaleDateString(),
+      lastActive: new Date(u.updatedAt).toLocaleString()
+    }));
+  };
 
   const fetchUsers = async () => {
     try {
@@ -43,15 +62,46 @@ export default function UserMasterProfile() {
     }
   };
   const [search, setSearch] = useState("");
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(async () => {
+      if (search.trim() !== "") {
+        try {
+          // Note: mapUserData function fetchUsers ke upar define honi chahiye
+          const response = await searchUsersAPI(search);
+          if (response.status) {
+            const mapped = response.data.map(u => ({
+              id: u._id,
+              name: u.fullName || u.name || "Unknown User",
+              photo: u.profilePhoto || "",
+              mobile: u.mobile || "N/A",
+              whatsapp: u.mobile || "N/A",
+              gender: u.gender,
+              location: typeof u.location === 'object' ? u.location.address || "Point" : u.location,
+              blood: u.bloodGroup,
+              role: u.role,
+              credits: u.credits,
+              status: u.status,
+              joined: new Date(u.createdAt).toLocaleDateString(),
+              lastActive: new Date(u.updatedAt).toLocaleString()
+            }));
+            setUsers(mapped);
+          }
+        } catch (error) {
+          console.error("Search failed", error);
+        }
+      } else {
+        fetchUsers();
+      }
+    }, 500);
 
+    return () => clearTimeout(delayDebounceFn);
+  }, [search]);
   // State for Edit Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
 
   // Filter Logic
-  const filteredUsers = users.filter((u) =>
-    (u.name || "").toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredUsers = users;
 
   // --- ACTIONS ---
 

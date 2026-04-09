@@ -23,7 +23,7 @@ import {
   TrendingUp,
   Loader2, // Loading icon ke liye
 } from "lucide-react";
-import { getDashboardStats, getDashboardUsers } from "../../auth/adminLogin"
+import { getDashboardStats } from "../../auth/adminLogin"
 
 const OTHER_STATIC_STATS = {
   shops: "184",
@@ -108,21 +108,8 @@ function Dashboard() {
       </div>
     );
   }
-  const [users, setUsers] = useState([]);
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await getDashboardUsers();
-        if (response.success) {
-          setUsers(response.data);
-        }
-      } catch (error) {
-        console.error("Failed to fetch users", error);
-      }
-    };
-    fetchUsers();
-  }, []);
+
   return (
     <div className="p-8 bg-[#F8FAFC] min-h-screen font-sans">
       {/* -------------------- HEADER -------------------- */}
@@ -185,36 +172,40 @@ function Dashboard() {
         />
       </div>
 
-      {/* -------------------- BUSINESS & JOBS (STATIC) -------------------- */}
+      {/* -------------------- BUSINESS & JOBS (API DATA) -------------------- */}
       <SectionTitle title="Business & Marketplace" />
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
         <StatCard
           title="Shops (Lite+Pro)"
-          value={OTHER_STATIC_STATS.shops}
+          value={stats?.totalBusinesses || 0} // Map from API
           icon={Store}
           color="bg-pink-500"
+          isLoading={loading}
         />
         <StatCard
           title="Marketplace"
-          value={OTHER_STATIC_STATS.marketplaceListings}
+          value={stats?.totalItems || 0} // Map from API
           icon={ShoppingBag}
           color="bg-yellow-500"
+          isLoading={loading}
         />
         <StatCard
           title="Part-time Jobs"
-          value={OTHER_STATIC_STATS.partTimeJobs}
+          value={stats?.partTimeJobs || 0} // Map from API
           icon={Briefcase}
           color="bg-cyan-500"
+          isLoading={loading}
         />
         <StatCard
           title="Full-time Jobs"
-          value={OTHER_STATIC_STATS.fullTimeJobs}
+          value={stats?.fullTimeJobs || 0} // Map from API
           icon={Briefcase}
           color="bg-blue-600"
+          isLoading={loading}
         />
       </div>
 
-      {/* -------------------- FINANCE & COMMUNITY (STATIC) -------------------- */}
+      {/* -------------------- FINANCE & COMMUNITY (MIXED) -------------------- */}
       <SectionTitle title="Finance & Community" />
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
         <StatCard
@@ -237,9 +228,10 @@ function Dashboard() {
         />
         <StatCard
           title="Blood Requests"
-          value={OTHER_STATIC_STATS.bloodRequestsToday}
+          value={stats?.totalBloodRequests || 0} // Map from API
           icon={Droplets}
           color="bg-red-600"
+          isLoading={loading}
         />
       </div>
 

@@ -81,6 +81,26 @@ const UserTable = () => {
       }
     } catch (err) { console.error(err); }
   };
+
+  const handleDeleteAdmin = async () => {
+    if (!adminToDelete) return;
+    setDeleteLoading(true);
+    try {
+      const result = await deleteAdminAPI(adminToDelete);
+      if (result) {
+        setToast({ visible: true, message: "Admin deleted successfully!" });
+        // Update local state so the user disappears from the list immediately
+        setUsers(users.filter((user) => (user.id || user._id) !== adminToDelete));
+        setIsDeleteModalOpen(false);
+        setAdminToDelete(null);
+        setTimeout(() => setToast({ visible: false, message: "" }), 3000);
+      }
+    } catch (err) {
+      alert(err.message || "Failed to delete admin");
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
   // --- JSX Rendering ---
   return (
     <div className="p-8 bg-gray-50 min-h-screen font-sans">

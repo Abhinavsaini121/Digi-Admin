@@ -1,298 +1,318 @@
-import React, { useState } from "react";
-import { 
-  Edit, Trash2, Star, Tag, CheckCircle, X, 
-  ShoppingBag, DollarSign, Eye, MoreHorizontal 
+
+import React, { useState, useEffect } from "react";
+import {
+  Edit, Trash2, Star, X,
+  ShoppingBag, DollarSign, Eye, MapPin, Loader2, AlertCircle, ImageOff, AlertTriangle, CheckCircle
 } from "lucide-react";
 
-// --- DUMMY DATA ---
-const INITIAL_LISTINGS = [
-  {
-    id: 1,
-    title: "iPhone 13 Pro Max",
-    description: "256GB, Sierra Blue, Battery 92%",
-    category: "Electronics",
-    price: 65000,
-    isFeatured: true,
-    status: "Active",
-    image: "https://images.unsplash.com/photo-1632661674596-df8be070a5c5?auto=format&fit=crop&q=80&w=200"
-  },
-  {
-    id: 2,
-    title: "Wooden Coffee Table",
-    description: "Teak wood, 2 years old, minor scratches",
-    category: "Furniture",
-    price: 4500,
-    isFeatured: false,
-    status: "Active",
-    image: "https://images.unsplash.com/photo-1532372320572-cda25653a26d?auto=format&fit=crop&q=80&w=200"
-  },
-  {
-    id: 3,
-    title: "Royal Enfield Classic 350",
-    description: "2021 Model, 15k kms driven",
-    category: "Vehicles",
-    price: 180000,
-    isFeatured: true,
-    status: "Sold",
-    image: "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&q=80&w=200"
-  },
-  {
-    id: 4,
-    title: "Study Table & Chair",
-    description: "Ergonomic chair with white desk",
-    category: "Furniture",
-    price: 8000,
-    isFeatured: false,
-    status: "Inactive",
-    image: "https://images.unsplash.com/photo-1519643381401-22c779110e8e?auto=format&fit=crop&q=80&w=200"
-  },
-];
+const MarketplaceManager = () => {
+  const [items, setItems] = useState([]);
+  const [stats, setStats] = useState({
+    total: 0,
+    active: 0,
+    featured: 0,
+    sum: 0
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-const Marketplace = () => {
-  const [listings, setListings] = useState(INITIAL_LISTINGS);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentListing, setCurrentListing] = useState(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [currentItem, setCurrentItem] = useState(null);
+  const [actionLoading, setActionLoading] = useState(false);
 
-  // --- Actions ---
+  const [toast, setToast] = useState({ visible: false, message: "", type: "success" });
 
-  // Toggle Featured Status
-  const toggleFeatured = (id) => {
-    setListings(listings.map(item => 
-      item.id === id ? { ...item, isFeatured: !item.isFeatured } : item
-    ));
+  const showToast = (message, type = "success") => {
+    setToast({ visible: true, message, type });
+    setTimeout(() => {
+      setToast({ visible: false, message: "", type: "success" });
+    }, 5000);
   };
 
-  // Delete Listing
-  const handleDelete = (id) => {
-    if (window.confirm("Are you sure you want to delete this listing?")) {
-      setListings(listings.filter(item => item.id !== id));
+  const fetchMarketplaceData = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("https://digiapp-node-1.onrender.com/api/admin/items/Items", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        }
+      });
+
+      if (response.status === 401) {
+        setError("Session expired. Please login again.");
+        setLoading(false);
+        return;
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        setItems(result.data);
+        setStats({
+          total: result.totalItems || 0,
+          active: result.activeItems || 0,
+          featured: result.featuredItems || 0,
+          sum: result.totalPriceSum || 0
+        });
+      } else {
+        setError("Failed to load data");
+      }
+    } catch (err) {
+      setError("API Error: " + err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Open Edit Modal
-  const handleEdit = (item) => {
-    setCurrentListing({ ...item });
-    setIsModalOpen(true);
+  useEffect(() => {
+    fetchMarketplaceData();
+  }, []);
+
+  const openEditModal = (item) => {
+    setCurrentItem({ ...item });
+    setIsEditModalOpen(true);
   };
 
-  // Save Changes (Simulated)
-  const handleSave = () => {
-    setListings(listings.map(item => 
-      item.id === currentListing.id ? currentListing : item
-    ));
-    setIsModalOpen(false);
+  const handleUpdateConfirm = async () => {
+    if (!currentItem) return;
+    setActionLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`https://digiapp-node-1.onrender.com/api/admin/items/update/${currentItem._id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          title: currentItem.title,
+          price: currentItem.price,
+          isActive: currentItem.isActive,
+          category: currentItem.category
+        })
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        setItems(items.map(item => item._id === currentItem._id ? result.data : item));
+        setIsEditModalOpen(false);
+        setCurrentItem(null);
+        showToast("Updated successfully", "success");
+      } else {
+        alert("Update failed: " + result.message);
+      }
+    } catch (err) {
+      alert("Error updating item: " + err.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const openDeleteModal = (item) => {
+    setCurrentItem(item);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!currentItem) return;
+    setActionLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`https://digiapp-node-1.onrender.com/api/admin/items/delete/${currentItem._id}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        setItems(items.filter(item => item._id !== currentItem._id));
+        setIsDeleteModalOpen(false);
+        setCurrentItem(null);
+        showToast("Deleted successfully", "success");
+      } else {
+        alert("Failed to delete item: " + result.message);
+      }
+    } catch (err) {
+      alert("Error deleting item: " + err.message);
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   return (
-    <div className="p-4 md:p-8 bg-[#f8fafc] min-h-screen font-sans">
-      
-      {/* Header */}
+    <div className="p-4 md:p-8 bg-[#f8fafc] min-h-screen font-sans text-slate-900 relative">
+
+      {toast.visible && (
+        <div className="fixed top-5 right-5 z-[1100] animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className={`flex items-center gap-3 px-5 py-3 rounded-xl shadow-2xl border text-white font-bold ${toast.type === "success" ? "bg-emerald-600 border-emerald-400" : "bg-red-600 border-red-400"}`}>
+            {toast.type === "success" ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
+            <p className="text-sm tracking-wide">{toast.message}</p>
+            <button onClick={() => setToast({ ...toast, visible: false })} className="ml-2 hover:opacity-70"><X size={16} /></button>
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-800 tracking-tight">
-            Marketplace Listings
-          </h1>
-          <p className="text-slate-500 text-sm">Manage Buy/Sell products, categories & status</p>
+          <h1 className="text-2xl font-extrabold tracking-tight text-slate-800">MarketPlace Dashboard</h1>
+          <p className="text-slate-500 text-sm">Real-time Marketplace Management</p>
         </div>
-        <button className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg text-sm font-medium shadow-md transition-all active:scale-95">
-          + Add New Listing
+        <button
+          onClick={fetchMarketplaceData}
+          className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg text-sm font-bold shadow-md flex items-center gap-2 transition-all active:scale-95"
+        >
+          <Loader2 size={16} className={loading ? "animate-spin" : "hidden"} />
+          Refresh List
         </button>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <StatCard title="Total Listings" value={listings.length} icon={<ShoppingBag size={20} />} color="blue" />
-        <StatCard title="Active Listings" value={listings.filter(i => i.status === 'Active').length} icon={<Eye size={20} />} color="emerald" />
-        <StatCard title="Featured Items" value={listings.filter(i => i.isFeatured).length} icon={<Star size={20} />} color="amber" />
-        <StatCard title="Total Value" value={`₹${(listings.reduce((acc, curr) => acc + curr.price, 0) / 1000).toFixed(0)}k`} icon={<DollarSign size={20} />} color="indigo" />
-      </div>
-
-      {/* Table Container */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-slate-50/50 border-b border-slate-200">
-                <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Product Details</th>
-                <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Category</th>
-                <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Price</th>
-                <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider text-center">Featured</th>
-                <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider text-center">Status</th>
-                <th className="p-4 text-xs font-bold text-slate-400 uppercase tracking-wider text-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {listings.map((item) => (
-                <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
-                  
-                  {/* 1. Title & Details (Image included) */}
-                  <td className="p-4 align-top max-w-[300px]">
-                    <div className="flex items-start gap-3">
-                      <img 
-                        src={item.image} 
-                        alt="product" 
-                        className="w-12 h-12 rounded-lg object-cover border border-slate-200 shadow-sm"
-                      />
-                      <div>
-                        <p className="font-bold text-slate-800 text-sm mb-0.5">{item.title}</p>
-                        <p className="text-xs text-slate-500 line-clamp-1">{item.description}</p>
-                      </div>
-                    </div>
-                  </td>
-
-                  {/* 2. Category */}
-                  <td className="p-4 align-top">
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
-                      <Tag size={12} /> {item.category}
-                    </span>
-                  </td>
-
-                  {/* 3. Price */}
-                  <td className="p-4 align-top font-bold text-slate-700 text-sm">
-                    ₹{item.price.toLocaleString()}
-                  </td>
-
-                  {/* 4. Featured Toggle */}
-                  <td className="p-4 align-top text-center">
-                    <button 
-                      onClick={() => toggleFeatured(item.id)}
-                      className={`p-1 rounded-full transition-all ${item.isFeatured ? 'text-amber-400 hover:text-amber-500 bg-amber-50' : 'text-slate-300 hover:text-slate-400'}`}
-                    >
-                      <Star size={18} fill={item.isFeatured ? "currentColor" : "none"} />
-                    </button>
-                  </td>
-
-                  {/* 5. Status */}
-                  <td className="p-4 align-top text-center">
-                    <StatusBadge status={item.status} />
-                  </td>
-
-                  {/* 6. Admin Actions (Edit / Delete) */}
-                  <td className="p-4 align-top text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <button 
-                        onClick={() => handleEdit(item)}
-                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded border border-transparent hover:border-blue-100 transition-all"
-                        title="Edit"
-                      >
-                        <Edit size={16} />
-                      </button>
-                      <button 
-                        onClick={() => handleDelete(item.id)}
-                        className="p-1.5 text-red-600 hover:bg-red-50 rounded border border-transparent hover:border-red-100 transition-all"
-                        title="Delete"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          
-          {listings.length === 0 && (
-            <div className="p-8 text-center text-slate-400">
-              No listings found.
-            </div>
-          )}
+      {!loading && !error && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <StatCard title="Total Items" value={stats.total} icon={<ShoppingBag size={20} />} color="blue" />
+          <StatCard title="Active Items" value={stats.active} icon={<Eye size={20} />} color="emerald" />
+          <StatCard title="Featured" value={stats.featured} icon={<Star size={20} />} color="amber" />
+          <StatCard title="Total Sum" value={`₹${(stats.sum / 1000).toFixed(0)}k`} icon={<DollarSign size={20} />} color="indigo" />
         </div>
-      </div>
+      )}
 
-      {/* --- EDIT MODAL --- */}
-      {isModalOpen && currentListing && (
+      {loading && (
+        <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-slate-200 shadow-sm">
+          <Loader2 className="animate-spin text-indigo-600 mb-4" size={40} />
+          <p className="text-slate-500 font-medium italic">Syncing with server...</p>
+        </div>
+      )}
+
+      {error && !loading && (
+        <div className="p-8 text-center bg-red-50 rounded-2xl border border-red-100 text-red-600">
+          <AlertCircle size={40} className="mx-auto mb-2" />
+          <p className="font-bold">Error: {error}</p>
+        </div>
+      )}
+
+      {!loading && !error && (
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-50/50 border-b border-slate-200 text-slate-400">
+                  <th className="p-4 text-xs font-bold uppercase tracking-wider">Product Info</th>
+                  <th className="p-4 text-xs font-bold uppercase tracking-wider">Category</th>
+                  <th className="p-4 text-xs font-bold uppercase tracking-wider">Price</th>
+                  <th className="p-4 text-xs font-bold uppercase tracking-wider text-center">Featured</th>
+                  <th className="p-4 text-xs font-bold uppercase tracking-wider text-center">Status</th>
+                  <th className="p-4 text-xs font-bold uppercase tracking-wider text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {items.map((item) => (
+                  <tr key={item._id} className="hover:bg-slate-50/50 transition-colors">
+                    <td className="p-4 max-w-xs">
+                      <div className="flex gap-3">
+                        {item.images && item.images.length > 0 ? (
+                          <img src={item.images[0]} className="w-12 h-12 rounded-lg object-cover border" alt="" />
+                        ) : (
+                          <div className="w-12 h-12 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400 border"><ImageOff size={16} /></div>
+                        )}
+                        <div>
+                          <p className="font-bold text-sm text-slate-800 line-clamp-1">{item.title}</p>
+                          <p className="text-[10px] text-slate-500 flex items-center gap-1 mt-0.5">
+                            <MapPin size={10} /> {item.location?.address || "No Address"}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded text-[10px] font-bold uppercase border border-indigo-100">
+                        {item.category}
+                      </span>
+                    </td>
+                    <td className="p-4 font-bold text-sm text-slate-700">₹{item.price.toLocaleString()}</td>
+                    <td className="p-4 text-center">
+                      <Star size={18} className={item.isFeatured ? "text-amber-400 fill-amber-400 mx-auto" : "text-slate-200 mx-auto"} />
+                    </td>
+                    <td className="p-4 text-center">
+                      <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full uppercase ${item.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                        {item.isActive ? "Active" : "Inactive"}
+                      </span>
+                    </td>
+                    <td className="p-4 text-center">
+                      <div className="flex justify-center gap-2">
+                        <button onClick={() => openEditModal(item)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"><Edit size={16} /></button>
+                        <button onClick={() => openDeleteModal(item)} className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"><Trash2 size={16} /></button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {items.length === 0 && <div className="p-10 text-center text-slate-400 font-medium">No items found in database.</div>}
+          </div>
+        </div>
+      )}
+
+      {isEditModalOpen && currentItem && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-white">
-              <h2 className="text-lg font-bold text-slate-800">Edit Listing</h2>
-              <button onClick={() => setIsModalOpen(false)} className="p-1 hover:bg-slate-100 rounded-full text-slate-400">
-                <X size={20} />
-              </button>
+            <div className="flex items-center justify-between px-6 py-4 border-b">
+              <h2 className="text-lg font-bold">Edit Listing</h2>
+              <button onClick={() => setIsEditModalOpen(false)} className="text-slate-400 hover:text-slate-600"><X size={20} /></button>
             </div>
-
-            {/* Modal Body */}
             <div className="p-6 space-y-4">
-              
-              {/* Title */}
               <div>
                 <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Product Title</label>
-                <input 
-                  type="text" 
-                  value={currentListing.title}
-                  onChange={(e) => setCurrentListing({...currentListing, title: e.target.value})}
-                  className="w-full p-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                <input
+                  type="text"
+                  value={currentItem.title}
+                  onChange={(e) => setCurrentItem({ ...currentItem, title: e.target.value })}
+                  className="w-full p-2.5 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
-
-              {/* Category & Price */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Category</label>
-                  <select 
-                    value={currentListing.category}
-                    onChange={(e) => setCurrentListing({...currentListing, category: e.target.value})}
-                    className="w-full p-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option>Electronics</option>
-                    <option>Furniture</option>
-                    <option>Vehicles</option>
-                    <option>Fashion</option>
-                    <option>Other</option>
-                  </select>
+                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Price (₹)</label>
+                  <input
+                    type="number"
+                    value={currentItem.price}
+                    onChange={(e) => setCurrentItem({ ...currentItem, price: parseInt(e.target.value) })}
+                    className="w-full p-2.5 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Price (₹)</label>
-                  <input 
-                    type="number" 
-                    value={currentListing.price}
-                    onChange={(e) => setCurrentListing({...currentListing, price: parseInt(e.target.value)})}
-                    className="w-full p-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Category</label>
+                  <input
+                    type="text"
+                    value={currentItem.category}
+                    onChange={(e) => setCurrentItem({ ...currentItem, category: e.target.value })}
+                    className="w-full p-2.5 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
               </div>
-
-              {/* Status & Featured */}
-              <div className="grid grid-cols-2 gap-4 pt-2">
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Status</label>
-                  <select 
-                    value={currentListing.status}
-                    onChange={(e) => setCurrentListing({...currentListing, status: e.target.value})}
-                    className="w-full p-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="Active">Active</option>
-                    <option value="Sold">Sold</option>
-                    <option value="Inactive">Inactive</option>
-                  </select>
-                </div>
-                <div className="flex items-center pt-6">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input 
-                      type="checkbox" 
-                      checked={currentListing.isFeatured}
-                      onChange={(e) => setCurrentListing({...currentListing, isFeatured: e.target.checked})}
-                      className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                    />
-                    <span className="text-sm font-semibold text-slate-700">Mark as Featured</span>
-                  </label>
-                </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Active Status</label>
+                <select
+                  value={currentItem.isActive ? "true" : "false"}
+                  onChange={(e) => setCurrentItem({ ...currentItem, isActive: e.target.value === "true" })}
+                  className="w-full p-2.5 border rounded-lg text-sm outline-none bg-white focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="true">Active</option>
+                  <option value="false">Inactive</option>
+                </select>
               </div>
-
             </div>
-
-            {/* Modal Footer */}
-            <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
-              <button 
-                onClick={() => setIsModalOpen(false)}
-                className="px-4 py-2 text-sm font-bold text-slate-500 hover:text-slate-700"
+            <div className="px-6 py-4 bg-slate-50 border-t flex justify-end gap-3">
+              <button onClick={() => setIsEditModalOpen(false)} className="text-sm font-bold text-slate-500 hover:text-slate-700">Cancel</button>
+              <button
+                onClick={handleUpdateConfirm}
+                disabled={actionLoading}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg text-sm font-bold flex items-center gap-2 disabled:opacity-70"
               >
-                Cancel
-              </button>
-              <button 
-                onClick={handleSave}
-                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold shadow-md"
-              >
+                {actionLoading && <Loader2 size={16} className="animate-spin" />}
                 Save Changes
               </button>
             </div>
@@ -300,11 +320,41 @@ const Marketplace = () => {
         </div>
       )}
 
+      {isDeleteModalOpen && currentItem && (
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="p-6 text-center">
+              <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <AlertTriangle size={32} />
+              </div>
+              <h2 className="text-xl font-bold text-slate-800">Confirm Delete</h2>
+              <p className="text-slate-500 mt-2 text-sm">
+                Are you sure you want to delete <span className="font-bold text-slate-700">"{currentItem.title}"</span>? This action cannot be undone.
+              </p>
+            </div>
+            <div className="px-6 py-4 bg-slate-50 flex flex-col gap-2">
+              <button
+                onClick={handleDeleteConfirm}
+                disabled={actionLoading}
+                className="w-full bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-colors disabled:opacity-70"
+              >
+                {actionLoading ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+                {actionLoading ? "Deleting..." : "Delete Permanently"}
+              </button>
+              <button
+                onClick={() => setIsDeleteModalOpen(false)}
+                disabled={actionLoading}
+                className="w-full bg-white border border-slate-200 text-slate-600 py-2.5 rounded-xl font-bold text-sm hover:bg-slate-100 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
-
-/* --- Reusable Components --- */
 
 const StatCard = ({ title, value, icon, color }) => {
   const colors = {
@@ -313,32 +363,15 @@ const StatCard = ({ title, value, icon, color }) => {
     amber: "bg-amber-50 text-amber-600",
     indigo: "bg-indigo-50 text-indigo-600"
   };
-
   return (
-    <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-100 flex items-start justify-between">
+    <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-100 flex items-start justify-between transition-transform hover:translate-y-[-2px]">
       <div>
         <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">{title}</p>
         <h2 className="text-2xl font-extrabold text-slate-800 mt-1">{value}</h2>
       </div>
-      <div className={`p-2 rounded-lg ${colors[color]}`}>
-        {icon}
-      </div>
+      <div className={`p-2 rounded-lg ${colors[color]}`}>{icon}</div>
     </div>
   );
 };
 
-const StatusBadge = ({ status }) => {
-  const styles = {
-    Active: "bg-emerald-100 text-emerald-700",
-    Sold: "bg-slate-100 text-slate-600",
-    Inactive: "bg-red-100 text-red-700"
-  };
-
-  return (
-    <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full uppercase tracking-wide ${styles[status] || styles.Inactive}`}>
-      {status}
-    </span>
-  );
-};
-
-export default Marketplace;
+export default MarketplaceManager;

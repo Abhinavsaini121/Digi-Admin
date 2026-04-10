@@ -606,3 +606,45 @@ export const searchUsersAPI = async (name) => {
     }
 };
 
+export const registerAdmin = async (name, email, password) => {
+    try {
+        const response = await apiClient.post('/admin/register', {
+            name,
+            email,
+            password
+        });
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : new Error("Network Error");
+    }
+};
+
+export const searchAdminAPI = async (query) => {
+    try {
+        const token = localStorage.getItem("token");
+        const response = await apiClient.get("/admin/search-admin", {
+            params: { query },
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : new Error("Network Error");
+    }
+};
+
+
+export const deleteAdminAPI = async (id) => {
+    try {
+        const token = localStorage.getItem("token");
+        const response = await apiClient.delete(`/admin/delete/${id}`, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        return response.data; // Expected: { "message": "Admin deleted successfully" }
+    } catch (error) {
+        throw error.response ? error.response.data : new Error("Network Error");
+    }
+};

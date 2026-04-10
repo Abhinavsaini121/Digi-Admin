@@ -648,3 +648,41 @@ export const deleteAdminAPI = async (id) => {
         throw error.response ? error.response.data : new Error("Network Error");
     }
 };
+
+export const updateAdminAPI = async (id, adminData) => {
+    try {
+        const token = localStorage.getItem("token");
+        const adminId = localStorage.getItem("id") || localStorage.getItem("userId");
+
+        // Including updatedBy for tracking, similar to your other update controllers
+        const dataToSend = { ...adminData, updatedBy: adminId };
+
+        const response = await apiClient.put(`/admin/update/${id}`, dataToSend, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+
+        return response.data; // Expected: { "message": "Admin updated successfully", "admin": {...} }
+    } catch (error) {
+        throw error.response ? error.response.data : new Error("Network Error");
+    }
+};
+
+// --- SEARCH USERS BY NAME ---
+export const searchUsersByNameAPI = async (name) => {
+    try {
+        const token = localStorage.getItem("token");
+
+        const response = await apiClient.get("/admin/users/search", {
+            params: { name }, // This adds ?name=Digi to the URL
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+
+        return response.data; // This returns the { status, message, data: [...] } object
+    } catch (error) {
+        throw error.response ? error.response.data : new Error("Network Error");
+    }
+};

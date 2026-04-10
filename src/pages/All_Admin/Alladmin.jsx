@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, UserPlus, Edit2, Lock, Unlock, Trash2, X } from 'lucide-react';
-import { getAllAdminData, registerAdmin, searchAdminAPI, deleteAdminAPI } from "../../auth/adminLogin";
+import { getAllAdminData, registerAdmin, searchAdminAPI, deleteAdminAPI, updateAdminAPI } from "../../auth/adminLogin";
 
 const UserTable = () => {
   // State for storing user data, loading, and error
@@ -15,6 +15,10 @@ const UserTable = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [adminToDelete, setAdminToDelete] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+  const [updateFormData, setUpdateFormData] = useState({ name: '', email: '' });
+  const [adminToUpdateId, setAdminToUpdateId] = useState(null);
+  const [updateLoading, setUpdateLoading] = useState(false);
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -99,6 +103,32 @@ const UserTable = () => {
       alert(err.message || "Failed to delete admin");
     } finally {
       setDeleteLoading(false);
+    }
+  };
+
+
+  const openUpdateModal = (user) => {
+    setAdminToUpdateId(user.id || user._id);
+    setUpdateFormData({ name: user.name, email: user.email });
+    setIsUpdateModalOpen(true);
+  };
+
+  const handleUpdateAdmin = async (e) => {
+    e.preventDefault();
+    setUpdateLoading(true);
+    try {
+      const result = await updateAdminAPI(adminToUpdateId, updateFormData);
+      if (result) {
+        setToast({ visible: true, message: "Admin updated successfully!" });
+        // Update local state so UI updates immediately
+        setUsers(users.map(u => (u.id || u._id) === adminToUpdateId ? { ...u, ...updateFormData } : u));
+        setIsUpdateModalOpen(false);
+        setTimeout(() => setToast({ visible: false, message: "" }), 3000);
+      }
+    } catch (err) {
+      alert(err.message || "Update failed");
+    } finally {
+      setUpdateLoading(false);
     }
   };
   // --- JSX Rendering ---
@@ -198,15 +228,24 @@ const UserTable = () => {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex justify-center gap-4 text-gray-400">
-                      <Edit2 size={18} className="cursor-pointer hover:text-blue-500" />
-                      {/* Assuming the action logic should use the fetched status */}
+                      <Edit2
+                        size={18}
+                        className="cursor-pointer hover:text-blue-500"
+                        onClick={() => openUpdateModal(user)}
+                      />                      {/* Assuming the action logic should use the fetched status */}
                       {user.status === 'BLOCKED' ? (
                         <Unlock size={18} className="cursor-pointer text-green-500" />
                       ) : (
                         <Lock size={18} className="cursor-pointer text-yellow-500" />
                       )}
-                      <Trash2 size={18} className="cursor-pointer hover:text-red-500" />
-                    </div>
+                      <Trash2
+                        size={18}
+                        className="cursor-pointer hover:text-red-500"
+                        onClick={() => {
+                          setAdminToDelete(user.id || user._id); // Ensure you use the correct ID field
+                          setIsDeleteModalOpen(true);
+                        }}
+                      />                    </div>
                   </td>
                 </tr>
               ))}
@@ -256,6 +295,77 @@ const UserTable = () => {
                 <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 px-4 py-2.5 border rounded-lg font-bold text-gray-500 hover:bg-gray-50">Cancel</button>
                 <button type="submit" disabled={regLoading} className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 disabled:opacity-50">
                   {regLoading ? "Registering..." : "Register Admin"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* DELETE CONFIRMATION MODAL */}
+      {isDeleteModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden p-6 text-center">
+            <div className="flex justify-center mb-4">
+              <div className="bg-red-100 p-3 rounded-full">
+                <Trash2 size={30} className="text-red-600" />
+              </div>
+            </div>
+            <h2 className="text-xl font-bold text-gray-800 mb-2">Are you sure?</h2>
+            <p className="text-gray-500 mb-6">
+              Do you really want to delete this admin? This action cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setIsDeleteModalOpen(false)}
+                className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg font-bold text-gray-600 hover:bg-gray-50 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteAdmin}
+                disabled={deleteLoading}
+                className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700 transition disabled:opacity-50"
+              >
+                {deleteLoading ? "Deleting..." : "Yes, Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* UPDATE ADMIN MODAL */}
+      {isUpdateModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+            <div className="flex justify-between items-center p-6 border-b">
+              <h2 className="text-xl font-bold text-gray-800">Edit Admin Details</h2>
+              <button onClick={() => setIsUpdateModalOpen(false)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
+            </div>
+            <form onSubmit={handleUpdateAdmin} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                <input
+                  required
+                  type="text"
+                  className="w-full p-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+                  value={updateFormData.name}
+                  onChange={(e) => setUpdateFormData({ ...updateFormData, name: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                <input
+                  required
+                  type="email"
+                  className="w-full p-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+                  value={updateFormData.email}
+                  onChange={(e) => setUpdateFormData({ ...updateFormData, email: e.target.value })}
+                />
+              </div>
+              <div className="flex gap-3 mt-6">
+                <button type="button" onClick={() => setIsUpdateModalOpen(false)} className="flex-1 px-4 py-2.5 border rounded-lg font-bold text-gray-500 hover:bg-gray-50">Cancel</button>
+                <button type="submit" disabled={updateLoading} className="flex-1 px-4 py-2.5 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 disabled:opacity-50">
+                  {updateLoading ? "Updating..." : "Save Changes"}
                 </button>
               </div>
             </form>

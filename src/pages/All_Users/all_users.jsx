@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Tag, Space, Button, message, Avatar, Modal } from 'antd';
+import { Table, Tag, Space, Button, message, Avatar, Modal, Input } from 'antd';
 import {
     UserOutlined,
     EditOutlined,
@@ -10,8 +10,8 @@ import {
     PlusOutlined
 } from '@ant-design/icons';
 // deleteUserAPI को import करें
-import { getAllUsersAPI, updateUserStatusAPI  } from '../../auth/adminLogin';
-import { deleteUserAPI } from '../../auth/apiAddUser'; 
+import { getAllUsersAPI, updateUserStatusAPI, searchUsersByNameAPI } from '../../auth/adminLogin';
+import { deleteUserAPI } from '../../auth/apiAddUser';
 import defaultUserImage from "../../assets/dummy.png";
 import AddUserFormModal from './AddUserFormModal';
 import EditUserFormModal from './EditUserFormModal';
@@ -25,8 +25,31 @@ const AllUsersContent = () => {
     const [isAddModalVisible, setIsAddModalVisible] = useState(false);
     const [isEditModalVisible, setIsEditModalVisible] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
+    const [searchText, setSearchText] = useState('');
+    const [roleFilter, setRoleFilter] = useState(null); // null = All, 'SERVICE_PROVIDER' = Providers, 'GENERAL_USER' = Customers
 
-    useEffect(() => {
+    const handleSearch = async (value) => {
+        setSearchText(value);
+
+        if (value.trim() === '') {
+            fetchData();
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const result = await searchUsersByNameAPI(value);
+            if (result && result.status && Array.isArray(result.data)) {
+                setData(result.data);
+            } else {
+                setData([]);
+            }
+        } catch (error) {
+            message.error(error.message || "Search failed");
+        } finally {
+            setLoading(false);
+        }
+    }; useEffect(() => {
         fetchData();
     }, []);
 
@@ -76,7 +99,7 @@ const AllUsersContent = () => {
             const response = await deleteUserAPI(userId);
             if (response && response.success) {
                 message.success('User deleted successfully!');
-               
+
                 fetchData();
             } else {
                 message.error(response.message || 'Failed to delete user.');
@@ -206,16 +229,37 @@ const AllUsersContent = () => {
             <p className="text-gray-500 mb-4">Manage all registered users on the platform.</p>
 
             <Space style={{ marginBottom: 20 }}>
-                <Button type="primary" size="middle" style={{ borderRadius: 20, background: '#4a69bd' }}>All Users</Button>
-                <Button size="middle" style={{ borderRadius: 20 }}>Service Providers</Button>
-                <Button size="middle" style={{ borderRadius: 20 }}>Customers</Button>
-            </Space>
+                <Button
+                    type={roleFilter === null ? "primary" : "default"}
+                    onClick={() => setRoleFilter(null)}
+                    style={{ borderRadius: 20, background: roleFilter === null ? '#4a69bd' : '' }}
+                >
+                    All Users
+                </Button>                <Button
+                    type={roleFilter === 'SERVICE_PROVIDER' ? "primary" : "default"}
+                    onClick={() => setRoleFilter('SERVICE_PROVIDER')}
+                    style={{ borderRadius: 20, background: roleFilter === 'SERVICE_PROVIDER' ? '#4a69bd' : '' }}
+                >
+                    Service Providers
+                </Button>
+                <Button
+                    type={roleFilter === 'GENERAL_USER' ? "primary" : "default"}
+                    onClick={() => setRoleFilter('GENERAL_USER')}
+                    style={{ borderRadius: 20, background: roleFilter === 'GENERAL_USER' ? '#4a69bd' : '' }}
+                >
+                    Customers
+                </Button>            </Space>
 
             <div className="flex justify-between items-center mb-4 pb-3 border-b border-gray-200">
                 <Space>
-                    <Button icon={<SearchOutlined />} style={{ border: '1px solid #ccc' }}>
-                        Search Users...
-                    </Button>
+                    <Input
+                        placeholder="Search Users by name..."
+                        prefix={<SearchOutlined />}
+                        value={searchText}
+                        onChange={(e) => handleSearch(e.target.value)}
+                        style={{ width: 250, borderRadius: 6 }}
+                        allowClear
+                    />
                 </Space>
                 <Button
                     type="primary"
@@ -228,7 +272,7 @@ const AllUsersContent = () => {
 
             <Table
                 columns={columns}
-                dataSource={data}
+                dataSource={roleFilter ? data.filter(user => user.role === roleFilter) : data}
                 loading={loading}
                 rowKey="_id"
                 pagination={{

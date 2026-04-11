@@ -49,21 +49,31 @@ const AllUsersContent = () => {
         } finally {
             setLoading(false);
         }
-    }; useEffect(() => {
-        fetchData();
+    };
+    useEffect(() => {
+        fetchData(1); // Page 1 load karega
     }, []);
 
-    const fetchData = async () => {
+    // Purana fetchData replace karein isse:
+    const fetchData = async (page = 1) => {
         setLoading(true);
         try {
-            const result = await getAllUsersAPI();
+            // API ko page number bhej rahe hain
+            const result = await getAllUsersAPI(page);
+
             if (result && result.success && Array.isArray(result.data)) {
                 setData(result.data);
+                // Agar backend se total count aa raha hai (e.g. result.total), 
+                // to yahan set karein (Optional but recommended)
             } else if (Array.isArray(result)) {
                 setData(result);
             } else {
                 setData([]);
             }
+
+            // Pagination state ko update karein taaki UI pe sahi page dikhe
+            setPagination(prev => ({ ...prev, current: page }));
+
         } catch (error) {
             message.error(error.message || "Failed to load user data");
         } finally {
@@ -278,10 +288,11 @@ const AllUsersContent = () => {
                 pagination={{
                     current: pagination.current,
                     pageSize: pagination.pageSize,
-                    onChange: (page, size) => setPagination({ current: page, pageSize: size })
+                    onChange: (page) => {
+                        fetchData(page); // Naya page fetch karega
+                    }
                 }}
             />
-
             <AddUserFormModal
                 visible={isAddModalVisible}
                 onClose={() => setIsAddModalVisible(false)}

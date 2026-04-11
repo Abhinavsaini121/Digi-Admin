@@ -17,8 +17,7 @@ import {
     getAllBloodRequestsAPI,
     updateBloodRequestAPI,
     deleteBloodRequestAPI,
-    getBloodRequestByIdAPI,
-    createNewBloodRequestFromAdminAPI
+    getBloodRequestByIdAPI, createBloodRequestAPI
 } from '../../auth/adminLogin';
 
 const { Option } = Select;
@@ -28,7 +27,7 @@ const { TextArea } = Input;
 const getInitialFormData = () => ({
     patientName: '', age: '', gender: 'Male', bloodGroup: '',
     units: 1, hospitalName: '', location: '', contactNumber: '',
-    urgency: 'Normal', description: '', whatsappNumber: ''
+    urgency: 'Low', description: '', whatsappNumber: '', latitude: '', longitude: ''
 });
 
 const BloodRequests = () => {
@@ -89,11 +88,6 @@ const BloodRequests = () => {
             return;
         }
 
-        if (!currentAdminId) {
-            message.error("Admin ID is missing or not set. Cannot create request.");
-            return;
-        }
-
         setSubmitLoading(true);
         try {
             const dataToSend = {
@@ -102,18 +96,19 @@ const BloodRequests = () => {
                 bloodGroup: formData.bloodGroup,
                 urgency: formData.urgency,
                 hospitalName: formData.hospitalName,
-                location: formData.location,
+                lat: parseFloat(formData.latitude),
+                lng: parseFloat(formData.longitude),
+                address: formData.location,
                 contactNumber: formData.contactNumber,
                 whatsappNumber: formData.whatsappNumber,
-                additionalInfo: formData.description, // Assuming API uses 'additionalInfo'
+                additionalInfo: formData.description,
             };
+            const response = await createBloodRequestAPI(dataToSend);
 
-            const response = await createNewBloodRequestFromAdminAPI(dataToSend);
-
-            if (response && (response.success || response._id)) {
+            if (response && response.success) {
                 message.success("Blood Request Posted Successfully!");
                 setIsAddModalOpen(false);
-                setFormData(getInitialFormData()); // Reset Form
+                setFormData(getInitialFormData());
                 fetchData();
             } else {
                 message.error(response.message || "Failed to post request");
@@ -124,7 +119,46 @@ const BloodRequests = () => {
             setSubmitLoading(false);
         }
     };
+    // --- POST (Add) Handler ---
 
+    const handleAutoFetchLocation = () => {
+        if (!navigator.geolocation) {
+            return message.error("Geolocation is not supported by your browser");
+        }
+
+        setLoading(true);
+        navigator.geolocation.getCurrentPosition(
+            async (position) => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+
+                setFormData(prev => ({
+                    ...prev,
+                    latitude: lat.toString(),
+                    longitude: lng.toString()
+                }));
+
+                // Reverse Geocoding — lat/lng se address fetch karo
+                try {
+                    const res = await fetch(
+                        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`
+                    );
+                    const geoData = await res.json();
+                    const address = geoData.display_name || `${lat}, ${lng}`;
+                    setFormData(prev => ({ ...prev, location: address }));
+                } catch {
+                    setFormData(prev => ({ ...prev, location: `${lat}, ${lng}` }));
+                }
+
+                setLoading(false);
+                message.success("Location fetched successfully!");
+            },
+            () => {
+                setLoading(false);
+                message.error("Unable to retrieve your location. Please enter manually.");
+            }
+        );
+    };
     // --- PUT (Edit) Handlers ---
     const handleEditClick = (record) => {
         setEditingRecord(record);
@@ -139,7 +173,7 @@ const BloodRequests = () => {
             location: record.location?.address || record.location || record.city || '',
 
             contactNumber: record.contactNumber || record.mobile || '',
-            urgency: record.urgency || 'Normal',
+            urgency: record.urgency || 'Low',
             description: record.description || '',
             whatsappNumber: record.whatsappNumber || record.contactNumber || '',
             userId: record.userId || ''
@@ -152,9 +186,18 @@ const BloodRequests = () => {
         setSubmitLoading(true);
         try {
             const dataToSend = {
-                ...formData,
+                userId: currentAdminId,
+                adminId: currentAdminId,          // ✅ add this
+                patientName: formData.patientName,
+                bloodGroup: formData.bloodGroup,
+                urgency: formData.urgency,
+                hospitalName: formData.hospitalName,
+                contactNumber: formData.contactNumber,
                 whatsappNumber: formData.whatsappNumber,
-                userId: editingRecord.userId || formData.userId,
+                additionalInfo: formData.description,
+                lat: parseFloat(formData.latitude),    // ✅ was: latitude
+                lng: parseFloat(formData.longitude),   // ✅ was: longitude
+                address: formData.location,            // ✅ was: location object
             };
 
             const response = await updateBloodRequestAPI(editingRecord._id, dataToSend);
@@ -354,9 +397,9 @@ const BloodRequests = () => {
                     <h1 className="text-2xl font-bold text-gray-800">Blood Requests</h1>
                     <Space wrap size="small">
                         <Button style={activeTabStyle}>All</Button>
-                        <Button style={tabButtonStyle}>Urgent</Button>
-                        <Button style={tabButtonStyle}>Pending</Button>
-                        <Button style={tabButtonStyle}>Fulfilled</Button>
+                        <Button style={tabButtonStyle}>NORMAL</Button>
+                        <Button style={tabButtonStyle}>URGENT</Button>
+                        <Button style={tabButtonStyle}>CRITICAL</Button>
                     </Space>
                 </div>
                 <Button
@@ -435,11 +478,32 @@ const BloodRequests = () => {
                         <Col span={12}><label style={labelStyle}>Location (City)</label><Input placeholder="Enter city" name="location" value={formData.location} onChange={handleInputChange} style={inputStyle} /></Col>
                     </Row>
                     <Row gutter={16} style={{ marginBottom: '15px' }}>
+                        <Col span={8}>
+                            <label style={labelStyle}>Latitude</label>
+                            <Input placeholder="Lat" name="latitude" value={formData.latitude} onChange={handleInputChange} style={inputStyle} readOnly />
+                        </Col>
+                        <Col span={8}>
+                            <label style={labelStyle}>Longitude</label>
+                            <Input placeholder="Long" name="longitude" value={formData.longitude} onChange={handleInputChange} style={inputStyle} readOnly />
+                        </Col>
+                        <Col span={8}>
+                            <label style={labelStyle}>&nbsp;</label>
+                            <Button
+                                block
+                                icon={<EnvironmentOutlined />}
+                                onClick={handleAutoFetchLocation}
+                                style={{ borderRadius: '6px', height: '38px' }}
+                            >
+                                Fetch Location
+                            </Button>
+                        </Col>
+                    </Row>
+                    <Row gutter={16} style={{ marginBottom: '15px' }}>
                         <Col span={12}><label style={labelStyle}>Contact Number</label><Input placeholder="+91 9876543210" name="contactNumber" value={formData.contactNumber} onChange={handleInputChange} style={inputStyle} /></Col>
                         <Col span={12}>
                             <label style={labelStyle}>Urgency</label>
                             <Select placeholder="Select Urgency" style={{ width: '100%' }} value={formData.urgency} onChange={(val) => handleSelectChange('urgency', val)}>
-                                <Option value="Normal">Normal</Option><Option value="Urgent">Urgent</Option><Option value="Critical">Critical</Option>
+                                <Option value="Low">Low</Option><Option value="Urgent">Urgent</Option><Option value="Critical">Critical</Option>
                             </Select>
                         </Col>
                     </Row>
@@ -499,7 +563,7 @@ const BloodRequests = () => {
                             <Col span={12}>
                                 <label style={labelStyle}>Urgency</label>
                                 <Select placeholder="Select Urgency" style={{ width: '100%' }} value={formData.urgency} onChange={(val) => handleSelectChange('urgency', val)}>
-                                    <Option value="Normal">Normal</Option><Option value="Urgent">Urgent</Option><Option value="Critical">Critical</Option>
+                                    <Option value="Low">Low</Option><Option value="Urgent">Urgent</Option><Option value="Critical">Critical</Option>
                                 </Select>
                             </Col>
                         </Row>

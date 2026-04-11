@@ -20,7 +20,7 @@ import Notification from "./pages/Notifications/Notification";
 import ShopManage from "./pages/ShopManagement/shopmanage";
 import Moderation from "./pages/ModerationBlocking/Moderationblocking";
 import Setting from "./pages/SystemSetting/Systemsetting";
-import Reports from "./pages/Report_Export/Report_export";
+// import Reports from "./pages/Report_Export/Report_export";
 import Business from "./pages/Business_Varifies/business-verify";
 function App() {
   return (
@@ -59,7 +59,7 @@ function App() {
         <Route path="/notifications" element={<Notification />} />
         <Route path="/moderationblocking" element={<Moderation />} />
         <Route path="/systemsetting" element={<Setting />} />
-        <Route path="/report" element={<Reports />} />
+        {/* <Route path="/report" element={<Reports />} /> */}
         <Route path="/business" element={<Business />} />
 
       </Route>

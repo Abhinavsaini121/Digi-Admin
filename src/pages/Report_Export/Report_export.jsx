@@ -3,11 +3,11 @@ import React from 'react';
 const DataExportDashboard = () => {
   return (
     <div className="w-full bg-[#F8F9FC] p-4 md:p-8 font-sans text-gray-800">
-      
+
       {/* SECTION HEADER */}
       <div className="mb-2">
         <h3 className="uppercase text-xs font-bold text-gray-400 tracking-wider mb-6">
-           DATA & EXPORT MANAGER
+          DATA & EXPORT MANAGER
         </h3>
 
         {/* --- PART 1: DATA CATEGORIES --- */}
@@ -20,7 +20,7 @@ const DataExportDashboard = () => {
 
         {/* Grid for Data Items */}
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
-          
+
           {/* Item: Users */}
           <div className="bg-white p-5 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] hover:shadow-lg hover:-translate-y-1 transition-all duration-300 border border-transparent hover:border-blue-100 cursor-pointer group">
             <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center text-blue-500 mb-3 group-hover:bg-blue-500 group-hover:text-white transition-colors">
@@ -73,55 +73,13 @@ const DataExportDashboard = () => {
 
         </div>
 
-        {/* --- PART 2: EXPORT FORMATS --- */}
-        <div className="flex items-center gap-2 mb-4">
-          <span className="w-1 h-4 bg-[#FF6B00] rounded-full"></span>
-          <h4 className="text-gray-700 text-sm font-bold uppercase tracking-wide">
-            Export Format
-          </h4>
-        </div>
+
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          
-          {/* Format: PDF */}
-          <div className="bg-white p-6 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] flex items-center justify-between cursor-pointer hover:bg-red-50 transition-colors border-l-4 border-red-500">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center text-red-600">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <div>
-                <h5 className="text-lg font-bold text-gray-800">Export as PDF</h5>
-                <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Document Format</p>
-              </div>
-            </div>
-            <div className="bg-white rounded-full p-2 shadow-sm text-gray-400">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
-            </div>
-          </div>
 
-          {/* Format: Excel */}
-          <div className="bg-white p-6 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] flex items-center justify-between cursor-pointer hover:bg-green-50 transition-colors border-l-4 border-green-600">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-green-700">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <div>
-                <h5 className="text-lg font-bold text-gray-800">Export as Excel</h5>
-                <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Spreadsheet Format</p>
-              </div>
-            </div>
-            <div className="bg-white rounded-full p-2 shadow-sm text-gray-400">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
-            </div>
-          </div>
+
+
+
 
         </div>
 

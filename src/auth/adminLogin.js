@@ -244,16 +244,16 @@ export const getBloodRequestByIdAPI = async (id) => {
     }
 };
 
-export const createNewBloodRequestFromAdminAPI = async (requestDataWithUserId) => {
-    try {
-        const adminId = localStorage.getItem("id");
-        const finalData = { ...requestDataWithUserId, adminId };
-        const response = await apiClient.post('/admin/blood-requests', finalData);
-        return response.data;
-    } catch (error) {
-        throw error.response ? error.response.data : new Error("Network Error");
-    }
-};
+// export const createNewBloodRequestFromAdminAPI = async (requestDataWithUserId) => {
+//     try {
+//         const adminId = localStorage.getItem("id");
+//         const finalData = { ...requestDataWithUserId, adminId };
+//         const response = await apiClient.post('/admin/blood-requests', finalData);
+//         return response.data;
+//     } catch (error) {
+//         throw error.response ? error.response.data : new Error("Network Error");
+//     }
+// };
 
 export const getAllAdminData = async () => {
     try {
@@ -546,10 +546,11 @@ export const getSubCategoriesByCategory = async (categoryName) => {
     }
 };
 
-
-export const getAllMasterUsers = async () => {
+// page parameter add kiya gaya hai, default value 1 rakhi hai
+export const getAllMasterUsers = async (page = 1) => {
     try {
-        const response = await apiClient.get("/admin/users/all-users");
+        // Query parameter (?page=) add kiya gaya hai
+        const response = await apiClient.get(`/admin/users/all-users?page=${page}`);
         return response.data;
     } catch (error) {
         throw error.response ? error.response.data : new Error("Network Error or Server Unreachable");
@@ -684,5 +685,46 @@ export const searchUsersByNameAPI = async (name) => {
         return response.data; // This returns the { status, message, data: [...] } object
     } catch (error) {
         throw error.response ? error.response.data : new Error("Network Error");
+    }
+};
+
+export const createBloodRequestAPI = async (requestData) => {
+    try {
+        const adminId = localStorage.getItem("id") || localStorage.getItem("userId");
+
+        // Payload mein adminId add kar rahe hain agar localStorage mein available hai
+        const finalData = {
+            ...requestData,
+            adminId: requestData.adminId || adminId
+        };
+
+        const response = await apiClient.post('/admin/blood-requests', finalData);
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : new Error("Network Error");
+    }
+};
+
+export const deleteFullTimeJob = async (jobId) => {
+    try {
+        const token = localStorage.getItem("token"); // Apne token ka key name yahan use karein
+
+        const response = await fetch(`https://digiapp-node-1.onrender.com/api/admin/full-time/delete/${jobId}`, {
+            method: "DELETE",
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json"
+            }
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || "Failed to delete job");
+        }
+
+        return data;
+    } catch (error) {
+        throw error;
     }
 };

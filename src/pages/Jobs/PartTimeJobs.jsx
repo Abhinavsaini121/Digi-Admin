@@ -154,6 +154,7 @@ const PartTimeJobManagement = () => {
     try {
       setLoading(true);
       const response = await getAllJobs();
+      console.log("Full API Response:", response); // Isse check karein ki data ka array kahan hai
       setAllJobs(response.data || []);
     } catch (err) {
       toast.error("Error fetching job list");
@@ -173,10 +174,9 @@ const PartTimeJobManagement = () => {
 
   const filteredJobs = useMemo(() => {
     return allJobs.filter((job) =>
-      job.jobCategory?.toLowerCase().includes("part-time")
+      job.jobCategory?.toLowerCase().replace('_', '-').includes("part-time")
     );
   }, [allJobs]);
-
   // Handle Location Fetch for both Create & Edit
   const handleFetchLocation = (type) => {
     if (!navigator.geolocation) {
@@ -191,7 +191,7 @@ const PartTimeJobManagement = () => {
           const osmRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`);
           const osmData = await osmRes.json();
           const address = osmData.display_name || "Location Found";
-          
+
           if (type === 'create') {
             setNewJob(prev => ({ ...prev, latitude, longitude, address }));
           } else {
@@ -224,7 +224,7 @@ const PartTimeJobManagement = () => {
       setSaveLoading(true);
       const formData = new FormData();
       formData.append("userId", newJob.userId);
-      formData.append("jobCategory", "Part-time job");
+      formData.append("jobCategory", "PART_TIME_JOB");
       formData.append("title", newJob.title);
       formData.append("description", newJob.description || "N/A");
       formData.append("details", newJob.details);
@@ -276,7 +276,7 @@ const PartTimeJobManagement = () => {
       formData.append("isFeatured", String(selectedJob.isFeatured));
       formData.append("salaryRange[min]", selectedJob.salaryRange?.min);
       formData.append("salaryRange[max]", selectedJob.salaryRange?.max);
-      
+
       formData.append("location[address]", selectedJob.location?.address);
       formData.append("location[type]", "Point");
       formData.append("location[coordinates][0]", selectedJob.location?.coordinates[0]);
@@ -308,19 +308,19 @@ const PartTimeJobManagement = () => {
   const openEditModal = (job) => {
     // Mapping all nested and non-nested data properly to avoid UI blanks
     setSelectedJob({
-        ...job,
-        experience: job.experience || "Fresher",
-        qualification: job.qualification || "10th Pass",
-        whatsappNumber: job.whatsappNumber || "",
-        location: {
-            address: job.location?.address || "",
-            coordinates: job.location?.coordinates || [72.8777, 19.0760],
-            type: "Point"
-        },
-        salaryRange: {
-            min: job.salaryRange?.min || "",
-            max: job.salaryRange?.max || ""
-        }
+      ...job,
+      experience: job.experience || "Fresher",
+      qualification: job.qualification || "10th Pass",
+      whatsappNumber: job.whatsappNumber || "",
+      location: {
+        address: job.location?.address || "",
+        coordinates: job.location?.coordinates || [72.8777, 19.0760],
+        type: "Point"
+      },
+      salaryRange: {
+        min: job.salaryRange?.min || "",
+        max: job.salaryRange?.max || ""
+      }
     });
     setEditNewImages([]);
     setIsEditModalOpen(true);
@@ -493,25 +493,25 @@ const PartTimeJobManagement = () => {
               <div>
                 <label className="label-text">Current & New Images</label>
                 <div className="grid grid-cols-5 gap-3 mt-2">
-                    {/* Existing Images from API */}
-                    {selectedJob.images?.map((img, idx) => (
-                        <div key={idx} className="relative aspect-square rounded-xl overflow-hidden border border-blue-200">
-                            <img src={img} className="w-full h-full object-cover" alt="Existing" />
-                            <div className="absolute top-1 left-1 bg-blue-600 text-white text-[8px] px-1 rounded font-bold">LIVE</div>
-                        </div>
-                    ))}
-                    {/* New images picked during edit */}
-                    {editNewImages.map((file, idx) => (
-                        <div key={idx} className="relative aspect-square rounded-xl overflow-hidden border border-green-200">
-                            <img src={URL.createObjectURL(file)} className="w-full h-full object-cover" alt="New" />
-                            <button onClick={() => setEditNewImages(editNewImages.filter((_, i) => i !== idx))} className="absolute top-1 right-1 bg-white text-red-500 rounded-full p-0.5"><X size={10} /></button>
-                        </div>
-                    ))}
-                    { (selectedJob.images?.length || 0) + editNewImages.length < 5 && (
-                        <button onClick={() => editFileInputRef.current.click()} className="aspect-square border-2 border-dashed rounded-xl flex items-center justify-center text-slate-400 hover:border-blue-400">
-                            <PlusCircle size={24} />
-                        </button>
-                    )}
+                  {/* Existing Images from API */}
+                  {selectedJob.images?.map((img, idx) => (
+                    <div key={idx} className="relative aspect-square rounded-xl overflow-hidden border border-blue-200">
+                      <img src={img} className="w-full h-full object-cover" alt="Existing" />
+                      <div className="absolute top-1 left-1 bg-blue-600 text-white text-[8px] px-1 rounded font-bold">LIVE</div>
+                    </div>
+                  ))}
+                  {/* New images picked during edit */}
+                  {editNewImages.map((file, idx) => (
+                    <div key={idx} className="relative aspect-square rounded-xl overflow-hidden border border-green-200">
+                      <img src={URL.createObjectURL(file)} className="w-full h-full object-cover" alt="New" />
+                      <button onClick={() => setEditNewImages(editNewImages.filter((_, i) => i !== idx))} className="absolute top-1 right-1 bg-white text-red-500 rounded-full p-0.5"><X size={10} /></button>
+                    </div>
+                  ))}
+                  {(selectedJob.images?.length || 0) + editNewImages.length < 5 && (
+                    <button onClick={() => editFileInputRef.current.click()} className="aspect-square border-2 border-dashed rounded-xl flex items-center justify-center text-slate-400 hover:border-blue-400">
+                      <PlusCircle size={24} />
+                    </button>
+                  )}
                 </div>
                 <input type="file" ref={editFileInputRef} className="hidden" multiple accept="image/*" onChange={(e) => setEditNewImages([...editNewImages, ...Array.from(e.target.files)])} />
               </div>
@@ -524,15 +524,15 @@ const PartTimeJobManagement = () => {
               {/* Location Section in Edit */}
               <div className="p-5 bg-blue-50/50 rounded-2xl border border-blue-100 space-y-4">
                 <div className="flex items-center justify-between">
-                    <label className="label-text text-blue-700 font-bold">Job Location</label>
-                    <button onClick={() => handleFetchLocation('edit')} disabled={locLoading} className="bg-blue-600 text-white text-[10px] px-2 py-1 rounded-lg flex items-center gap-1">
-                        {locLoading ? <Loader2 size={10} className="animate-spin" /> : <Navigation size={10} />} Update Current
-                    </button>
+                  <label className="label-text text-blue-700 font-bold">Job Location</label>
+                  <button onClick={() => handleFetchLocation('edit')} disabled={locLoading} className="bg-blue-600 text-white text-[10px] px-2 py-1 rounded-lg flex items-center gap-1">
+                    {locLoading ? <Loader2 size={10} className="animate-spin" /> : <Navigation size={10} />} Update Current
+                  </button>
                 </div>
                 <Input label="Full Address" value={selectedJob.location?.address} onChange={(v) => setSelectedJob({ ...selectedJob, location: { ...selectedJob.location, address: v } })} />
                 <div className="grid grid-cols-2 gap-4">
-                   <Input label="Longitude" value={selectedJob.location?.coordinates[0]} onChange={(v) => setSelectedJob({ ...selectedJob, location: { ...selectedJob.location, coordinates: [v, selectedJob.location.coordinates[1]] } })} />
-                   <Input label="Latitude" value={selectedJob.location?.coordinates[1]} onChange={(v) => setSelectedJob({ ...selectedJob, location: { ...selectedJob.location, coordinates: [selectedJob.location.coordinates[0], v] } })} />
+                  <Input label="Longitude" value={selectedJob.location?.coordinates[0]} onChange={(v) => setSelectedJob({ ...selectedJob, location: { ...selectedJob.location, coordinates: [v, selectedJob.location.coordinates[1]] } })} />
+                  <Input label="Latitude" value={selectedJob.location?.coordinates[1]} onChange={(v) => setSelectedJob({ ...selectedJob, location: { ...selectedJob.location, coordinates: [selectedJob.location.coordinates[0], v] } })} />
                 </div>
               </div>
 
@@ -546,28 +546,28 @@ const PartTimeJobManagement = () => {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                 <div className="space-y-1">
-                    <label className="label-text">Experience</label>
-                    <select className="input-field" value={selectedJob.experience} onChange={(e) => setSelectedJob({ ...selectedJob, experience: e.target.value })}>
-                        <option value="Fresher">Fresher</option>
-                        <option value="1+ Year">1+ Year</option>
-                        <option value="2+ Year">2+ Year</option>
-                        <option value="5+ Year">5+ Year</option>
-                    </select>
-                 </div>
-                 <div className="space-y-1">
-                    <label className="label-text">Qualification</label>
-                    <select className="input-field" value={selectedJob.qualification} onChange={(e) => setSelectedJob({ ...selectedJob, qualification: e.target.value })}>
-                        <option value="10th Pass">10th Pass</option>
-                        <option value="12th Pass">12th Pass</option>
-                        <option value="Graduate">Graduate</option>
-                        <option value="Post Graduate">Post Graduate</option>
-                    </select>
-                 </div>
+                <div className="space-y-1">
+                  <label className="label-text">Experience</label>
+                  <select className="input-field" value={selectedJob.experience} onChange={(e) => setSelectedJob({ ...selectedJob, experience: e.target.value })}>
+                    <option value="Fresher">Fresher</option>
+                    <option value="1+ Year">1+ Year</option>
+                    <option value="2+ Year">2+ Year</option>
+                    <option value="5+ Year">5+ Year</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="label-text">Qualification</label>
+                  <select className="input-field" value={selectedJob.qualification} onChange={(e) => setSelectedJob({ ...selectedJob, qualification: e.target.value })}>
+                    <option value="10th Pass">10th Pass</option>
+                    <option value="12th Pass">12th Pass</option>
+                    <option value="Graduate">Graduate</option>
+                    <option value="Post Graduate">Post Graduate</option>
+                  </select>
+                </div>
               </div>
 
               <div className="flex items-center gap-2">
-                <input type="checkbox" id="editFeat" checked={selectedJob.isFeatured} onChange={(e) => setSelectedJob({...selectedJob, isFeatured: e.target.checked})} />
+                <input type="checkbox" id="editFeat" checked={selectedJob.isFeatured} onChange={(e) => setSelectedJob({ ...selectedJob, isFeatured: e.target.checked })} />
                 <label htmlFor="editFeat" className="text-sm font-bold text-slate-700">Mark as Featured Job</label>
               </div>
 

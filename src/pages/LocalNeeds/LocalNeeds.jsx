@@ -11,7 +11,7 @@ const LocalNeeds = () => {
       subCategory: "Electrical",
       budget: "₹500 - ₹2000",
       featured: true,
-      unlocks: 23,
+
       status: "Active",
     },
     {
@@ -22,7 +22,6 @@ const LocalNeeds = () => {
       subCategory: "Furniture",
       budget: "₹8,500",
       featured: false,
-      unlocks: 5,
       status: "Active",
     },
     {
@@ -33,7 +32,6 @@ const LocalNeeds = () => {
       subCategory: "Tuition",
       budget: "₹3000/month",
       featured: false,
-      unlocks: 45,
       status: "Expired",
     },
   ]);
@@ -78,7 +76,6 @@ const LocalNeeds = () => {
     const finalTask = {
       ...newTask,
       id: `#LN${Math.floor(1000 + Math.random() * 9000)}`,
-      unlocks: parseInt(newTask.unlocks) || 0,
       status: newTask.status || "Active",
     };
     setTasks([finalTask, ...tasks]);
@@ -99,7 +96,7 @@ const LocalNeeds = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Local Needs (Tasks) Management</h1>
-        <button 
+        <button
           onClick={() => setIsPostModalOpen(true)}
           className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow font-semibold transition"
         >
@@ -112,7 +109,6 @@ const LocalNeeds = () => {
         <StatCard title="Total Tasks" value={tasks.length} />
         <StatCard title="Active" value={tasks.filter((t) => t.status === "Active").length} />
         <StatCard title="Featured" value={tasks.filter((t) => t.featured).length} />
-        <StatCard title="Total Unlocks" value={tasks.reduce((acc, curr) => acc + curr.unlocks, 0)} />
       </div>
 
       {/* Table Container */}
@@ -124,7 +120,6 @@ const LocalNeeds = () => {
                 <th className="p-4">Task Info</th>
                 <th className="p-4">Category / Sub</th>
                 <th className="p-4">Budget</th>
-                <th className="p-4 text-center">Unlocks</th>
                 <th className="p-4 text-center">Featured?</th>
                 <th className="p-4">Status</th>
                 <th className="p-4 text-center">Admin Actions</th>
@@ -145,13 +140,11 @@ const LocalNeeds = () => {
                     </div>
                   </td>
                   <td className="p-4 font-bold text-gray-700">{task.budget}</td>
-                  <td className="p-4 text-center font-bold text-gray-800">{task.unlocks}</td>
                   <td className="p-4 text-center">
                     <button
                       onClick={() => toggleFeatured(task.id)}
-                      className={`px-3 py-1 rounded-full text-xs font-bold border transition-all ${
-                        task.featured ? "bg-purple-100 text-purple-700 border-purple-200" : "bg-gray-100 text-gray-500"
-                      }`}
+                      className={`px-3 py-1 rounded-full text-xs font-bold border transition-all ${task.featured ? "bg-purple-100 text-purple-700 border-purple-200" : "bg-gray-100 text-gray-500"
+                        }`}
                     >
                       {task.featured ? "★ Yes" : "No"}
                     </button>
@@ -163,7 +156,7 @@ const LocalNeeds = () => {
                   </td>
                   <td className="p-4">
                     <div className="flex justify-center gap-2">
-                      <button 
+                      <button
                         onClick={() => openEditModal(task)}
                         className="px-4 py-1.5 bg-blue-50 text-blue-600 rounded border border-blue-100 hover:bg-blue-100 font-bold text-xs transition"
                       >
@@ -172,11 +165,10 @@ const LocalNeeds = () => {
                       <button
                         onClick={() => handleDeactivate(task.id)}
                         disabled={task.status !== "Active"}
-                        className={`px-4 py-1.5 rounded border font-bold text-xs transition ${
-                          task.status === "Active" 
-                          ? "bg-red-50 text-red-600 border-red-100 hover:bg-red-100" 
+                        className={`px-4 py-1.5 rounded border font-bold text-xs transition ${task.status === "Active"
+                          ? "bg-red-50 text-red-600 border-red-100 hover:bg-red-100"
                           : "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
-                        }`}
+                          }`}
                       >
                         {task.status === "Active" ? "Deactivate" : "Closed"}
                       </button>
@@ -191,11 +183,11 @@ const LocalNeeds = () => {
 
       {/* --- COMPACT THEMED MODAL --- */}
       {(isEditModalOpen || isPostModalOpen) && (
-        <ThemedTaskModal 
+        <ThemedTaskModal
           mode={isEditModalOpen ? "Edit" : "Post"}
-          task={isEditModalOpen ? currentTask : { title: "", details: "", category: "", subCategory: "", budget: "", featured: false, status: "Active", unlocks: 0 }} 
-          onSave={isEditModalOpen ? handleSaveEdit : handlePostNew} 
-          onClose={() => { setIsEditModalOpen(false); setIsPostModalOpen(false); }} 
+          task={isEditModalOpen ? currentTask : { title: "", details: "", category: "", subCategory: "", budget: "", featured: false, status: "Active", unlocks: 0 }}
+          onSave={isEditModalOpen ? handleSaveEdit : handlePostNew}
+          onClose={() => { setIsEditModalOpen(false); setIsPostModalOpen(false); }}
         />
       )}
     </div>
@@ -228,7 +220,7 @@ const ThemedTaskModal = ({ mode, task, onSave, onClose }) => {
     <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-[2px] flex items-center justify-center z-50 p-4">
       {/* Modal width reduced to max-w-md for a compact look */}
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-100 animate-in fade-in zoom-in duration-200">
-        
+
         {/* Compact Header */}
         <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-slate-50">
           <h3 className="text-base font-bold text-slate-800">
@@ -236,15 +228,15 @@ const ThemedTaskModal = ({ mode, task, onSave, onClose }) => {
           </h3>
           <button onClick={onClose} className="text-gray-400 hover:text-red-500 transition text-xl leading-none">×</button>
         </div>
-        
+
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          
+
           {/* Row 1: Title */}
           <div className="space-y-1">
             <label className="text-[10px] font-bold text-slate-500 uppercase">Task Title</label>
-            <input 
+            <input
               name="title" value={formData.title} onChange={handleChange} required
-              className="w-full px-3 py-2 bg-slate-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 outline-none text-sm text-slate-700" 
+              className="w-full px-3 py-2 bg-slate-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 outline-none text-sm text-slate-700"
               placeholder="e.g. Electrician Needed"
             />
           </div>
@@ -253,7 +245,7 @@ const ThemedTaskModal = ({ mode, task, onSave, onClose }) => {
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <label className="text-[10px] font-bold text-slate-500 uppercase">Category</label>
-              <input 
+              <input
                 name="category" value={formData.category} onChange={handleChange} required
                 className="w-full px-3 py-2 bg-slate-50 border border-gray-200 rounded-lg text-sm outline-none"
                 placeholder="Home Services"
@@ -261,7 +253,7 @@ const ThemedTaskModal = ({ mode, task, onSave, onClose }) => {
             </div>
             <div className="space-y-1">
               <label className="text-[10px] font-bold text-slate-500 uppercase">Sub-Category</label>
-              <input 
+              <input
                 name="subCategory" value={formData.subCategory} onChange={handleChange} required
                 className="w-full px-3 py-2 bg-slate-50 border border-gray-200 rounded-lg text-sm outline-none"
                 placeholder="Electrical"
@@ -273,7 +265,7 @@ const ThemedTaskModal = ({ mode, task, onSave, onClose }) => {
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <label className="text-[10px] font-bold text-slate-500 uppercase">Budget</label>
-              <input 
+              <input
                 name="budget" value={formData.budget} onChange={handleChange} required
                 className="w-full px-3 py-2 bg-slate-50 border border-gray-200 rounded-lg text-sm outline-none font-semibold text-blue-600"
                 placeholder="₹500 - ₹2000"
@@ -281,7 +273,7 @@ const ThemedTaskModal = ({ mode, task, onSave, onClose }) => {
             </div>
             <div className="space-y-1">
               <label className="text-[10px] font-bold text-slate-500 uppercase">Status</label>
-              <select 
+              <select
                 name="status" value={formData.status} onChange={handleChange}
                 className="w-full px-3 py-2 bg-slate-50 border border-gray-200 rounded-lg text-sm outline-none cursor-pointer"
               >
@@ -295,7 +287,7 @@ const ThemedTaskModal = ({ mode, task, onSave, onClose }) => {
           {/* Row 4: Details */}
           <div className="space-y-1">
             <label className="text-[10px] font-bold text-slate-500 uppercase">Task Details</label>
-            <textarea 
+            <textarea
               name="details" value={formData.details} onChange={handleChange} required rows="2"
               className="w-full px-3 py-2 bg-slate-50 border border-gray-200 rounded-lg text-sm outline-none"
               placeholder="Requirement details..."
@@ -305,31 +297,25 @@ const ThemedTaskModal = ({ mode, task, onSave, onClose }) => {
           {/* Row 5: Admin Mini Actions */}
           <div className="flex items-center justify-between py-2 px-1 bg-blue-50/50 rounded-lg">
             <div className="flex items-center gap-2">
-              <input 
+              <input
                 type="checkbox" name="featured" id="feat" checked={formData.featured} onChange={handleChange}
                 className="w-4 h-4 rounded border-gray-300 text-blue-600 cursor-pointer"
               />
               <label htmlFor="feat" className="text-xs font-bold text-slate-600 cursor-pointer">Featured</label>
             </div>
-            <div className="flex items-center gap-2">
-              <label className="text-[10px] font-bold text-slate-500 uppercase">Unlocks:</label>
-              <input 
-                type="number" name="unlocks" value={formData.unlocks} onChange={handleChange}
-                className="w-14 px-2 py-1 bg-white border border-gray-200 rounded font-bold text-xs text-center outline-none"
-              />
-            </div>
+
           </div>
 
           {/* Action Buttons */}
           <div className="flex justify-end items-center gap-3 pt-4">
-            <button 
-              type="button" onClick={onClose} 
+            <button
+              type="button" onClick={onClose}
               className="px-4 py-2 text-xs font-bold text-slate-400 hover:text-slate-600 transition"
             >
               Cancel
             </button>
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               className="px-6 py-2 bg-blue-600 text-white rounded-lg font-bold text-xs shadow-md hover:bg-blue-700 transition"
             >
               {mode === "Edit" ? "Update Task" : "Post Need"}

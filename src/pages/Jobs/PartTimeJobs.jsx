@@ -121,7 +121,8 @@ const PartTimeJobManagement = () => {
 
   const createFileInputRef = useRef(null);
   const editFileInputRef = useRef(null);
-
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [jobIdToDelete, setJobIdToDelete] = useState(null);
   const initialJobState = {
     userId: "",
     title: "",
@@ -355,12 +356,9 @@ const PartTimeJobManagement = () => {
         });
       }
 
+
       // API Call
       const res = await updateJob(selectedJob._id, formData);
-
-      // Aapke response format ke hisaab se:
-      // res.data.success check karein (kyunki aapka return response pura axios object ho sakta hai)
-      // Ya agar adminLogin.js sirf response.data bhejta hai toh res.success use karein
 
       const isSuccess = res.success || res.data?.success;
       const msg = res.message || res.data?.message;
@@ -384,6 +382,31 @@ const PartTimeJobManagement = () => {
     }
   };
 
+
+  // Is function ko replace karein (Line 312 ke aas-pass)
+  const handleDeleteConfirm = (id) => {
+    setJobIdToDelete(id);
+    setIsDeleteModalOpen(true);
+  };
+
+  // Ek naya function banaye jo Modal ke "Yes" button par chalega
+  const confirmDelete = async () => {
+    if (!jobIdToDelete) return;
+
+    try {
+      setLoading(true); // Ya koi aur loader state
+      const response = await deleteJob(jobIdToDelete);
+      if (response.success || response.data?.success) {
+        toast.success("Job deleted successfully");
+        fetchData();
+      }
+    } catch (err) {
+      toast.error("Failed to delete job");
+    } finally {
+      setIsDeleteModalOpen(false);
+      setJobIdToDelete(null);
+    }
+  };
   const openEditModal = (job) => {
     // Mapping all nested and non-nested data properly to avoid UI blanks
     setSelectedJob({
@@ -456,7 +479,12 @@ const PartTimeJobManagement = () => {
                   <td className="p-4">
                     <div className="flex justify-center gap-2">
                       <ActionBtn text="View" variant="blue" icon={<Eye size={12} />} onClick={() => { setSelectedJob(job); setIsViewModalOpen(true) }} />
-                      <ActionBtn text="Delete" variant="red" icon={<Trash2 size={12} />} onClick={async () => { if (window.confirm("Delete?")) { await deleteJob(job._id); fetchData(); } }} />
+                      <ActionBtn
+                        text="Delete"
+                        variant="red"
+                        icon={<Trash2 size={12} />}
+                        onClick={() => handleDeleteConfirm(job._id)}
+                      />
                       <ActionBtn text="Edit" variant="blue" icon={<PlusCircle size={12} />} onClick={() => openEditModal(job)} />
                     </div>
                   </td>
@@ -668,6 +696,33 @@ const PartTimeJobManagement = () => {
 
       {/* VIEW MODAL */}
       <JobViewModal isOpen={isViewModalOpen} onClose={() => setIsViewModalOpen(false)} job={selectedJob} />
+      {isDeleteModalOpen && (
+        <div className="fixed inset-0 z-[1100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center">
+            <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Trash2 size={30} />
+            </div>
+            <h3 className="text-xl font-bold text-slate-800 mb-2">Are you sure?</h3>
+            <p className="text-slate-500 text-sm mb-6">
+              Do you really want to delete this job? This action cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setIsDeleteModalOpen(false)}
+                className="flex-1 px-4 py-2.5 border border-slate-200 text-slate-600 rounded-xl font-bold text-sm hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-xl font-bold text-sm hover:bg-red-700 shadow-lg shadow-red-200"
+              >
+                Yes, Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style>{`
         .label-text { display: block; font-size: 0.7rem; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 0.4rem; }

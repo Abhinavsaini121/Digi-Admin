@@ -5,9 +5,9 @@ import {
   Loader2, AlertCircle, X, Star, CheckCircle, Plus,
   ChevronDown, Upload, MapPin, Briefcase, IndianRupee,
   Users, GraduationCap, Phone, Info, Layout, Navigation, FileText,
-  Eye, Trash2
+  Eye, Trash2, Edit
 } from "lucide-react";
-import { getAllFullTimeJobs, createNewFullTimeJob, getAllUsersAPI, deleteFullTimeJob } from "../../auth/adminLogin";
+import { getAllFullTimeJobs, createNewFullTimeJob, getAllUsersAPI, deleteFullTimeJob, updateFullTimeJob } from "../../auth/adminLogin";
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
 const normalizeJobData = (job) => {
@@ -60,7 +60,9 @@ const FullTimeJobManagement = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const fileInputRef = useRef(null);
-
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editJobForm, setEditJobForm] = useState(null);
+  const [isEditSuccessVisible, setIsEditSuccessVisible] = useState(false);
   const initialNewJobForm = {
     userId: "",
     title: "",
@@ -230,6 +232,47 @@ const FullTimeJobManagement = () => {
     }
   };
 
+  const openEditModal = (job) => {
+    setEditJobForm({
+      id: job._id,
+      title: job.title,
+      details: job.details,
+      status: job.isActive ? 'active' : 'inactive',
+      workType: job.jobRole || "", // Mapping jobRole to workType as requested
+      salaryMin: job.budget?.min || 0,
+      salaryMax: job.budget?.max || 0,
+      preferredCommunication: "Text", // Default as per request
+      images: null
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      const formData = new FormData();
+      formData.append('title', editJobForm.title);
+      formData.append('details', editJobForm.details);
+      formData.append('status', editJobForm.status);
+      formData.append('jobRole', editJobForm.workType);
+      formData.append('salaryRange', JSON.stringify({ min: Number(editJobForm.salaryMin), max: Number(editJobForm.salaryMax) }));
+      if (editJobForm.images) formData.append('images', editJobForm.images);
+
+      await updateFullTimeJob(editJobForm.id, formData);
+      await fetchJobs();
+      setIsEditModalOpen(false);
+      setIsEditSuccessVisible(true);
+
+      setTimeout(() => {
+        setIsEditSuccessVisible(false);
+      }, 5000);;
+    } catch (err) {
+      alert(err.message || "Update failed");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
   return (
     <div className="p-4 md:p-8 bg-[#f8fafc] min-h-screen font-sans">
       <div className="flex justify-between items-center mb-8">
@@ -287,6 +330,9 @@ const FullTimeJobManagement = () => {
                       <div className="flex items-center justify-end gap-3">
                         <button onClick={() => openViewModal(job)} className="p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors">
                           <Eye size={18} />
+                        </button>
+                        <button onClick={() => openEditModal(job)} className="p-1.5 text-amber-600 bg-amber-50 hover:bg-amber-100 rounded-lg transition-colors">
+                          <Edit size={18} />
                         </button>
                         <button onClick={() => openDeleteModal(job)} className="p-1.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors">
                           <Trash2 size={18} />
@@ -574,6 +620,80 @@ const FullTimeJobManagement = () => {
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
       `}</style>
+      {isEditModalOpen && editJobForm && (
+        <div className="fixed inset-0 z-[999] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden">
+            <div className="p-6 border-b flex justify-between items-center bg-slate-50">
+              <h2 className="font-black text-xl text-slate-800 flex items-center gap-2">
+                <Edit className="text-amber-600" size={20} /> Edit Job Listing
+              </h2>
+              <button onClick={() => setIsEditModalOpen(false)} className="p-2 hover:bg-slate-200 rounded-full"><X size={20} /></button>
+            </div>
+
+            <form onSubmit={handleEditSubmit} className="p-8 space-y-4">
+              <InputField label="Title" value={editJobForm.title} onChange={(e) => setEditJobForm({ ...editJobForm, title: e.target.value })} required />
+
+              <div className="grid grid-cols-2 gap-4">
+                <InputField label="Work Type" value={editJobForm.workType} onChange={(e) => setEditJobForm({ ...editJobForm, workType: e.target.value })} />
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-slate-500 uppercase ml-1">Status</label>
+                  <select
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none"
+                    value={editJobForm.status}
+                    onChange={(e) => setEditJobForm({ ...editJobForm, status: e.target.value })}
+                  >
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <InputField label="Min Salary" type="number" value={editJobForm.salaryMin} onChange={(e) => setEditJobForm({ ...editJobForm, salaryMin: e.target.value })} />
+                <InputField label="Max Salary" type="number" value={editJobForm.salaryMax} onChange={(e) => setEditJobForm({ ...editJobForm, salaryMax: e.target.value })} />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-slate-500 uppercase ml-1">Details</label>
+                <textarea
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm h-24 outline-none"
+                  value={editJobForm.details}
+                  onChange={(e) => setEditJobForm({ ...editJobForm, details: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-slate-500 uppercase ml-1">Update Banner</label>
+                <input type="file" className="text-sm block w-full" onChange={(e) => setEditJobForm({ ...editJobForm, images: e.target.files[0] })} />
+              </div>
+
+              <button type="submit" disabled={isSubmitting} className="w-full bg-slate-900 text-white font-bold py-3 rounded-xl mt-4 hover:bg-slate-800 disabled:opacity-50">
+                {isSubmitting ? "Updating..." : "Save Changes"}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* Success Popup for Edit */}
+      {isEditSuccessVisible && (
+        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[1001] animate-in fade-in slide-in-from-bottom-5 duration-500">
+          <div className="bg-slate-900 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 border border-slate-700 min-w-[300px]">
+            <div className="bg-emerald-500 p-2 rounded-full shadow-lg shadow-emerald-500/20">
+              <CheckCircle size={20} className="text-white" />
+            </div>
+            <div className="flex-1">
+              <p className="font-black text-sm tracking-wide">SUCCESSFULLY UPDATED</p>
+              <p className="text-[11px] text-slate-400 uppercase font-bold">Job details are now live</p>
+            </div>
+            <button
+              onClick={() => setIsEditSuccessVisible(false)}
+              className="p-1 hover:bg-white/10 rounded-lg transition-colors"
+            >
+              <X size={18} className="text-slate-400" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

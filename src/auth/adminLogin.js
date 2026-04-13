@@ -35,10 +35,14 @@ export const getDashboardStats = async () => {
     }
 };
 
-// --- Get All Jobs (Part-Time) ---
 export const getAllJobs = async () => {
     try {
-        const response = await apiClient.get("/admin/part-time/jobs");
+        const token = localStorage.getItem("token");
+        const response = await apiClient.get("/admin/part-time/jobs", {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
         return response.data;
     } catch (error) {
         throw error.response ? error.response.data : new Error("Network Error");
@@ -88,12 +92,21 @@ export const updateJob = async (id, jobData) => {
 };
 
 // --- DELETE JOB (Part-Time) ---
+// --- DELETE PART-TIME JOB CONTROLLER ---
 export const deleteJob = async (id) => {
     try {
-        const response = await apiClient.delete(`/admin/part-time/job/delete/${id}`);
+        const token = localStorage.getItem("token");
+
+        const response = await apiClient.delete(`/admin/part-time/job/delete/${id}`, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+
         return response.data;
     } catch (error) {
-        throw error.response ? error.response.data : new Error("Network Error");
+        console.error("Part-Time Job Delete Error:", error);
+        throw error.response ? error.response.data : new Error("Network Error or Server Unreachable");
     }
 };
 
@@ -735,5 +748,32 @@ export const deleteFullTimeJob = async (jobId) => {
         return data;
     } catch (error) {
         throw error;
+    }
+};
+
+// --- UPDATE FULL-TIME JOB CONTROLLER ---
+export const updateFullTimeJob = async (id, formData) => {
+    try {
+        const token = localStorage.getItem("token");
+        const adminId = localStorage.getItem("id") || localStorage.getItem("userId");
+
+        // Agar updatedBy track karna chahte hain toh add karein
+        if (formData instanceof FormData) {
+            if (adminId && !formData.has("updatedBy")) {
+                formData.append("updatedBy", adminId);
+            }
+        }
+
+        const response = await apiClient.put(`/admin/full-time/update/${id}`, formData, {
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "multipart/form-data",
+            },
+        });
+
+        return response.data;
+    } catch (error) {
+        console.error("Full-Time Job Update Error:", error);
+        throw error.response ? error.response.data : new Error("Network Error");
     }
 };

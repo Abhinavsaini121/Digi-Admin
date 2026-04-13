@@ -229,7 +229,7 @@ export default function UserMasterProfile() {
           <tbody className="divide-y divide-orange-50">
             {filteredUsers.map((u, index) => (
               <tr key={u.id} className="hover:bg-orange-50/50 transition-colors">
-                <td className="px-4 py-3 text-gray-500">{index + 1}</td>
+                <td className="px-4 py-3 text-gray-500">{(currentPage - 1) * 10 + (index + 1)}</td>
                 {/* Profile Photo */}
                 <td className="px-4 py-3">
                   {u.photo ? (

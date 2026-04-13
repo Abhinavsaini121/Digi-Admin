@@ -58,23 +58,32 @@ export const getJobById = async (id) => {
 // --- UPDATE JOB (Part-Time) ---
 export const updateJob = async (id, jobData) => {
     try {
-        const adminId = localStorage.getItem("id");
-
+        // Bahut important: Check karein ki adminId kis naam se stored hai
+        // Kyunki login function mein aap "userId" use kar rahe hain
+        const adminId = localStorage.getItem("id") || localStorage.getItem("userId");
 
         let dataToSend;
         if (jobData instanceof FormData) {
             dataToSend = jobData;
-
-            if (adminId) dataToSend.append("updatedBy", adminId);
+            // Agar adminId milta hai toh use append karein
+            if (adminId) {
+                // Ensure karein ki duplicate append na ho agar pehle se component me add kiya hai
+                if (!dataToSend.has("updatedBy")) {
+                    dataToSend.append("updatedBy", adminId);
+                }
+            }
         } else {
             dataToSend = { ...jobData, updatedBy: adminId };
         }
 
-
         const response = await apiClient.put(`/admin/part-time/job/update/${id}`, dataToSend);
+
+
         return response.data;
+
     } catch (error) {
-        throw error.response ? error.response.data : new Error("Network Error");
+        console.error("Update Job API Error:", error);
+        throw error.response ? error.response.data : new Error("Network Error or Server Unreachable");
     }
 };
 

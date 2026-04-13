@@ -154,15 +154,25 @@ const PartTimeJobManagement = () => {
     try {
       setLoading(true);
       const response = await getAllJobs();
-      console.log("Full API Response:", response); // Isse check karein ki data ka array kahan hai
-      setAllJobs(response.data || []);
+
+      // API से आने वाला असल डेटा (Array) ढूँढें
+      // कभी-कभी डेटा response.data में होता है, कभी response.data.data में
+      const jobs = response?.data?.data || response?.data || response;
+
+      if (Array.isArray(jobs)) {
+        setAllJobs(jobs);
+        console.log("Jobs loaded in state:", jobs.length);
+      } else {
+        console.error("Fetched data is not an array:", jobs);
+        setAllJobs([]);
+      }
     } catch (err) {
+      console.error("Fetch Error:", err);
       toast.error("Error fetching job list");
     } finally {
       setLoading(false);
     }
   };
-
   const fetchUsers = async () => {
     try {
       const response = await getAllUsersAPI();
@@ -173,9 +183,12 @@ const PartTimeJobManagement = () => {
   };
 
   const filteredJobs = useMemo(() => {
-    return allJobs.filter((job) =>
-      job.jobCategory?.toLowerCase().replace('_', '-').includes("part-time")
-    );
+    const reversedJobs = [...allJobs].reverse();
+
+    return reversedJobs.filter((job) => {
+      const category = String(job.jobCategory || "").toLowerCase();
+      return category.includes("part");
+    });
   }, [allJobs]);
   // Handle Location Fetch for both Create & Edit
   const handleFetchLocation = (type) => {
@@ -216,13 +229,31 @@ const PartTimeJobManagement = () => {
   };
 
   const handleCreateNewJob = async () => {
-    if (!newJob.userId) return toast.error("Select a User first!");
-    if (!newJob.title?.trim()) return toast.error("Job Title is required!");
-    if (!newJob.details?.trim()) return toast.error("Full Job details are required!");
+    console.log("--- 🚀 CREATE JOB PROCESS STARTED ---");
+
+    // 1. Validation Check
+    if (!newJob.userId) {
+      console.warn("❌ Validation Failed: No User Selected");
+      return toast.error("Select a User first!");
+    }
+    if (!newJob.title?.trim()) {
+      console.warn("❌ Validation Failed: No Job Title");
+      return toast.error("Job Title is required!");
+    }
 
     try {
       setSaveLoading(true);
       const formData = new FormData();
+
+      // 2. Data Preparation Logs
+      console.log("📦 Preparing FormData with these values:", {
+        userId: newJob.userId,
+        title: newJob.title,
+        category: "PART_TIME_JOB",
+        location: newJob.address,
+        imagesCount: createImages.length
+      });
+
       formData.append("userId", newJob.userId);
       formData.append("jobCategory", "PART_TIME_JOB");
       formData.append("title", newJob.title);
@@ -243,63 +274,111 @@ const PartTimeJobManagement = () => {
       formData.append("location[coordinates][0]", newJob.longitude);
       formData.append("location[coordinates][1]", newJob.latitude);
 
-      createImages.forEach((file) => formData.append("images", file));
+      createImages.forEach((file, index) => {
+        formData.append("images", file);
+        console.log(`🖼️ Appending image ${index + 1}:`, file.name);
+      });
 
+      // 3. API Call
+      console.log("📡 Sending request to Server...");
       const response = await createNewJob(formData);
-      if (response.success) {
-        toast.success("Job posted!");
+
+      console.log("📥 SERVER RESPONSE RECEIVED:", response);
+
+
+
+      console.log("⚖️ Success Condition Met?", isSuccess);
+      const isSuccess = response?.success || response?.data?.success;
+
+      if (isSuccess) {
+        toast.success("Job posted successfully!");
         setIsCreateModalOpen(false);
         setNewJob(initialJobState);
         setCreateImages([]);
-        fetchData();
+        await fetchData();
+      } else {
+        toast.error(response?.message || "Failed to create job");
       }
+
     } catch (err) {
-      toast.error("Submission Error");
+      console.error("Error details:", err);
+      toast.error("Error: Check console");
     } finally {
       setSaveLoading(false);
     }
   };
-
   const handleUpdateJob = async () => {
+    // Debugging: Pehle console mein ID check karein
+    console.log("Attempting to update Job ID:", selectedJob?._id);
+
+    if (!selectedJob?._id) {
+      toast.error("Invalid Job ID! Please refresh and try again.");
+      return;
+    }
+
     try {
       setSaveLoading(true);
       const formData = new FormData();
-      formData.append("title", selectedJob.title);
+
+      // Basic Fields
+      formData.append("title", selectedJob.title || "");
       formData.append("description", selectedJob.description || "");
-      formData.append("details", selectedJob.details);
-      formData.append("companyName", selectedJob.companyName);
-      formData.append("jobRole", selectedJob.jobRole);
-      formData.append("vacancies", selectedJob.vacancies);
-      formData.append("experience", selectedJob.experience);
-      formData.append("qualification", selectedJob.qualification);
-      formData.append("whatsappNumber", selectedJob.whatsappNumber);
+      formData.append("details", selectedJob.details || "");
+      formData.append("companyName", selectedJob.companyName || "");
+      formData.append("jobRole", selectedJob.jobRole || "");
+      formData.append("vacancies", Number(selectedJob.vacancies) || 0);
+      formData.append("experience", selectedJob.experience || "Fresher");
+      formData.append("qualification", selectedJob.qualification || "10th Pass");
+      formData.append("whatsappNumber", selectedJob.whatsappNumber || "");
       formData.append("isFeatured", String(selectedJob.isFeatured));
-      formData.append("salaryRange[min]", selectedJob.salaryRange?.min);
-      formData.append("salaryRange[max]", selectedJob.salaryRange?.max);
 
-      formData.append("location[address]", selectedJob.location?.address);
+      // Salary Range (Nested)
+      formData.append("salaryRange[min]", selectedJob.salaryRange?.min || "");
+      formData.append("salaryRange[max]", selectedJob.salaryRange?.max || "");
+
+      // Location (Nested) - Ensuring correct numeric values
+      formData.append("location[address]", selectedJob.location?.address || "");
       formData.append("location[type]", "Point");
-      formData.append("location[coordinates][0]", selectedJob.location?.coordinates[0]);
-      formData.append("location[coordinates][1]", selectedJob.location?.coordinates[1]);
 
-      // If new images were selected during edit
+      // Yahan ensure karein ki coordinates valid numbers hain
+      const lng = parseFloat(selectedJob.location?.coordinates?.[0]) || 72.8777;
+      const lat = parseFloat(selectedJob.location?.coordinates?.[1]) || 19.0760;
+      formData.append("location[coordinates][0]", lng);
+      formData.append("location[coordinates][1]", lat);
+
+      // Images Handling
       if (editNewImages && editNewImages.length > 0) {
-        editNewImages.forEach(file => {
-          if (file instanceof File) { // Sirf tabhi append karein agar ye actual file hai
+        editNewImages.forEach((file) => {
+          if (file instanceof File) {
             formData.append("images", file);
           }
         });
       }
 
-      const response = await updateJob(selectedJob._id, formData);
-      if (response.success) {
-        toast.success("Job updated successfully!");
+      // API Call
+      const res = await updateJob(selectedJob._id, formData);
+
+      // Aapke response format ke hisaab se:
+      // res.data.success check karein (kyunki aapka return response pura axios object ho sakta hai)
+      // Ya agar adminLogin.js sirf response.data bhejta hai toh res.success use karein
+
+      const isSuccess = res.success || res.data?.success;
+      const msg = res.message || res.data?.message;
+
+      if (isSuccess) {
+        toast.success(msg || "Job updated successfully!");
         setIsEditModalOpen(false);
         setEditNewImages([]);
-        fetchData();
+        fetchData(); // Refresh table
+      } else {
+        toast.error(msg || "Update failed from server");
       }
+
     } catch (err) {
-      toast.error("Update failed");
+      console.error("Update Error:", err);
+      // Agar Backend 404 bhejta hai (Job not found), toh yahan pakda jayega
+      const errorMessage = err.response?.data?.message || "Job not found on server";
+      toast.error(errorMessage);
     } finally {
       setSaveLoading(false);
     }

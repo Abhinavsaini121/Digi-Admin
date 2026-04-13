@@ -8,12 +8,14 @@ import { getAllMasterUsers, updateUserProfileAPI, deleteUserAPI, searchUsersAPI 
 import toast, { Toaster } from 'react-hot-toast';
 export default function UserMasterProfile() {
   const [users, setUsers] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1); // New
+  const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, userId: null, userName: "" });
-  useEffect(() => {
-    fetchUsers();
-  }, []);
 
+  useEffect(() => {
+    fetchUsers(currentPage);
+  }, [currentPage]);
 
   const mapUserData = (apiData) => {
     return apiData.map(u => ({
@@ -33,17 +35,19 @@ export default function UserMasterProfile() {
     }));
   };
 
-  const fetchUsers = async () => {
+  // Is logic se replace karein
+  const fetchUsers = async (page = 1) => {
+    setLoading(true);
     try {
-      const response = await getAllMasterUsers();
+      const response = await getAllMasterUsers(page);
       if (response.success) {
-        // Mapping API fields to your Component fields
+        // Mapping API fields
         const mappedData = response.data.map(u => ({
           id: u._id,
           name: u.fullName || u.name || "Unknown User",
           photo: u.profilePhoto || "",
           mobile: u.mobile || "N/A",
-          whatsapp: u.mobile || "N/A", // API doesn't have whatsapp separately
+          whatsapp: u.mobile || "N/A",
           gender: u.gender,
           location: typeof u.location === 'object' ? u.location.address || "Point" : u.location,
           blood: u.bloodGroup,
@@ -53,7 +57,10 @@ export default function UserMasterProfile() {
           joined: new Date(u.createdAt).toLocaleDateString(),
           lastActive: new Date(u.updatedAt).toLocaleString()
         }));
+
         setUsers(mappedData);
+        setTotalPages(response.totalPages); // Backend se total pages set karein
+        setCurrentPage(page); // Current page update karein
       }
     } catch (error) {
       console.error("Failed to fetch users", error);
@@ -315,6 +322,29 @@ export default function UserMasterProfile() {
         </table>
       </div>
 
+      {/* Pagination Controls */}
+      <div className="flex items-center justify-between px-6 py-4 bg-white border-t border-orange-100">
+        <div className="text-sm text-gray-500">
+          Page <span className="font-medium text-gray-700">{currentPage}</span> of{" "}
+          <span className="font-medium text-gray-700">{totalPages}</span>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+            className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-orange-50 hover:text-orange-600 transition-colors"
+          >
+            Previous
+          </button>
+          <button
+            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+            disabled={currentPage === totalPages}
+            className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-orange-50 hover:text-orange-600 transition-colors"
+          >
+            Next
+          </button>
+        </div>
+      </div>
       {deleteModal.isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden">

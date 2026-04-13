@@ -228,32 +228,13 @@ const PartTimeJobManagement = () => {
       () => { toast.error("Location permission denied"); setLocLoading(false); }
     );
   };
-
   const handleCreateNewJob = async () => {
-    console.log("--- 🚀 CREATE JOB PROCESS STARTED ---");
-
-    // 1. Validation Check
-    if (!newJob.userId) {
-      console.warn("❌ Validation Failed: No User Selected");
-      return toast.error("Select a User first!");
-    }
-    if (!newJob.title?.trim()) {
-      console.warn("❌ Validation Failed: No Job Title");
-      return toast.error("Job Title is required!");
-    }
+    if (!newJob.userId) return toast.error("Select a User first!");
+    if (!newJob.title?.trim()) return toast.error("Job Title is required!");
 
     try {
       setSaveLoading(true);
       const formData = new FormData();
-
-      // 2. Data Preparation Logs
-      console.log("📦 Preparing FormData with these values:", {
-        userId: newJob.userId,
-        title: newJob.title,
-        category: "PART_TIME_JOB",
-        location: newJob.address,
-        imagesCount: createImages.length
-      });
 
       formData.append("userId", newJob.userId);
       formData.append("jobCategory", "PART_TIME_JOB");
@@ -275,20 +256,11 @@ const PartTimeJobManagement = () => {
       formData.append("location[coordinates][0]", newJob.longitude);
       formData.append("location[coordinates][1]", newJob.latitude);
 
-      createImages.forEach((file, index) => {
-        formData.append("images", file);
-        console.log(`🖼️ Appending image ${index + 1}:`, file.name);
-      });
+      createImages.forEach((file) => formData.append("images", file));
 
-      // 3. API Call
-      console.log("📡 Sending request to Server...");
       const response = await createNewJob(formData);
 
-      console.log("📥 SERVER RESPONSE RECEIVED:", response);
-
-
-
-      console.log("⚖️ Success Condition Met?", isSuccess);
+      // FIX: Declaration pehle, usage baad mein
       const isSuccess = response?.success || response?.data?.success;
 
       if (isSuccess) {
@@ -296,14 +268,15 @@ const PartTimeJobManagement = () => {
         setIsCreateModalOpen(false);
         setNewJob(initialJobState);
         setCreateImages([]);
+
+        // UI ko turant refresh karne ke liye
         await fetchData();
       } else {
         toast.error(response?.message || "Failed to create job");
       }
-
     } catch (err) {
       console.error("Error details:", err);
-      toast.error("Error: Check console");
+      toast.error("Error creating job");
     } finally {
       setSaveLoading(false);
     }

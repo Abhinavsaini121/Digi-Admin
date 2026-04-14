@@ -148,8 +148,6 @@ const UserTable = () => {
       {/* Navigation Tabs */}
       <div className="flex gap-4 mb-6">
         <button className="px-6 py-2 bg-indigo-600 text-white rounded-full font-medium">All Admin</button>
-        <button className="px-6 py-2 bg-white text-gray-600 border border-gray-200 rounded-full hover:bg-gray-100">Service Providers</button>
-        <button className="px-6 py-2 bg-white text-gray-600 border border-gray-200 rounded-full hover:bg-gray-100">Customers</button>
       </div>
 
       {/* Search and Add User Row */}

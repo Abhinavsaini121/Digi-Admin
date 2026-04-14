@@ -135,12 +135,17 @@ export const createNewJob = async (jobData) => {
 };
 
 // --- Get All Full-Time Jobs ---
-export const getAllFullTimeJobs = async () => {
+export const getAllFullTimeJobs = async (page = 1) => {
     try {
-        const response = await apiClient.get("/admin/full-time/all");
+        const token = localStorage.getItem("token");
+        const response = await apiClient.get(`/admin/full-time/all?page=${page}`, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
         return response.data;
     } catch (error) {
-        throw error.response ? error.response.data : new Error("Network Error or Server Unreachable");
+        throw error.response ? error.response.data : new Error("Network Error");
     }
 };
 

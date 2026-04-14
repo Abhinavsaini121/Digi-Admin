@@ -266,21 +266,14 @@ export const getBloodRequestByIdAPI = async (id) => {
     }
 };
 
-// export const createNewBloodRequestFromAdminAPI = async (requestDataWithUserId) => {
-//     try {
-//         const adminId = localStorage.getItem("id");
-//         const finalData = { ...requestDataWithUserId, adminId };
-//         const response = await apiClient.post('/admin/blood-requests', finalData);
-//         return response.data;
-//     } catch (error) {
-//         throw error.response ? error.response.data : new Error("Network Error");
-//     }
-// };
 
-export const getAllAdminData = async () => {
+
+export const getAllAdminData = async (page = 1) => {
     try {
-        // Fetching data from the newly specified endpoint /api/admin/all
-        const response = await apiClient.get("/admin/all");
+        const token = localStorage.getItem("token");
+        const response = await apiClient.get(`/admin/all?page=${page}`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
         return response.data;
     }
     catch (error) {

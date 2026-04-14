@@ -19,41 +19,32 @@ const UserTable = () => {
   const [updateFormData, setUpdateFormData] = useState({ name: '', email: '' });
   const [adminToUpdateId, setAdminToUpdateId] = useState(null);
   const [updateLoading, setUpdateLoading] = useState(false);
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
-        // Call the function from your controller file
-        const response = await getAllAdminData();
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await getAllAdminData(currentPage);
 
-
-        if (Array.isArray(response)) {
-          setUsers(response);
-        }
-        // *** If your backend returns { data: [...] } (common pattern): ***
-        else if (response && Array.isArray(response.data)) {
-          setUsers(response.data);
-        }
-        // *** If your backend returns something else, you might need to adjust this logic ***
-        else {
-          // If the response structure is unknown or empty, set an error or default to empty array
-          console.error("Unexpected response structure from getAllAdminData:", response);
-          setUsers([]); // Set empty array as default safe value
-        }
-
-      } catch (err) {
-        console.error("Failed to fetch admin data:", err);
-        setError("Failed to load admin data. Please check the network or API.");
-        setUsers([]); // Clear users on error
-      } finally {
-        setLoading(false);
+      if (response && response.data) {
+        setUsers(response.data);
+        setTotalPages(response.pagination?.totalPages || 1);
+      } else {
+        setUsers(Array.isArray(response) ? response : []);
       }
-    };
+    } catch (err) {
+      setError("Failed to load admin data.");
+      setUsers([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchUsers();
-  }, []); // Empty dependency array means this runs once on mount
+  }, [currentPage]);
   const handleAddAdmin = async (e) => {
     e.preventDefault();
     setRegLoading(true);
@@ -195,61 +186,86 @@ const UserTable = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {users.map((user, index) => (
-                <tr key={user.id} className="hover:bg-gray-50 transition">
-                  <td className="px-6 py-4 text-sm text-gray-600">{index + 1}</td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
-                        {/* Avatar Placeholder - Using user.id for seed */}
-                        <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`} alt="avatar" className="w-8 h-8" />
+              {users.map((user, index) => {
+                const serialNumber = ((currentPage - 1) * 10) + (index + 1);
+                return (
+                  <tr key={user.id || user._id} className="hover:bg-gray-50 transition">
+                    <td className="px-6 py-4 text-sm text-gray-600">{serialNumber}</td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                          {/* Avatar Placeholder - Using user.id for seed */}
+                          <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`} alt="avatar" className="w-8 h-8" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-gray-800">{user.name}</p>
+                          {/* Assuming 'phone' field exists in API response */}
+                          <p className="text-xs text-gray-400">{user.phone || 'N/A'}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm font-semibold text-gray-800">{user.name}</p>
-                        {/* Assuming 'phone' field exists in API response */}
-                        <p className="text-xs text-gray-400">{user.phone || 'N/A'}</p>
-                      </div>
-                    </div>
-                  </td>
-                  {/* Assuming 'email' field exists in API response */}
-                  <td className="px-6 py-4 text-sm text-gray-600">{user.email || 'N/A'}</td>
-                  {/* Assuming 'type' field exists in API response */}
-                  <td className="px-6 py-4 text-sm text-gray-600 font-medium">{user.type || 'UNKNOWN'}</td>
-                  <td className="px-6 py-4">
-                    {/* Assuming 'status' field exists in API response and is 'BLOCKED' or 'ACTIVE' */}
-                    <span className={`px-3 py-1 rounded text-xs font-bold ${user.status === 'BLOCKED'
-                      ? 'bg-red-50 text-red-400 border border-red-100'
-                      : 'bg-green-50 text-green-500 border border-green-100'
-                      }`}>
-                      {user.status || 'INACTIVE'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex justify-center gap-4 text-gray-400">
-                      <Edit2
-                        size={18}
-                        className="cursor-pointer hover:text-blue-500"
-                        onClick={() => openUpdateModal(user)}
-                      />                      {/* Assuming the action logic should use the fetched status */}
-                      {user.status === 'BLOCKED' ? (
-                        <Unlock size={18} className="cursor-pointer text-green-500" />
-                      ) : (
-                        <Lock size={18} className="cursor-pointer text-yellow-500" />
-                      )}
-                      <Trash2
-                        size={18}
-                        className="cursor-pointer hover:text-red-500"
-                        onClick={() => {
-                          setAdminToDelete(user.id || user._id); // Ensure you use the correct ID field
-                          setIsDeleteModalOpen(true);
-                        }}
-                      />                    </div>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    {/* Assuming 'email' field exists in API response */}
+                    <td className="px-6 py-4 text-sm text-gray-600">{user.email || 'N/A'}</td>
+                    {/* Assuming 'type' field exists in API response */}
+                    <td className="px-6 py-4 text-sm text-gray-600 font-medium">{user.type || 'UNKNOWN'}</td>
+                    <td className="px-6 py-4">
+                      {/* Assuming 'status' field exists in API response and is 'BLOCKED' or 'ACTIVE' */}
+                      <span className={`px-3 py-1 rounded text-xs font-bold ${user.status === 'BLOCKED'
+                        ? 'bg-red-50 text-red-400 border border-red-100'
+                        : 'bg-green-50 text-green-500 border border-green-100'
+                        }`}>
+                        {user.status || 'INACTIVE'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex justify-center gap-4 text-gray-400">
+                        <Edit2
+                          size={18}
+                          className="cursor-pointer hover:text-blue-500"
+                          onClick={() => openUpdateModal(user)}
+                        />                      {/* Assuming the action logic should use the fetched status */}
+                        {user.status === 'BLOCKED' ? (
+                          <Unlock size={18} className="cursor-pointer text-green-500" />
+                        ) : (
+                          <Lock size={18} className="cursor-pointer text-yellow-500" />
+                        )}
+                        <Trash2
+                          size={18}
+                          className="cursor-pointer hover:text-red-500"
+                          onClick={() => {
+                            setAdminToDelete(user.id || user._id); // Ensure you use the correct ID field
+                            setIsDeleteModalOpen(true);
+                          }}
+                        />                    </div>
+                    </td>
+                  </tr>
+                )
+              }
+              )}
             </tbody>
           </table>
         )}
+      </div>
+      <div className="mt-6 flex items-center justify-between bg-white px-6 py-4 rounded-xl border border-gray-100 shadow-sm">
+        <div className="text-sm text-gray-500 font-medium">
+          Page <span className="text-indigo-600 font-bold">{currentPage}</span> of {totalPages}
+        </div>
+        <div className="flex gap-2">
+          <button
+            disabled={currentPage === 1 || loading}
+            onClick={() => setCurrentPage(prev => prev - 1)}
+            className="px-4 py-2 border border-gray-200 rounded-lg text-sm font-bold text-gray-600 hover:bg-gray-50 disabled:opacity-50 transition"
+          >
+            Previous
+          </button>
+          <button
+            disabled={currentPage === totalPages || loading}
+            onClick={() => setCurrentPage(prev => prev + 1)}
+            className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-bold hover:bg-indigo-700 disabled:opacity-50 transition"
+          >
+            Next
+          </button>
+        </div>
       </div>
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">

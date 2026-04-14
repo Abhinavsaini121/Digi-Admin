@@ -503,7 +503,7 @@ const BloodRequests = () => {
                         <Col span={12}>
                             <label style={labelStyle}>Urgency</label>
                             <Select placeholder="Select Urgency" style={{ width: '100%' }} value={formData.urgency} onChange={(val) => handleSelectChange('urgency', val)}>
-                                <Option value="Low">Low</Option><Option value="Urgent">Urgent</Option><Option value="Critical">Critical</Option>
+                                <Option value="Low">Low</Option><Option value="Medium">Normal</Option> <Option value="Critical">Critical</Option>
                             </Select>
                         </Col>
                     </Row>
@@ -563,7 +563,7 @@ const BloodRequests = () => {
                             <Col span={12}>
                                 <label style={labelStyle}>Urgency</label>
                                 <Select placeholder="Select Urgency" style={{ width: '100%' }} value={formData.urgency} onChange={(val) => handleSelectChange('urgency', val)}>
-                                    <Option value="Low">Low</Option><Option value="Urgent">Urgent</Option><Option value="Critical">Critical</Option>
+                                    <Option value="Low">Low</Option><Option value="Medium">Normal</Option> <Option value="Critical">Critical</Option>
                                 </Select>
                             </Col>
                         </Row>

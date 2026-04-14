@@ -34,21 +34,17 @@ export const getDashboardStats = async () => {
         throw error.response ? error.response.data : new Error("Network Error");
     }
 };
-
-export const getAllJobs = async () => {
+export const getAllJobs = async (page = 1) => {
     try {
         const token = localStorage.getItem("token");
-        const response = await apiClient.get("/admin/part-time/jobs", {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
+        const response = await apiClient.get(`/admin/part-time/jobs?page=${page}`, {
+            headers: { Authorization: `Bearer ${token}` },
         });
         return response.data;
     } catch (error) {
         throw error.response ? error.response.data : new Error("Network Error");
     }
 };
-
 // --- Get Job By ID (Part-Time) ---
 export const getJobById = async (id) => {
     try {
@@ -92,7 +88,6 @@ export const updateJob = async (id, jobData) => {
 };
 
 // --- DELETE JOB (Part-Time) ---
-// --- DELETE PART-TIME JOB CONTROLLER ---
 export const deleteJob = async (id) => {
     try {
         const token = localStorage.getItem("token");
@@ -289,13 +284,15 @@ export const getAllAdminData = async () => {
 };
 // --- Modified Shop Management API Function ---
 
-export const getAllShopsForAdmin = async () => {
+export const getAllShopsForAdmin = async (page = 1) => {
+    const token = localStorage.getItem("token"); // or wherever you store it
     try {
-        const response = await apiClient.get("/admin/manage-business/all");
-        return response.data.data || response.data;
+        const response = await apiClient.get(`/admin/manage-business/all?page=${page}`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        return response.data;
     } catch (error) {
-        console.error("Error fetching shops:", error);
-        throw error.response ? error.response.data : new Error("Network Error or Shop Service Unreachable");
+        throw error.response ? error.response.data : new Error("Network Error");
     }
 };
 

@@ -146,29 +146,23 @@ const PartTimeJobManagement = () => {
 
   const [newJob, setNewJob] = useState(initialJobState);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
   useEffect(() => {
     fetchData();
     fetchUsers();
-  }, []);
+  }, [currentPage]); // Re-fetch when page changes
 
   const fetchData = async () => {
     try {
       setLoading(true);
-      const response = await getAllJobs();
-
-      // API से आने वाला असल डेटा (Array) ढूँढें
-      // कभी-कभी डेटा response.data में होता है, कभी response.data.data में
+      const response = await getAllJobs(currentPage);
       const jobs = response?.data?.data || response?.data || response;
 
-      if (Array.isArray(jobs)) {
-        setAllJobs(jobs);
-        console.log("Jobs loaded in state:", jobs.length);
-      } else {
-        console.error("Fetched data is not an array:", jobs);
-        setAllJobs([]);
-      }
+      setAllJobs(Array.isArray(jobs) ? jobs : []);
+      setTotalPages(response?.pagination?.totalPages || 1);
     } catch (err) {
-      console.error("Fetch Error:", err);
       toast.error("Error fetching job list");
     } finally {
       setLoading(false);
@@ -425,6 +419,8 @@ const PartTimeJobManagement = () => {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200">
+                <th className="p-4 text-xs font-semibold text-slate-500 uppercase w-12">S.No</th>
+
                 <th className="p-4 text-xs font-semibold text-slate-500 uppercase">Job Details</th>
                 <th className="p-4 text-xs font-semibold text-slate-500 uppercase">Salary</th>
                 <th className="p-4 text-xs font-semibold text-slate-500 uppercase text-center">Featured</th>
@@ -433,38 +429,67 @@ const PartTimeJobManagement = () => {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading ? (
-                <tr><td colSpan="4" className="p-10 text-center"><Loader2 className="animate-spin mx-auto text-blue-600" /></td></tr>
+                <tr><td colSpan="5" className="p-10 text-center"><Loader2 className="animate-spin mx-auto text-blue-600" /></td></tr>
               ) : filteredJobs.length === 0 ? (
-                <tr><td colSpan="4" className="p-10 text-center text-slate-400">No jobs found.</td></tr>
-              ) : filteredJobs.map((job) => (
-                <tr key={job._id} className="hover:bg-slate-50 transition-colors">
-                  <td className="p-4">
-                    <div className="flex items-start gap-3">
-                      <img src={job.images?.[0] || "https://placehold.co/150"} className="w-10 h-10 rounded-lg object-cover border" alt="job" />
-                      <div>
-                        <div className="font-bold text-slate-800 text-sm">{job.title}</div>
-                        <div className="text-[10px] text-blue-600 font-bold uppercase">{job.jobRole}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="p-4 font-bold text-slate-700 text-sm">₹{job.salaryRange?.min} - {job.salaryRange?.max}</td>
-                  <td className="p-4 text-center"><Star size={18} className={job.isFeatured ? "text-amber-400 fill-amber-400 mx-auto" : "text-slate-300 mx-auto"} /></td>
-                  <td className="p-4">
-                    <div className="flex justify-center gap-2">
-                      <ActionBtn text="View" variant="blue" icon={<Eye size={12} />} onClick={() => { setSelectedJob(job); setIsViewModalOpen(true) }} />
-                      <ActionBtn
-                        text="Delete"
-                        variant="red"
-                        icon={<Trash2 size={12} />}
-                        onClick={() => handleDeleteConfirm(job._id)}
-                      />
-                      <ActionBtn text="Edit" variant="blue" icon={<PlusCircle size={12} />} onClick={() => openEditModal(job)} />
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                <tr><td colSpan="5" className="p-10 text-center text-slate-400">No jobs found.</td></tr>
+              ) : (
+                filteredJobs.map((job, idx) => {
+                  const serialNumber = ((currentPage - 1) * 10) + (idx + 1);
+                  return (
+                    <tr key={job._id} className="hover:bg-slate-50 transition-colors">
+                      <td className="p-4 text-sm font-bold text-slate-400">{serialNumber}</td>
+                      <td className="p-4">
+                        <div className="flex items-start gap-3">
+                          <img src={job.images?.[0] || "https://placehold.co/150"} className="w-10 h-10 rounded-lg object-cover border" alt="job" />
+                          <div>
+                            <div className="font-bold text-slate-800 text-sm">{job.title}</div>
+                            <div className="text-[10px] text-blue-600 font-bold uppercase">{job.jobRole}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-4 font-bold text-slate-700 text-sm">₹{job.salaryRange?.min} - {job.salaryRange?.max}</td>
+                      <td className="p-4 text-center">
+                        <Star size={18} className={job.isFeatured ? "text-amber-400 fill-amber-400 mx-auto" : "text-slate-300 mx-auto"} />
+                      </td>
+                      <td className="p-4">
+                        <div className="flex justify-center gap-2">
+                          <ActionBtn text="View" variant="blue" icon={<Eye size={12} />} onClick={() => { setSelectedJob(job); setIsViewModalOpen(true) }} />
+                          <ActionBtn
+                            text="Delete"
+                            variant="red"
+                            icon={<Trash2 size={12} />}
+                            onClick={() => handleDeleteConfirm(job._id)}
+                          />
+                          <ActionBtn text="Edit" variant="blue" icon={<PlusCircle size={12} />} onClick={() => openEditModal(job)} />
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
+        </div>
+        <div className="px-6 py-4 bg-slate-50 border-t flex items-center justify-between">
+          <div className="text-xs font-bold text-slate-400 uppercase">
+            Page {currentPage} of {totalPages}
+          </div>
+          <div className="flex gap-2">
+            <button
+              disabled={currentPage === 1 || loading}
+              onClick={() => setCurrentPage(prev => prev - 1)}
+              className="px-4 py-2 text-xs font-bold bg-white border rounded-lg disabled:opacity-50"
+            >
+              Previous
+            </button>
+            <button
+              disabled={currentPage === totalPages || loading}
+              onClick={() => setCurrentPage(prev => prev + 1)}
+              className="px-4 py-2 text-xs font-bold bg-white border rounded-lg disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
         </div>
       </div>
 

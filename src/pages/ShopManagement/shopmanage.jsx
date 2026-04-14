@@ -65,7 +65,8 @@ const ShopListManagement = () => {
     const [selectedShop, setSelectedShop] = useState(null);
     const [isProcessing, setIsProcessing] = useState(false);
     const [editingService, setEditingService] = useState(null);
-
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
     const [feedback, setFeedback] = useState({ show: false, message: "", type: "success" });
 
     const [formData, setFormData] = useState({
@@ -95,20 +96,23 @@ const ShopListManagement = () => {
     const fetchInitialData = useCallback(async () => {
         setLoading(true);
         try {
-            const shopRes = await getAllShopsForAdmin();
-            // Check if shopRes is the direct array or contains .data
-            const shopData = Array.isArray(shopRes) ? shopRes : (shopRes.data || []);
-            setShops(shopData);
-
-            // ... rest of the code
+            // Send search and filter to the backend so it searches the WHOLE database
+            const response = await getAllShopsForAdmin(currentPage, searchTerm, activeFilter);
+            setShops(response.data || []);
+            setTotalPages(response.pagination?.totalPages || 1);
         } catch (err) {
             showFeedback("Failed to load data", "error");
         } finally {
             setLoading(false);
         }
-    }, []);
-    useEffect(() => { fetchInitialData(); }, [fetchInitialData]);
+    }, [currentPage, searchTerm, activeFilter]); // Add these dependencies
+    useEffect(() => {
+        fetchInitialData();
+    }, [fetchInitialData]);
 
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm, activeFilter]);
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         if (name === "userId") {
@@ -332,6 +336,7 @@ const ShopListManagement = () => {
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="bg-slate-50/50 border-b border-slate-100">
+                                <th className="p-6 text-[11px] font-black text-slate-500 uppercase tracking-widest w-12">SNo.</th> {/* Add this */}
                                 <th className="p-6 text-[11px] font-black text-slate-500 uppercase tracking-widest">Business Info</th>
                                 <th className="p-6 text-[11px] font-black text-slate-500 uppercase tracking-widest">Owner Contact</th>
                                 <th className="p-6 text-[11px] font-black text-slate-500 uppercase tracking-widest text-center">Verification</th>
@@ -340,48 +345,102 @@ const ShopListManagement = () => {
                         </thead>
                         <tbody className="divide-y divide-slate-50">
                             {loading ? (
-                                <tr><td colSpan="4" className="p-24 text-center"><Loader2 className="animate-spin mx-auto text-indigo-600" size={40} /></td></tr>
+                                <tr><td colSpan="5" className="p-24 text-center">...</td></tr>
                             ) : filteredShops.length === 0 ? (
-                                <tr><td colSpan="4" className="p-24 text-center text-slate-400 font-medium italic">No listings found in this category.</td></tr>
-                            ) : filteredShops.map((shop) => (
-                                <tr key={shop._id} className="group hover:bg-slate-50/50 transition-all">
-                                    <td className="p-6">
-                                        <div className="text-base font-bold text-slate-900">{shop.businessName}</div>
-                                        <div className="flex items-center gap-2 mt-1.5">
-                                            <span className="text-[10px] text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded uppercase">{shop.category}</span>
-                                            <span className="text-[10px] text-slate-400 font-bold flex items-center gap-1">
-                                                <MapPin size={10} />
-                                                {shop.location?.address || shop.address || "N/A"}
-                                            </span>                                        </div>
-                                    </td>
-                                    <td className="p-6">
-                                        <div className="text-sm font-bold text-slate-700">{shop.ownerName}</div>
-                                        <div className="text-[11px] text-slate-400 font-semibold flex items-center gap-1 mt-1"><Phone size={10} className="text-slate-300" /> {shop.mobileNumber}</div>
-                                    </td>
-                                    <td className="p-6 text-center">
-                                        <StatusBadge status={shop.status} />
-                                    </td>
-                                    <td className="p-6">
-                                        <div className="flex justify-end items-center gap-1">
-                                            <button onClick={() => handleAction('addService', shop)} className="p-2.5 text-indigo-500 hover:bg-indigo-50 rounded-xl transition-all" title="Add Service"><Layers size={18} /></button>
-                                            <button onClick={() => handleAction('editService', shop)} className="p-2.5 text-blue-500 hover:bg-blue-50 rounded-xl transition-all" title="Edit Services"><Wrench size={18} /></button>
-                                            <div className="w-[1px] h-4 bg-slate-200 mx-1"></div>
-                                            {shop.status !== 'Approved' && (
-                                                <button onClick={() => handleAction('approve', shop)} className="p-2.5 text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all" title="Approve Business"><CheckCircle size={18} /></button>
-                                            )}
-                                            {shop.status !== 'Rejected' && (
-                                                <button onClick={() => handleAction('reject', shop)} className="p-2.5 text-rose-500 hover:bg-rose-50 rounded-xl transition-all" title="Reject Business"><XCircle size={18} /></button>
-                                            )}
-                                            <div className="w-[1px] h-4 bg-slate-200 mx-1"></div>
-                                            <button onClick={() => handleAction('view', shop)} className="p-2.5 text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all" title="View Details"><Eye size={18} /></button>
-                                            <button onClick={() => handleAction('edit', shop)} className="p-2.5 text-amber-500 hover:bg-amber-50 rounded-xl transition-all" title="Edit Business"><Pencil size={18} /></button>
-                                            <button onClick={() => handleAction('delete', shop)} className="p-2.5 text-rose-500 hover:bg-rose-50 rounded-xl transition-all" title="Delete"><Trash2 size={18} /></button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
+                                <tr><td colSpan="5" className="p-24 text-center">...</td></tr>
+                            ) : filteredShops.map((shop, index) => {
+                                // CALCULATION: (Current Page - 1) * Items Per Page + (Index + 1)
+                                // If your backend sends 10 items per page, use 10.
+                                const serialNumber = ((currentPage - 1) * 10) + (index + 1);
+
+                                return (
+                                    <tr key={shop._id} className="group hover:bg-slate-50/50 transition-all">
+                                        {/* Add this TD first */}
+                                        <td className="p-6 text-sm font-bold text-slate-400">
+                                            {serialNumber.toString().padStart(2, '0')}
+                                        </td>
+                                        <td className="p-6">
+                                            <div className="text-base font-bold text-slate-900">{shop.businessName}</div>
+                                            <div className="flex items-center gap-2 mt-1.5">
+                                                <span className="text-[10px] text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded uppercase">{shop.category}</span>
+                                                <span className="text-[10px] text-slate-400 font-bold flex items-center gap-1">
+                                                    <MapPin size={10} />
+                                                    {shop.location?.address || shop.address || "N/A"}
+                                                </span>                                        </div>
+                                        </td>
+                                        <td className="p-6">
+                                            <div className="text-sm font-bold text-slate-700">{shop.ownerName}</div>
+                                            <div className="text-[11px] text-slate-400 font-semibold flex items-center gap-1 mt-1"><Phone size={10} className="text-slate-300" /> {shop.mobileNumber}</div>
+                                        </td>
+                                        <td className="p-6 text-center">
+                                            <StatusBadge status={shop.status} />
+                                        </td>
+                                        <td className="p-6">
+                                            <div className="flex justify-end items-center gap-1">
+                                                <button onClick={() => handleAction('addService', shop)} className="p-2.5 text-indigo-500 hover:bg-indigo-50 rounded-xl transition-all" title="Add Service"><Layers size={18} /></button>
+                                                <button onClick={() => handleAction('editService', shop)} className="p-2.5 text-blue-500 hover:bg-blue-50 rounded-xl transition-all" title="Edit Services"><Wrench size={18} /></button>
+                                                <div className="w-[1px] h-4 bg-slate-200 mx-1"></div>
+                                                {shop.status !== 'Approved' && (
+                                                    <button onClick={() => handleAction('approve', shop)} className="p-2.5 text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all" title="Approve Business"><CheckCircle size={18} /></button>
+                                                )}
+                                                {shop.status !== 'Rejected' && (
+                                                    <button onClick={() => handleAction('reject', shop)} className="p-2.5 text-rose-500 hover:bg-rose-50 rounded-xl transition-all" title="Reject Business"><XCircle size={18} /></button>
+                                                )}
+                                                <div className="w-[1px] h-4 bg-slate-200 mx-1"></div>
+                                                <button onClick={() => handleAction('view', shop)} className="p-2.5 text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all" title="View Details"><Eye size={18} /></button>
+                                                <button onClick={() => handleAction('edit', shop)} className="p-2.5 text-amber-500 hover:bg-amber-50 rounded-xl transition-all" title="Edit Business"><Pencil size={18} /></button>
+                                                <button onClick={() => handleAction('delete', shop)} className="p-2.5 text-rose-500 hover:bg-rose-50 rounded-xl transition-all" title="Delete"><Trash2 size={18} /></button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
                         </tbody>
                     </table>
+                </div>
+                <div className="px-8 py-5 bg-slate-50/50 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="text-[11px] font-black text-slate-400 uppercase tracking-[0.15em]">
+                        Showing Page <span className="text-indigo-600">{currentPage}</span> of <span className="text-slate-600">{totalPages}</span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <button
+                            disabled={currentPage === 1 || loading}
+                            onClick={() => setCurrentPage(prev => prev - 1)}
+                            className="p-2.5 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm"
+                        >
+                            <RefreshCcw size={16} className={loading ? "animate-spin" : ""} />
+                        </button>
+
+                        <div className="flex gap-1.5">
+                            {[...Array(totalPages)].map((_, i) => {
+                                const pageNum = i + 1;
+                                // Logic to show limited page numbers if totalPages is huge
+                                if (totalPages > 5 && Math.abs(currentPage - pageNum) > 2) return null;
+
+                                return (
+                                    <button
+                                        key={pageNum}
+                                        onClick={() => setCurrentPage(pageNum)}
+                                        className={`w-10 h-10 rounded-xl text-xs font-black transition-all border ${currentPage === pageNum
+                                            ? "bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-200"
+                                            : "bg-white border-slate-200 text-slate-500 hover:border-indigo-300 hover:text-indigo-600"
+                                            }`}
+                                    >
+                                        {pageNum}
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        <button
+                            disabled={currentPage === totalPages || loading}
+                            onClick={() => setCurrentPage(prev => prev + 1)}
+                            className="px-5 py-2.5 rounded-xl border border-slate-200 bg-white text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm"
+                        >
+                            Next
+                        </button>
+                    </div>
                 </div>
             </div>
 

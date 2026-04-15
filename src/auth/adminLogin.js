@@ -820,3 +820,18 @@ export const updateCategoryAPI = async (id, payload) => {
         throw error.response ? error.response.data : new Error("Network Error");
     }
 };
+
+
+export const getBloodRequestsByUrgencyAPI = async (urgency) => {
+    try {
+        const token = localStorage.getItem("token");
+        const response = await apiClient.get(`/admin/bloodRequest-urgency?urgency=${urgency}`, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        return response.data; // Return karega { success, results, data }
+    } catch (error) {
+        throw error.response ? error.response.data : new Error("Network Error");
+    }
+};

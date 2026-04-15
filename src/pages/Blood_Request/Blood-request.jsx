@@ -17,7 +17,7 @@ import {
     getAllBloodRequestsAPI,
     updateBloodRequestAPI,
     deleteBloodRequestAPI,
-    getBloodRequestByIdAPI, createBloodRequestAPI
+    getBloodRequestByIdAPI, createBloodRequestAPI, getBloodRequestsByUrgencyAPI
 } from '../../auth/adminLogin';
 
 const { Option } = Select;
@@ -389,6 +389,21 @@ const BloodRequests = () => {
     const labelStyle = { fontWeight: 'bold', fontSize: '11px', color: '#555', marginBottom: '5px', display: 'block', textTransform: 'uppercase' };
     const inputStyle = { borderRadius: '6px', padding: '8px' };
 
+    const handleFilterByUrgency = async (urgency) => {
+        setLoading(true);
+        try {
+            if (urgency === 'All') {
+                await fetchData();
+            } else {
+                const result = await getBloodRequestsByUrgencyAPI(urgency);
+                setData(result.data || []);
+            }
+        } catch (error) {
+            message.error("Failed to filter data");
+        } finally {
+            setLoading(false);
+        }
+    };
     return (
         <div className="p-6 bg-white rounded-lg shadow-sm max-w-7xl mx-auto mb-8 mt-2">
 
@@ -396,10 +411,15 @@ const BloodRequests = () => {
                 <div className="flex flex-col gap-4">
                     <h1 className="text-2xl font-bold text-gray-800">Blood Requests</h1>
                     <Space wrap size="small">
-                        <Button style={activeTabStyle}>All</Button>
-                        <Button style={tabButtonStyle}>NORMAL</Button>
-                        <Button style={tabButtonStyle}>URGENT</Button>
-                        <Button style={tabButtonStyle}>CRITICAL</Button>
+                        {['All', 'Low', 'Medium', 'Critical'].map((level) => (
+                            <Button
+                                key={level}
+                                onClick={() => handleFilterByUrgency(level)}
+                                style={tabButtonStyle}
+                            >
+                                {level === 'Low' ? 'NORMAL' : level === 'Medium' ? 'URGENT' : level.toUpperCase()}
+                            </Button>
+                        ))}
                     </Space>
                 </div>
                 <Button

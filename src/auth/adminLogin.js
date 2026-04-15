@@ -504,27 +504,27 @@ export const deleteSubCategoryAPI = async (categoryName, subCategoryName) => {
     }
 };
 
-// --- UPDATE CATEGORY ---
-export const updateCategoryAPI = async (id, categoryName, subCategoryName) => {
-    try {
-        const adminId = localStorage.getItem("id") || localStorage.getItem("userId");
+// // --- UPDATE CATEGORY ---
+// export const updateCategoryAPI = async (id, categoryName, subCategoryName) => {
+//     try {
+//         const adminId = localStorage.getItem("id") || localStorage.getItem("userId");
 
-        // Payload जैसा आपने बताया: category और name
-        const payload = {
-            category: categoryName, // e.g. Electronics
-            name: subCategoryName,   // e.g. MUSICS
-            updatedBy: adminId
-        };
+//         // Payload जैसा आपने बताया: category और name
+//         const payload = {
+//             category: categoryName, // e.g. Electronics
+//             name: subCategoryName,   // e.g. MUSICS
+//             updatedBy: adminId
+//         };
 
-        // URL: /admin/category/update/:id
-        const response = await apiClient.put(`/admin/category/update/${id}`, payload);
+//         // URL: /admin/category/update/:id
+//         const response = await apiClient.put(`/admin/category/update/${id}`, payload);
 
-        return response.data;
-    } catch (error) {
-        console.error("Error updating category:", error);
-        throw error.response ? error.response.data : new Error("Network Error");
-    }
-};
+//         return response.data;
+//     } catch (error) {
+//         console.error("Error updating category:", error);
+//         throw error.response ? error.response.data : new Error("Network Error");
+//     }
+// };
 
 
 // --- Add Sub Category ---
@@ -786,6 +786,35 @@ export const getUsersForDropdownAPI = async () => {
 export const getCategoriesForDropdownAPI = async () => {
     try {
         const response = await apiClient.get("/admin/category/dropdown-categories");
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : new Error("Network Error");
+    }
+};
+
+
+export const searchCategoriesAPI = async (query) => {
+    try {
+        const token = localStorage.getItem("token");
+        const response = await apiClient.get(`/admin/category/search-category?q=${query}`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : new Error("Network Error");
+    }
+};
+
+
+export const updateCategoryAPI = async (id, payload) => {
+    try {
+        const token = localStorage.getItem("token");
+        const response = await apiClient.put(`/admin/category/update/${id}`, payload, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json"
+            },
+        });
         return response.data;
     } catch (error) {
         throw error.response ? error.response.data : new Error("Network Error");

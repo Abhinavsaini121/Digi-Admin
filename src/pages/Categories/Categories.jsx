@@ -1,14 +1,11 @@
 
-
-
-
 import React, { useState, useEffect } from 'react';
 import {
   Layers, GitMerge, Edit3, Trash2, PlusCircle,
   Search, Power, X, Move, GripVertical, CheckCircle, ShieldAlert
 } from 'lucide-react';
 // Import new and existing API functions
-import { addCategory, getAllCategories, deleteCategory } from "../../auth/adminLogin";
+import { addCategory, getAllCategories, deleteCategory, searchCategoriesAPI, updateCategoryAPI } from "../../auth/adminLogin";
 
 // Component: Simple Toast Simulation
 const Toast = ({ message, type, onClose }) => {
@@ -46,7 +43,7 @@ const ImageCell = ({ name, imageUrl }) => (
 
 
 const Categories = () => {
-
+  const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('local'); // 'local' | 'marketplace' | 'shops'
   const [categoryNameState, setCategoryNameState] = useState('');
   const [imageFileState, setImageFileState] = useState(null);
@@ -92,11 +89,7 @@ const Categories = () => {
       subs: item.subCategory || [],
     }));
   };
-  const getTabLabel = () => {
-    if (activeTab === 'local') return 'Local Needs';
-    if (activeTab === 'marketplace') return 'Marketplace';
-    return 'Shops';
-  };
+  const getTabLabel = () => "Categories";
 
   // --- MODAL HANDLERS (remain the same) ---
   const openModal = (type, data = null) => {
@@ -178,11 +171,20 @@ const Categories = () => {
       }
       return; // Exit function after handling delete
     }
-    else {
-      // Placeholder for edit, status, reorder save actions
-      console.log(`Handling Save Changes for: ${modalConfig.type}`);
-      closeModal();
-      setToastConfig({ message: `${getTabLabel()} ${modalConfig.type} updated successfully (Simulated).`, type: 'success', show: true });
+    if (modalConfig.type === 'edit') {
+      try {
+        const payload = {
+          name: categoryNameState || modalConfig.data.name,
+          type: categoryType || modalConfig.data.type,
+          category: categoryRaw || modalConfig.data.category
+        };
+        await updateCategoryAPI(modalConfig.data.id, payload);
+        setToastConfig({ message: "Category updated successfully!", type: 'success', show: true });
+        closeModal();
+        fetchCategories();
+      } catch (err) {
+        setToastConfig({ message: "Error updating category", type: 'error', show: true });
+      }
     }
   };
 
@@ -220,24 +222,7 @@ const Categories = () => {
       </div>
 
       {/* TABS (unchanged) */}
-      <div className="flex flex-wrap gap-3 mb-6">
-        {[
-          { id: 'local', label: 'Local Needs' },
-          { id: 'marketplace', label: 'Marketplace' },
-          { id: 'shops', label: 'Shops' }
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${activeTab === tab.id
-              ? 'bg-slate-900 text-white shadow-md'
-              : 'bg-white text-slate-600 hover:bg-slate-100 border border-gray-200'
-              }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+
 
       {/* --- MAIN CONTENT CARD (unchanged) --- */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
@@ -248,6 +233,17 @@ const Categories = () => {
             <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
             <input
               type="text"
+              value={searchTerm}
+              onChange={async (e) => {
+                const val = e.target.value;
+                setSearchTerm(val);
+                if (val.length > 0) {
+                  const res = await searchCategoriesAPI(val);
+                  setCategoriesData(res.data);
+                } else {
+                  fetchCategories(); // Reset to all if input cleared
+                }
+              }}
               placeholder={`Search ${getTabLabel()}...`}
               className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-100 text-sm"
             />
@@ -347,9 +343,11 @@ const Categories = () => {
                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">Category Name (Main)</label>
                     <input
                       type="text"
-                      value={modalConfig.type === 'add' ? categoryNameState : undefined}
-                      onChange={(e) => modalConfig.type === 'add' && setCategoryNameState(e.target.value)}
-                      defaultValue={modalConfig.type === 'edit' ? modalConfig.data?.name || '' : undefined}
+                      value={modalConfig.type === 'add' ? categoryNameState : (modalConfig.type === 'edit' ? categoryNameState || modalConfig.data?.name : '')}
+                      onChange={(e) => {
+                        if (modalConfig.type === 'add') setCategoryNameState(e.target.value);
+                        if (modalConfig.type === 'edit') setCategoryNameState(e.target.value);
+                      }}
                       placeholder="e.g. Home Services"
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-slate-700 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition"
                     />

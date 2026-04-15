@@ -160,7 +160,11 @@ const PartTimeJobManagement = () => {
       const response = await getAllJobs(currentPage);
       const jobs = response?.data?.data || response?.data || response;
 
-      setAllJobs(Array.isArray(jobs) ? jobs : []);
+      const sortedJobs = Array.isArray(jobs)
+        ? jobs.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        : [];
+
+      setAllJobs(sortedJobs);
       setTotalPages(response?.pagination?.totalPages || 1);
     } catch (err) {
       toast.error("Error fetching job list");
@@ -178,8 +182,10 @@ const PartTimeJobManagement = () => {
   };
 
   const filteredJobs = useMemo(() => {
-    const reversedJobs = [...allJobs].reverse();
-
+    return allJobs.filter((job) => {
+      const category = String(job.jobCategory || "").toLowerCase();
+      return category.includes("part");
+    });
     return reversedJobs.filter((job) => {
       const category = String(job.jobCategory || "").toLowerCase();
       return category.includes("part");

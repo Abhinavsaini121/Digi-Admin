@@ -15,7 +15,8 @@ import {
     getAllCategories,
     createBusinessForUserAPI,
     addServiceToBusinessAPI,
-    getBusinessServicesAPI
+    getBusinessServicesAPI, getUsersForDropdownAPI,     // New
+    getCategoriesForDropdownAPI
 } from "../../auth/adminLogin";
 
 import ShopEditForm from "./ShopEditForm";
@@ -92,7 +93,21 @@ const ShopListManagement = () => {
             setTimeout(() => setFeedback({ show: false, message: "", type: "success" }), 3000);
         }
     };
-
+    useEffect(() => {
+        const loadDropdownData = async () => {
+            try {
+                const [uRes, cRes] = await Promise.all([
+                    getUsersForDropdownAPI(),
+                    getCategoriesForDropdownAPI()
+                ]);
+                setUsers(uRes.data || []);
+                setCategories(cRes.data || []);
+            } catch (err) {
+                console.error("Dropdown loading failed");
+            }
+        };
+        loadDropdownData();
+    }, []);
     const fetchInitialData = useCallback(async () => {
         setLoading(true);
         try {
@@ -467,7 +482,7 @@ const ShopListManagement = () => {
 
                             {modalType === 'add' && (
                                 <form id="addShopForm" onSubmit={handleAddShopSubmit} className="space-y-8">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 overflow-hidden">
                                         <div className="col-span-2 space-y-4">
                                             <div className="flex items-center gap-2 text-indigo-600">
                                                 <User size={16} strokeWidth={3} />
@@ -476,9 +491,8 @@ const ShopListManagement = () => {
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <div className="space-y-1.5">
                                                     <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Select User (By Name)</label>
-                                                    <select required name="userId" value={formData.userId} onChange={handleInputChange} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:bg-white focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-400 outline-none transition-all">
-                                                        <option value="">-- Choose User Name --</option>
-                                                        {users.map(u => <option key={u._id} value={u._id}>{u.fullName || u.name}</option>)}
+                                                    <select required name="userId" value={formData.userId} onChange={handleInputChange} className="w-full max-w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:bg-white focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-400 outline-none transition-all">                                                        <option value="">-- Choose User Name --</option>
+                                                        {users.map(u => <option key={u._id} value={u._id}>{u.fullName}</option>)}
                                                     </select>
                                                 </div>
                                                 <div className="space-y-1.5">
@@ -494,9 +508,8 @@ const ShopListManagement = () => {
                                             </div>
                                             <div className="space-y-3">
                                                 <input type="text" name="businessName" placeholder="Business Name" required onChange={handleInputChange} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:bg-white focus:ring-4 focus:ring-indigo-500/5 outline-none transition-all" />
-                                                <select required name="category" value={formData.category} onChange={handleInputChange} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:bg-white focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-400 outline-none transition-all">
-                                                    <option value="">-- Select Category --</option>
-                                                    {categories.map(cat => <option key={cat._id} value={cat.name}>{cat.name}</option>)}
+                                                <select required name="category" value={formData.category} onChange={handleInputChange} className="w-full max-w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:bg-white focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-400 outline-none transition-all">                                                    <option value="">-- Select Category --</option>
+                                                    {categories.map((cat, index) => <option key={index} value={cat}>{cat}</option>)}
                                                 </select>
                                                 <textarea name="details" placeholder="Brief business details..." rows="3" required onChange={handleInputChange} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:bg-white focus:ring-4 focus:ring-indigo-500/5 outline-none transition-all resize-none"></textarea>
                                             </div>

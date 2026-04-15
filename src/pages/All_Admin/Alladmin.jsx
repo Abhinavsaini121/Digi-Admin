@@ -3,7 +3,6 @@ import { Search, UserPlus, Edit2, Lock, Unlock, Trash2, X } from 'lucide-react';
 import { getAllAdminData, registerAdmin, searchAdminAPI, deleteAdminAPI, updateAdminAPI } from "../../auth/adminLogin";
 
 const UserTable = () => {
-  // State for storing user data, loading, and error
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -21,16 +20,18 @@ const UserTable = () => {
   const [updateLoading, setUpdateLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const itemsPerPage = 10;
 
-  const fetchUsers = async () => {
+  const fetchUsers = async (page) => {
     try {
       setLoading(true);
       setError(null);
-      const response = await getAllAdminData(currentPage);
-
+      const response = await getAllAdminData(page);
       if (response && response.data) {
         setUsers(response.data);
         setTotalPages(response.pagination?.totalPages || 1);
+        setTotalItems(response.pagination?.totalItems || response.pagination?.total || 0);
       } else {
         setUsers(Array.isArray(response) ? response : []);
       }
@@ -43,8 +44,9 @@ const UserTable = () => {
   };
 
   useEffect(() => {
-    fetchUsers();
+    fetchUsers(currentPage);
   }, [currentPage]);
+
   const handleAddAdmin = async (e) => {
     e.preventDefault();
     setRegLoading(true);
@@ -52,10 +54,11 @@ const UserTable = () => {
       const result = await registerAdmin(formData.name, formData.email, formData.password);
       if (result) {
         setToast({ visible: true, message: "Admin added successfully!" });
-        setTimeout(() => setToast({ visible: false, message: "" }), 5000); setIsModalOpen(false);
+        setIsModalOpen(false);
         setFormData({ name: '', email: '', password: '' });
-        const updatedData = await getAllAdminData();
-        setUsers(updatedData.data || updatedData);
+        setCurrentPage(1);
+        fetchUsers(1);
+        setTimeout(() => setToast({ visible: false, message: "" }), 5000);
       }
     } catch (err) {
       alert(err.message || "Registration failed");
@@ -68,13 +71,15 @@ const UserTable = () => {
     setSearchQuery(val);
     try {
       if (val.trim() === '') {
-        const res = await getAllAdminData();
-        setUsers(res.data || res);
+        await fetchUsers(1);
+        setCurrentPage(1);
       } else {
         const res = await searchAdminAPI(val);
-        setUsers(res.admins || []); // API response ke 'admins' array ko set karein
+        setUsers(res.admins || []);
       }
-    } catch (err) { console.error(err); }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const handleDeleteAdmin = async () => {
@@ -84,7 +89,6 @@ const UserTable = () => {
       const result = await deleteAdminAPI(adminToDelete);
       if (result) {
         setToast({ visible: true, message: "Admin deleted successfully!" });
-        // Update local state so the user disappears from the list immediately
         setUsers(users.filter((user) => (user.id || user._id) !== adminToDelete));
         setIsDeleteModalOpen(false);
         setAdminToDelete(null);
@@ -96,7 +100,6 @@ const UserTable = () => {
       setDeleteLoading(false);
     }
   };
-
 
   const openUpdateModal = (user) => {
     setAdminToUpdateId(user.id || user._id);
@@ -111,7 +114,6 @@ const UserTable = () => {
       const result = await updateAdminAPI(adminToUpdateId, updateFormData);
       if (result) {
         setToast({ visible: true, message: "Admin updated successfully!" });
-        // Update local state so UI updates immediately
         setUsers(users.map(u => (u.id || u._id) === adminToUpdateId ? { ...u, ...updateFormData } : u));
         setIsUpdateModalOpen(false);
         setTimeout(() => setToast({ visible: false, message: "" }), 3000);
@@ -122,7 +124,9 @@ const UserTable = () => {
       setUpdateLoading(false);
     }
   };
-  // --- JSX Rendering ---
+
+  const indexOfFirstItem = (currentPage - 1) * itemsPerPage;
+
   return (
     <div className="p-8 bg-gray-50 min-h-screen font-sans">
       {toast.visible && (
@@ -130,18 +134,15 @@ const UserTable = () => {
           ✅ {toast.message}
         </div>
       )}
-      {/* Header Section */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-800">All Admin</h1>
         <p className="text-gray-500">Manage all registered admin on the platform.</p>
       </div>
 
-      {/* Navigation Tabs */}
       <div className="flex gap-4 mb-6">
         <button className="px-6 py-2 bg-indigo-600 text-white rounded-full font-medium">All Admin</button>
       </div>
 
-      {/* Search and Add User Row */}
       <div className="flex justify-between items-center mb-6">
         <div className="relative w-1/4">
           <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
@@ -163,7 +164,6 @@ const UserTable = () => {
         </button>
       </div>
 
-      {/* Table Section - Loading/Error State */}
       <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
         {loading && <div className="p-6 text-center text-indigo-600">Loading Admin...</div>}
         {error && <div className="p-6 text-center text-red-600 bg-red-50">{error}</div>}
@@ -172,7 +172,6 @@ const UserTable = () => {
           <div className="p-6 text-center text-gray-500">No Admin found.</div>
         )}
 
-        {/* Table Content - Only render if not loading and data exists */}
         {!loading && users.length > 0 && (
           <table className="w-full text-left border-collapse">
             <thead>
@@ -187,29 +186,24 @@ const UserTable = () => {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {users.map((user, index) => {
-                const serialNumber = ((currentPage - 1) * 10) + (index + 1);
+                const serialNumber = indexOfFirstItem + index + 1;
                 return (
                   <tr key={user.id || user._id} className="hover:bg-gray-50 transition">
                     <td className="px-6 py-4 text-sm text-gray-600">{serialNumber}</td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
-                          {/* Avatar Placeholder - Using user.id for seed */}
                           <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`} alt="avatar" className="w-8 h-8" />
                         </div>
                         <div>
                           <p className="text-sm font-semibold text-gray-800">{user.name}</p>
-                          {/* Assuming 'phone' field exists in API response */}
                           <p className="text-xs text-gray-400">{user.phone || 'N/A'}</p>
                         </div>
                       </div>
                     </td>
-                    {/* Assuming 'email' field exists in API response */}
                     <td className="px-6 py-4 text-sm text-gray-600">{user.email || 'N/A'}</td>
-                    {/* Assuming 'type' field exists in API response */}
                     <td className="px-6 py-4 text-sm text-gray-600 font-medium">{user.type || 'UNKNOWN'}</td>
                     <td className="px-6 py-4">
-                      {/* Assuming 'status' field exists in API response and is 'BLOCKED' or 'ACTIVE' */}
                       <span className={`px-3 py-1 rounded text-xs font-bold ${user.status === 'BLOCKED'
                         ? 'bg-red-50 text-red-400 border border-red-100'
                         : 'bg-green-50 text-green-500 border border-green-100'
@@ -223,7 +217,7 @@ const UserTable = () => {
                           size={18}
                           className="cursor-pointer hover:text-blue-500"
                           onClick={() => openUpdateModal(user)}
-                        />                      {/* Assuming the action logic should use the fetched status */}
+                        />
                         {user.status === 'BLOCKED' ? (
                           <Unlock size={18} className="cursor-pointer text-green-500" />
                         ) : (
@@ -233,22 +227,23 @@ const UserTable = () => {
                           size={18}
                           className="cursor-pointer hover:text-red-500"
                           onClick={() => {
-                            setAdminToDelete(user.id || user._id); // Ensure you use the correct ID field
+                            setAdminToDelete(user.id || user._id);
                             setIsDeleteModalOpen(true);
                           }}
-                        />                    </div>
+                        />
+                      </div>
                     </td>
                   </tr>
-                )
-              }
-              )}
+                );
+              })}
             </tbody>
           </table>
         )}
       </div>
+
       <div className="mt-6 flex items-center justify-between bg-white px-6 py-4 rounded-xl border border-gray-100 shadow-sm">
         <div className="text-sm text-gray-500 font-medium">
-          Page <span className="text-indigo-600 font-bold">{currentPage}</span> of {totalPages}
+          Showing <span className="text-indigo-600 font-bold">{indexOfFirstItem + 1}</span> to <span className="text-indigo-600 font-bold">{Math.min(indexOfFirstItem + users.length, totalItems)}</span> of <span className="text-indigo-600 font-bold">{totalItems}</span> entries
         </div>
         <div className="flex gap-2">
           <button
@@ -258,6 +253,17 @@ const UserTable = () => {
           >
             Previous
           </button>
+          <div className="flex items-center gap-1">
+            {[...Array(totalPages)].map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentPage(i + 1)}
+                className={`w-8 h-8 rounded-lg text-sm font-bold transition-colors ${currentPage === i + 1 ? "bg-indigo-600 text-white" : "hover:bg-gray-100 text-gray-600"}`}
+              >
+                {i + 1}
+              </button>
+            ))}
+          </div>
           <button
             disabled={currentPage === totalPages || loading}
             onClick={() => setCurrentPage(prev => prev + 1)}
@@ -267,6 +273,7 @@ const UserTable = () => {
           </button>
         </div>
       </div>
+
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
@@ -315,7 +322,7 @@ const UserTable = () => {
           </div>
         </div>
       )}
-      {/* DELETE CONFIRMATION MODAL */}
+
       {isDeleteModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden p-6 text-center">
@@ -347,7 +354,6 @@ const UserTable = () => {
         </div>
       )}
 
-      {/* UPDATE ADMIN MODAL */}
       {isUpdateModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">

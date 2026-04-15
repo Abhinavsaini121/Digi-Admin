@@ -252,7 +252,6 @@ export default function UserMasterProfile() {
                     </span>
                   </div>
                 </td>
-
                 <td className="px-4 py-3">
                   <div className="flex flex-col">
                     <span className="font-medium">{u.role}</span>
@@ -437,10 +436,10 @@ export default function UserMasterProfile() {
                   onChange={handleChange}
                   className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-200 outline-none text-sm bg-white"
                 >
-                  {/* Value wahi rakhein jo backend accept karta hai */}
-                  <option value="GENERAL_USER">Job Seeker (General User)</option>
-                  <option value="RECRUITER">Recruiter</option>
-                  <option value="ADMIN">Admin</option>
+                  <option value="SERVICE_PROVIDER">Service Provider</option>
+                  <option value="BUSINESS_SHOPS">Business Shops</option>
+                  <option value="JOB_SEEKER">Job Seeker</option>
+                  <option value="GENERAL_USER">General User</option>
                 </select>
               </div>
 

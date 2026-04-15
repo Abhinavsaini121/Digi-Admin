@@ -772,3 +772,22 @@ export const updateFullTimeJob = async (id, formData) => {
         throw error.response ? error.response.data : new Error("Network Error");
     }
 };
+// --- GET USERS FOR DROPDOWN ---
+export const getUsersForDropdownAPI = async () => {
+    try {
+        const response = await apiClient.get("/admin/users/dropdown-users");
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : new Error("Network Error");
+    }
+};
+
+// --- GET CATEGORIES FOR DROPDOWN ---
+export const getCategoriesForDropdownAPI = async () => {
+    try {
+        const response = await apiClient.get("/admin/category/dropdown-categories");
+        return response.data;
+    } catch (error) {
+        throw error.response ? error.response.data : new Error("Network Error");
+    }
+};

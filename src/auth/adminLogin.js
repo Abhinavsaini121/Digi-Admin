@@ -784,15 +784,6 @@ export const getUsersForDropdownAPI = async () => {
     }
 };
 
-// --- GET CATEGORIES FOR DROPDOWN ---
-export const getCategoriesForDropdownAPI = async () => {
-    try {
-        const response = await apiClient.get("/admin/category/dropdown-categories");
-        return response.data;
-    } catch (error) {
-        throw error.response ? error.response.data : new Error("Network Error");
-    }
-};
 
 
 
@@ -845,6 +836,25 @@ export const searchCategoriesAPI = async (query) => {
         return response.data; // Yeh { success, count, data } return karega
     } catch (error) {
         console.error("Search Category API Error:", error);
+        throw error.response ? error.response.data : new Error("Network Error");
+    }
+};
+
+
+// --- GET CATEGORIES FOR DROPDOWN ---
+export const getCategoriesForDropdownAPI = async () => {
+    try {
+        const token = localStorage.getItem("token");
+        const response = await apiClient.get("/admin/category/dropdown-categories", {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+
+        // Response structure: { success: true, data: ["Chemistry", "Cleaning", ...] }
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching dropdown categories:", error);
         throw error.response ? error.response.data : new Error("Network Error");
     }
 };

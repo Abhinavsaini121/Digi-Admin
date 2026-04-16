@@ -840,10 +840,7 @@ const ShopListManagement = () => {
                                     <button onClick={closeModal} className="px-6 py-2.5 bg-slate-900 text-white rounded-xl text-[11px] font-bold uppercase">Close</button>
                                 </>
                             ) : modalType === 'edit' ? (
-                                <>
-                                    <button type="button" onClick={closeModal} className="px-6 py-2 text-[11px] font-bold text-slate-400 uppercase hover:text-slate-600">Cancel</button>
-                                    <button type="submit" form="editShopForm" disabled={isProcessing} className="px-10 py-3 bg-amber-600 text-white rounded-xl text-[11px] font-bold uppercase tracking-widest shadow-lg shadow-amber-100 hover:bg-amber-700 disabled:opacity-50 flex items-center gap-2 transition-all">{isProcessing ? <Loader2 className="animate-spin" size={14} /> : <Pencil size={14} />} Update Details</button>
-                                </>
+                                null
                             ) : modalType === 'add' ? (
                                 <>
                                     <button type="button" onClick={closeModal} className="px-6 py-2 text-[11px] font-bold text-slate-400 uppercase hover:text-slate-600">Cancel</button>

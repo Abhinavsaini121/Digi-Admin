@@ -4,7 +4,7 @@ import {
     Pencil, Loader2, MapPin
 } from 'lucide-react';
 import { updateBusinessDetailsAPI } from "../../auth/adminLogin";
-
+import Select from "react-select";
 const ShopEditForm = ({ shopData, users, categories, onClose }) => {
 
     // ─────────────────────────────────────────────
@@ -59,14 +59,17 @@ const ShopEditForm = ({ shopData, users, categories, onClose }) => {
     // HELPERS
     // ─────────────────────────────────────────────
 
-    /** Full-screen modal — onClose() sirf success pe call hoga */
     const showModal = (message, type = "success") => {
         setModal({ show: true, message, type });
-        const delay = type === "success" ? 1500 : 3000;
+
+        if (type === "success") {
+            // 👇 instantly close + refresh
+            if (onClose) onClose();
+        }
+
         setTimeout(() => {
             setModal({ show: false, message: "", type: "success" });
-            if (type === "success" && onClose) onClose();   // ✅ SIRF YAHAN
-        }, delay);
+        }, 1500);
     };
 
     /** Chhota bottom toast — modal se bilkul alag, onClose() nahi */
@@ -191,8 +194,29 @@ const ShopEditForm = ({ shopData, users, categories, onClose }) => {
 
             // ✅ Strict success check — response.success must be explicitly true
             if (response && response.success === true) {
+
+                // ✅ UPDATE UI STATE WITH NEW DATA
+                const updated = response.data;
+
+                setEditFormData({
+                    userId: updated.userId,
+                    businessName: updated.businessName,
+                    details: updated.details,
+                    category: updated.category,
+                    locationAddress: updated.location?.address,
+                    ownerName: updated.ownerName,
+                    mobileNumber: updated.mobileNumber,
+                    whatsappNumber: updated.whatsappNumber,
+                    latitude: updated.location?.coordinates?.[1],
+                    longitude: updated.location?.coordinates?.[0],
+                });
+                if (onClose) onClose(true);
                 showModal("Business Updated Successfully!", "success");
-            } else {
+                setTimeout(() => {
+                    if (onClose) onClose(true);
+                }, 1500);
+            }
+            else {
                 // API returned 200 but success=false
                 showModal(response?.message || "Update failed. Please try again.", "error");
             }
@@ -262,17 +286,39 @@ const ShopEditForm = ({ shopData, users, categories, onClose }) => {
                         <h4 className="text-[10px] font-black uppercase tracking-[2px]">Ownership Details</h4>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <select
-                            name="userId"
-                            value={editFormData.userId}
-                            onChange={handleInputChange}
-                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:bg-white"
-                        >
-                            <option value="">-- Choose User --</option>
-                            {users.map(u => (
-                                <option key={u._id} value={u._id}>{u.fullName || u.name}</option>
-                            ))}
-                        </select>
+                        <Select
+                            options={users.map(u => ({
+                                label: u.fullName || u.name,
+                                value: u._id
+                            }))}
+                            value={
+                                editFormData.userId
+                                    ? {
+                                        label: users.find(u => u._id === editFormData.userId)?.fullName || users.find(u => u._id === editFormData.userId)?.name,
+                                        value: editFormData.userId
+                                    }
+                                    : null
+                            }
+                            onChange={(selected) => {
+                                const found = users.find(u => u._id === selected.value);
+                                setEditFormData(prev => ({
+                                    ...prev,
+                                    userId: selected.value,
+                                    ownerName: found ? (found.fullName || found.name || "") : ""
+                                }));
+                            }}
+                            placeholder="Choose User"
+                            menuPortalTarget={document.body}
+                            styles={{
+                                menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                                menu: (base) => ({ ...base }),
+                                menuList: (base) => ({
+                                    ...base,
+                                    maxHeight: 150,
+                                    overflowY: "auto"
+                                })
+                            }}
+                        />
                         <input
                             type="text" name="ownerName" placeholder="Owner Name" required
                             value={editFormData.ownerName} onChange={handleInputChange}
@@ -292,16 +338,34 @@ const ShopEditForm = ({ shopData, users, categories, onClose }) => {
                         value={editFormData.businessName} onChange={handleInputChange}
                         className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:bg-white"
                     />
-                    <select
-                        name="category" required
-                        value={editFormData.category} onChange={handleInputChange}
-                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:bg-white"
-                    >
-                        <option value="">-- Select Category --</option>
-                        {categories.map((cat, i) => (
-                            <option key={i} value={cat}>{cat}</option>
-                        ))}
-                    </select>
+                    <Select
+                        options={categories.map(cat => ({
+                            label: cat,
+                            value: cat
+                        }))}
+                        value={
+                            editFormData.category
+                                ? { label: editFormData.category, value: editFormData.category }
+                                : null
+                        }
+                        onChange={(selected) =>
+                            setEditFormData(prev => ({
+                                ...prev,
+                                category: selected.value
+                            }))
+                        }
+                        placeholder="Select Category"
+                        menuPortalTarget={document.body}
+                        styles={{
+                            menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                            menu: (base) => ({ ...base }),
+                            menuList: (base) => ({
+                                ...base,
+                                maxHeight: 150,
+                                overflowY: "auto"
+                            })
+                        }}
+                    />
                     <textarea
                         name="details" placeholder="Details..." rows="3" required
                         value={editFormData.details} onChange={handleInputChange}

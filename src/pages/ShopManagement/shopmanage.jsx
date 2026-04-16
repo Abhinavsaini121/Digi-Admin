@@ -5,7 +5,7 @@ import {
     CheckCircle, XCircle, ShieldAlert, RefreshCcw, Plus, Upload, User, Info, FileText, AlertTriangle,
     Layers, List, Pencil, Wrench
 } from "lucide-react";
-
+import Select from "react-select";
 import {
     getAllShopsForAdmin,
     getShopDetailsById,
@@ -562,11 +562,50 @@ const ShopListManagement = () => {
                                                 <h4 className="text-[11px] font-black uppercase tracking-widest">Ownership Details</h4>
                                             </div>
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                {/* Replace old User select with this */}
                                                 <div className="space-y-1.5">
                                                     <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Select User (By Name)</label>
-                                                    <select required name="userId" value={formData.userId} onChange={handleInputChange} className="w-full max-w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:bg-white focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-400 outline-none transition-all">                                                        <option value="">-- Choose User Name --</option>
-                                                        {users.map(u => <option key={u._id} value={u._id}>{u.fullName}</option>)}
-                                                    </select>
+                                                    <Select
+                                                        options={users.map(u => ({
+                                                            label: u.fullName || u.name,
+                                                            value: u._id
+                                                        }))}
+                                                        value={
+                                                            formData.userId
+                                                                ? {
+                                                                    label: users.find(u => u._id === formData.userId)?.fullName || users.find(u => u._id === formData.userId)?.name,
+                                                                    value: formData.userId
+                                                                }
+                                                                : null
+                                                        }
+                                                        onChange={(selected) => {
+                                                            const found = users.find(u => u._id === selected.value);
+                                                            setFormData(prev => ({
+                                                                ...prev,
+                                                                userId: selected.value,
+                                                                ownerName: found ? (found.fullName || found.name || "") : ""
+                                                            }));
+                                                        }}
+                                                        placeholder="-- Choose User Name --"
+                                                        menuPortalTarget={document.body}
+                                                        styles={{
+                                                            menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                                                            control: (base) => ({
+                                                                ...base,
+                                                                borderRadius: '0.75rem',
+                                                                padding: '2px',
+                                                                backgroundColor: '#f8fafc',
+                                                                borderColor: '#e2e8f0',
+                                                                fontSize: '14px',
+                                                                fontWeight: '700'
+                                                            }),
+                                                            menuList: (base) => ({
+                                                                ...base,
+                                                                maxHeight: 150,
+                                                                overflowY: "auto"
+                                                            })
+                                                        }}
+                                                    />
                                                 </div>
                                                 <div className="space-y-1.5">
                                                     <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Legal Owner Name</label>
@@ -581,9 +620,35 @@ const ShopListManagement = () => {
                                             </div>
                                             <div className="space-y-3">
                                                 <input type="text" name="businessName" placeholder="Business Name" required onChange={handleInputChange} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:bg-white focus:ring-4 focus:ring-indigo-500/5 outline-none transition-all" />
-                                                <select required name="category" value={formData.category} onChange={handleInputChange} className="w-full max-w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:bg-white focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-400 outline-none transition-all">                                                    <option value="">-- Select Category --</option>
-                                                    {categories.map((cat, index) => <option key={index} value={cat}>{cat}</option>)}
-                                                </select>
+                                                <Select
+                                                    options={categories.map(cat => ({
+                                                        label: cat,
+                                                        value: cat
+                                                    }))}
+                                                    value={formData.category ? { label: formData.category, value: formData.category } : null}
+                                                    onChange={(selected) => {
+                                                        setFormData(prev => ({ ...prev, category: selected.value }));
+                                                    }}
+                                                    placeholder="-- Select Category --"
+                                                    menuPortalTarget={document.body}
+                                                    styles={{
+                                                        menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                                                        control: (base) => ({
+                                                            ...base,
+                                                            borderRadius: '0.75rem',
+                                                            padding: '2px',
+                                                            backgroundColor: '#f8fafc',
+                                                            borderColor: '#e2e8f0',
+                                                            fontSize: '14px',
+                                                            fontWeight: '700'
+                                                        }),
+                                                        menuList: (base) => ({
+                                                            ...base,
+                                                            maxHeight: 150,
+                                                            overflowY: "auto"
+                                                        })
+                                                    }}
+                                                />
                                                 <textarea name="details" placeholder="Brief business details..." rows="3" required onChange={handleInputChange} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:bg-white focus:ring-4 focus:ring-indigo-500/5 outline-none transition-all resize-none"></textarea>
                                             </div>
                                         </div>
@@ -653,8 +718,17 @@ const ShopListManagement = () => {
                             )}
 
                             {modalType === 'edit' && shopDetail && (
-                                <ShopEditForm shopData={shopDetail} users={users} categories={categories} onClose={closeModal} />
-                            )}
+                                <ShopEditForm
+                                    shopData={selectedShop}
+                                    users={users}
+                                    categories={categories}
+                                    onClose={(shouldRefresh) => {
+                                        if (shouldRefresh) {
+                                            fetchInitialData(); // ✅ सही फंक्शन कॉल
+                                        }
+                                        closeModal(); // ✅ सही क्लोज फंक्शन
+                                    }}
+                                />)}
 
                             {modalType === 'editService' && (
                                 <div className="space-y-6">

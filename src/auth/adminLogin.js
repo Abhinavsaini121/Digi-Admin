@@ -151,16 +151,16 @@ export const getAllFullTimeJobs = async (page = 1) => {
 
 
 
-export const getAllCategories = async () => {
+export const getAllCategories = async (page = 1, limit = 10) => {
     try {
-        const response = await apiClient.get("/admin/category/all");
+        // Yahan URL mein query parameters add karna zaroori hai
+        const response = await apiClient.get(`/admin/category/all?page=${page}&limit=${limit}`);
         return response.data;
     } catch (error) {
         const errorMessage = error.response?.data?.message || "Network Error";
         throw new Error(errorMessage);
     }
 };
-
 
 
 // --- Get Pending Businesses ---
@@ -387,18 +387,20 @@ export const getBusinessServicesAPI = async (businessId) => {
 
 export const updateBusinessDetailsAPI = async (businessId, formData) => {
     try {
+        const token = localStorage.getItem("token");
 
         const response = await apiClient.put(`/admin/manage-business/update/${businessId}`, formData, {
             headers: {
-                'Content-Type': 'multipart/form-data',
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "multipart/form-data",
             },
         });
+
         return response.data;
     } catch (error) {
-        throw error.response ? error.response.data : new Error("An unexpected error occurred");
+        throw error.response ? error.response.data : new Error("Network Error");
     }
 };
-
 
 
 export const updateBusinessServiceAPI = async (businessId, serviceId, formData) => {
@@ -835,3 +837,4 @@ export const getBloodRequestsByUrgencyAPI = async (urgency) => {
         throw error.response ? error.response.data : new Error("Network Error");
     }
 };
+

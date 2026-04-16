@@ -11,8 +11,6 @@ import {
     getShopDetailsById,
     deletebusiness,
     toggleBusinessStatusAPI,
-    getAllUsersAPI,
-    getAllCategories,
     createBusinessForUserAPI,
     addServiceToBusinessAPI,
     getBusinessServicesAPI, getUsersForDropdownAPI,     // New
@@ -73,6 +71,7 @@ const ShopListManagement = () => {
     const [formData, setFormData] = useState({
         userId: "", businessName: "", details: "", category: "",
         location: "", address: "", ownerName: "", mobileNumber: "", whatsappNumber: "",
+        latitude: "", longitude: ""
     });
 
     const [formFiles, setFormFiles] = useState({
@@ -154,32 +153,106 @@ const ShopListManagement = () => {
         }
     };
 
+    const handleFetchLocation = () => {
+        if ("geolocation" in navigator) {
+            // Step 1: Coordinates fetch karna
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                const lat = pos.coords.latitude;
+                const lon = pos.coords.longitude;
+
+                // Coordinates ko turant set karein
+                setFormData(prev => ({
+                    ...prev,
+                    latitude: lat.toString(),
+                    longitude: lon.toString(),
+                    location: "Fetching address..." // User ko dikhane ke liye loading text
+                }));
+
+                try {
+                    // Step 2: Reverse Geocoding API call
+                    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`, {
+                        headers: { 'Accept-Language': 'en' }
+                    });
+
+                    if (!res.ok) throw new Error("API Error");
+
+                    const data = await res.json();
+
+                    // Step 3: Address extract karna (Different possibilities handle karein)
+                    const city = data.address.city || data.address.town || data.address.village || data.address.state_district || "";
+                    const suburb = data.address.suburb || data.address.neighbourhood || data.address.road || "";
+
+                    // Agar city/suburb mile toh wo dikhayein, varna pura address string
+                    let finalLocation = suburb && city ? `${suburb}, ${city}` : data.display_name;
+
+                    // Agar kuch bhi na mile toh Lat/Long dikha dein
+                    if (!finalLocation) finalLocation = `Location at ${lat.toFixed(2)}, ${lon.toFixed(2)}`;
+
+                    setFormData(prev => ({
+                        ...prev,
+                        location: finalLocation
+                    }));
+
+                    showFeedback("Location & Address fetched!");
+                } catch (err) {
+                    console.error("Address fetch failed:", err);
+                    // CATCH BLOCK FIX: Agar API fail ho, toh location field khali mat chhodiye
+                    setFormData(prev => ({
+                        ...prev,
+                        location: "Manual entry required (GPS fixed)"
+                    }));
+                    showFeedback("Coordinates fetched, but address lookup failed", "error");
+                }
+            }, (err) => {
+                showFeedback("Location permission denied", "error");
+            }, { enableHighAccuracy: true });
+        } else {
+            showFeedback("Geolocation not supported", "error");
+        }
+    };
     const handleAddShopSubmit = async (e) => {
         e.preventDefault();
-        if (!formData.userId) return showFeedback("Please select a user", "error");
-        if (!formData.category) return showFeedback("Please select a category", "error");
+
+        // Validations
+        if (!formData.latitude || !formData.longitude) return showFeedback("Please fetch GPS location", "error");
 
         setIsProcessing(true);
         const data = new FormData();
-        Object.keys(formData).forEach(key => data.append(key, formData[key]));
-        formFiles.businessImages.forEach(file => data.append('businessImages', file));
+
+        // Normal Fields
+        data.append('userId', formData.userId);
+        data.append('businessName', formData.businessName);
+        data.append('category', formData.category);
+        data.append('details', formData.details);
+        data.append('ownerName', formData.ownerName);
+        data.append('mobileNumber', formData.mobileNumber);
+        data.append('whatsappNumber', formData.whatsappNumber);
+        data.append('address', formData.address); // Full Detailed Address field
+
+        // NESTED LOCATION (As per your working Postman response)
+        data.append('location[type]', 'Point');
+        data.append('location[coordinates][0]', formData.longitude); // Longitude (0)
+        data.append('location[coordinates][1]', formData.latitude);  // Latitude (1)
+        data.append('location[address]', formData.location);        // Area/City field
+
+        // Files
         if (formFiles.nationalIdImage) data.append('nationalIdImage', formFiles.nationalIdImage);
         if (formFiles.ownerImage) data.append('ownerImage', formFiles.ownerImage);
+        formFiles.businessImages.forEach(file => data.append('businessImages', file));
 
         try {
             const response = await createBusinessForUserAPI(data);
-            if (response.success || response) {
+            if (response.success) {
                 showFeedback("Shop Registered Successfully!");
-                fetchInitialData();
                 closeModal();
+                fetchInitialData();
             }
         } catch (err) {
-            showFeedback(err.message || "Failed to create shop", "error");
+            showFeedback(err.error || err.message, "error");
         } finally {
             setIsProcessing(false);
         }
     };
-
     const handleAddServiceSubmit = async (e) => {
         e.preventDefault();
         if (!selectedShop?._id) return showFeedback("Shop ID missing", "error");
@@ -519,13 +592,28 @@ const ShopListManagement = () => {
                                                 <Phone size={16} strokeWidth={3} />
                                                 <h4 className="text-[11px] font-black uppercase tracking-widest">Contact & Address</h4>
                                             </div>
+
+                                            <div className="col-span-2 grid grid-cols-2 gap-4 mt-4">
+                                                <input type="text" name="latitude" placeholder="Latitude" value={formData.latitude} onChange={handleInputChange} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold" />
+                                                <input type="text" name="longitude" placeholder="Longitude" value={formData.longitude} onChange={handleInputChange} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold" />
+                                                <button type="button" onClick={handleFetchLocation} className="col-span-2 flex items-center justify-center gap-2 bg-slate-800 text-white py-3 rounded-xl hover:bg-slate-900 text-xs font-bold uppercase tracking-widest">
+                                                    Fetch GPS Location
+                                                </button>
+                                            </div>
                                             <div className="space-y-3">
                                                 <div className="grid grid-cols-2 gap-3">
                                                     <input type="tel" name="mobileNumber" placeholder="Mobile Number" required onChange={handleInputChange} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:bg-white focus:ring-4 focus:ring-indigo-500/5 outline-none transition-all" />
                                                     <input type="tel" name="whatsappNumber" placeholder="WhatsApp Number" required onChange={handleInputChange} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:bg-white focus:ring-4 focus:ring-indigo-500/5 outline-none transition-all" />
                                                 </div>
-                                                <input type="text" name="location" placeholder="Area / City" required onChange={handleInputChange} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:bg-white focus:ring-4 focus:ring-indigo-500/5 outline-none transition-all" />
-                                                <input type="text" name="address" placeholder="Full Detailed Address" required onChange={handleInputChange} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:bg-white focus:ring-4 focus:ring-indigo-500/5 outline-none transition-all" />
+                                                <input
+                                                    type="text"
+                                                    name="location"
+                                                    placeholder="Area / City"
+                                                    required
+                                                    value={formData.location}  // <--- YE ADD KARNA ZAROORI HAI
+                                                    onChange={handleInputChange}
+                                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:bg-white focus:ring-4 focus:ring-indigo-500/5 outline-none transition-all"
+                                                />                                                <input type="text" name="address" placeholder="Full Detailed Address" required onChange={handleInputChange} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:bg-white focus:ring-4 focus:ring-indigo-500/5 outline-none transition-all" />
                                             </div>
                                         </div>
                                         <div className="col-span-2 space-y-4 pt-4 border-t border-slate-100">

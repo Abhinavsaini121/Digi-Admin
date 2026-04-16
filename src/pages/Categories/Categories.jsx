@@ -56,15 +56,20 @@ const Categories = () => {
   // --- MODAL & TOAST STATE ---
   const [modalConfig, setModalConfig] = useState({ isOpen: false, type: '', data: null });
   const [toastConfig, setToastConfig] = useState({ message: '', type: '', show: false });
-
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [limit] = useState(10);
   // --- DATA FETCHING FUNCTION ---
   const fetchCategories = async () => {
     setIsLoading(true);
     try {
-      const data = await getAllCategories();
-      setCategoriesData(data.data);
+      const response = await getAllCategories(currentPage, limit);
+
+      setCategoriesData(response.data || []);
+      // API response ke hisaab se path update kiya:
+      setTotalPages(response.pagination?.totalPages || 1);
+
     } catch (err) {
-      // More robust error message extraction
       const errorMessage = err.response?.data?.message || err.message || 'Error';
       setToastConfig({ message: `Failed to fetch categories: ${errorMessage}`, type: 'error', show: true });
     } finally {
@@ -72,11 +77,10 @@ const Categories = () => {
     }
   };
 
-  // --- DATA FETCHING EFFECT (FIXED) ---
+
   useEffect(() => {
-    // FIX: Calling fetchCategories on initial component mount
     fetchCategories();
-  }, []); // Run only once on component mount
+  }, [currentPage]); // Run only once on component mount
 
   // --- HELPERS (rest of helpers remain the same) ---
   const getCurrentData = () => {
@@ -122,7 +126,7 @@ const Categories = () => {
         await addCategory(formData);
 
         setToastConfig({ message: "Category added successfully!", type: 'success', show: true });
-
+        setCurrentPage(1);
         setTimeout(() => {
           setToastConfig((prev) => ({ ...prev, show: false }));
         }, 3000); setCategoryNameState('');
@@ -249,12 +253,7 @@ const Categories = () => {
             />
           </div>
           <div className="flex gap-2">
-            <button
-              onClick={() => openModal('reorder', getCurrentData())}
-              className="flex items-center gap-2 px-4 py-2 text-sm border border-gray-200 rounded-lg text-slate-700 hover:bg-gray-50 font-medium"
-            >
-              <Move size={16} /> Reorder List
-            </button>
+
             <button
               onClick={() => openModal('add')}
               className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition shadow-sm"
@@ -286,7 +285,7 @@ const Categories = () => {
             ) : (
               getCurrentData().map((item, index) => (
                 <tr key={item.id} className="border-b border-gray-50 hover:bg-blue-50/30 transition-colors group">
-                  <td className="p-4 text-sm font-medium text-gray-500">{index + 1}</td>
+                  <td className="p-4 text-sm font-medium text-gray-500">{(currentPage - 1) * limit + index + 1}</td>
                   <td className="p-4">
                     <ImageCell name={item.name} imageUrl={item.image} />
                   </td>
@@ -306,6 +305,51 @@ const Categories = () => {
             )}
           </tbody>
         </table>
+        {/* --- PAGINATION CONTROLS --- */}
+        <div className="p-4 border-t border-gray-100 flex items-center justify-between bg-gray-50/50">
+          <p className="text-sm text-gray-500">
+            Showing Page <span className="font-semibold text-slate-900">{currentPage}</span> of <span className="font-semibold text-slate-900">{totalPages}</span>
+          </p>
+          <div className="flex gap-2">
+            <button
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(prev => prev - 1)}
+              className={`px-4 py-2 text-sm font-medium rounded-lg border transition-colors ${currentPage === 1
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-white text-slate-700 hover:bg-gray-50 border-gray-200'
+                }`}
+            >
+              Previous
+            </button>
+
+            {/* Page Numbers (Optional) */}
+            <div className="flex items-center gap-1">
+              {[...Array(totalPages)].map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrentPage(i + 1)}
+                  className={`w-8 h-8 text-sm font-medium rounded-md transition-colors ${currentPage === i + 1
+                    ? 'bg-blue-600 text-white'
+                    : 'text-slate-600 hover:bg-gray-200'
+                    }`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+            </div>
+
+            <button
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage(prev => prev + 1)}
+              className={`px-4 py-2 text-sm font-medium rounded-lg border transition-colors ${currentPage === totalPages
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-white text-slate-700 hover:bg-gray-50 border-gray-200'
+                }`}
+            >
+              Next
+            </button>
+          </div>
+        </div>
       </div>
 
 
@@ -320,7 +364,6 @@ const Categories = () => {
                 <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                   {modalConfig.type === 'add' && <><PlusCircle className="text-blue-500" size={20} /> Add New Category</>}
                   {modalConfig.type === 'edit' && <><Edit3 className="text-amber-500" size={20} /> Edit Category</>}
-                  {modalConfig.type === 'reorder' && <><Move className="text-slate-500" size={20} /> Reorder Categories</>}
                   {modalConfig.type === 'delete' && <><ShieldAlert className="text-red-500" size={20} /> Delete Category</>}
                   {modalConfig.type === 'status' && <><Power className="text-green-500" size={20} /> Update Status</>}
                 </h2>
@@ -395,21 +438,6 @@ const Categories = () => {
                     <label htmlFor="activeStatus" className="text-sm text-slate-700 font-medium">Enable Immediately</label>
                   </div>
                 </>
-              )}
-
-              {/* --- REORDER LIST UI (unchanged) --- */}
-              {modalConfig.type === 'reorder' && (
-                <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
-                  <p className="text-sm text-gray-500 mb-3">Drag items to reorder (Simulation)</p>
-                  {(modalConfig.data || []).map((item, idx) => (
-                    <div key={item.id} className="flex items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg cursor-move hover:bg-gray-100 transition">
-                      <span className="text-gray-400 font-mono text-xs">{idx + 1}</span>
-                      <GripVertical size={16} className="text-gray-400" />
-                      <span className="font-medium text-slate-700 text-sm flex-1">{item.name}</span>
-                      <div className="text-xs text-gray-400 px-2 bg-white rounded border border-gray-200">{item.id}</div>
-                    </div>
-                  ))}
-                </div>
               )}
 
               {/* --- DELETE CONFIRMATION (unchanged) --- */}

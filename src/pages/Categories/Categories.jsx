@@ -77,11 +77,21 @@ const Categories = () => {
     }
   };
 
-
   useEffect(() => {
-    fetchCategories();
-  }, [currentPage]); // Run only once on component mount
-
+    if (searchTerm.trim() === '') {
+      fetchCategories();
+    } else {
+      const delayDebounceFn = setTimeout(async () => {
+        try {
+          const res = await searchCategoriesAPI(searchTerm);
+          setCategoriesData(res.data || []);
+        } catch (err) {
+          console.error("Search error", err);
+        }
+      }, 500); // 500ms wait karega typing rukne ka
+      return () => clearTimeout(delayDebounceFn);
+    }
+  }, [searchTerm, currentPage]);
   // --- HELPERS (rest of helpers remain the same) ---
   const getCurrentData = () => {
     return categoriesData.map(item => ({
@@ -388,8 +398,8 @@ const Categories = () => {
                       type="text"
                       value={modalConfig.type === 'add' ? categoryNameState : (modalConfig.type === 'edit' ? categoryNameState || modalConfig.data?.name : '')}
                       onChange={(e) => {
-                        if (modalConfig.type === 'add') setCategoryNameState(e.target.value);
-                        if (modalConfig.type === 'edit') setCategoryNameState(e.target.value);
+                        setSearchTerm(e.target.value);
+                        setCurrentPage(1); // Search karte hi pehle page par reset karein
                       }}
                       placeholder="e.g. Home Services"
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-slate-700 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition"

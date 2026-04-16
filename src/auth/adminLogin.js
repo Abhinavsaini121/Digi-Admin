@@ -795,17 +795,6 @@ export const getCategoriesForDropdownAPI = async () => {
 };
 
 
-export const searchCategoriesAPI = async (query) => {
-    try {
-        const token = localStorage.getItem("token");
-        const response = await apiClient.get(`/admin/category/search-category?q=${query}`, {
-            headers: { Authorization: `Bearer ${token}` },
-        });
-        return response.data;
-    } catch (error) {
-        throw error.response ? error.response.data : new Error("Network Error");
-    }
-};
 
 
 export const updateCategoryAPI = async (id, payload) => {
@@ -838,3 +827,24 @@ export const getBloodRequestsByUrgencyAPI = async (urgency) => {
     }
 };
 
+
+
+// --- SEARCH CATEGORY BY NAME ---
+export const searchCategoriesAPI = async (query) => {
+    try {
+        const token = localStorage.getItem("token");
+
+        // GET Request with query parameter 'q'
+        const response = await apiClient.get(`/admin/category/search-category`, {
+            params: { q: query },
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+
+        return response.data; // Yeh { success, count, data } return karega
+    } catch (error) {
+        console.error("Search Category API Error:", error);
+        throw error.response ? error.response.data : new Error("Network Error");
+    }
+};

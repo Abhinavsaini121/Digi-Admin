@@ -553,19 +553,23 @@ export const addSubCategory = async (categoryName, subCategoryName) => {
 export const getSubCategoriesByCategory = async (categoryName) => {
     try {
         const token = localStorage.getItem("token");
-        const response = await apiClient.get(`/admin/category/get-subCategories`, {
-            params: { categoryName }, headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
-        return response.data;
+
+        const response = await apiClient.get(
+            `/admin/category/get-subCategories`,
+            {
+                params: { categoryName },
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            }
+        );
+        return response.data?.data || [];
+
     } catch (error) {
         console.error("Error fetching sub-categories:", error);
-        throw error.response ? error.response.data : new Error("Network Error");
+        throw error.response?.data?.message || "Failed to fetch sub-categories";
     }
 };
-
-// page parameter add kiya gaya hai, default value 1 rakhi hai
 export const getAllMasterUsers = async (page = 1) => {
     try {
         // Query parameter (?page=) add kiya gaya hai

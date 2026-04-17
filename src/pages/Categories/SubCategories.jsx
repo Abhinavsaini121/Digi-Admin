@@ -33,9 +33,10 @@ const SubCategories = () => {
             if (response.success && response.data) {
                 setCategories(response.data); // ["Chemistry", "Cleaning"...]
 
-                if (response.data.length > 0 && !selectedCategory) {
-                    setSelectedCategory(response.data[0]);
-                    loadSubCategories(response.data[0]);
+                if (response.data.length > 0) {
+                    const first = response.data[0];
+                    setSelectedCategory(first);
+                    loadSubCategories(first);
                 }
             }
         } catch (error) {
@@ -46,27 +47,33 @@ const SubCategories = () => {
     // 2. Load Subcategories based on selection
     const loadSubCategories = useCallback(async (catName) => {
         if (!catName) return;
+
         try {
             setLoading(true);
+
             const response = await getSubCategoriesByCategory(catName);
-            if (response.success && response.data) {
-                const formattedSubs = response.data.map((subName, index) => ({
+
+            // 🔥 IMPORTANT FIX HERE
+            if (Array.isArray(response) && response.length > 0) {
+                const formattedSubs = response.map((subName, index) => ({
                     id: `${catName}-${index}`,
                     category: catName,
                     name: subName,
                     status: "Active"
                 }));
+
                 setSubCategories(formattedSubs);
             } else {
                 setSubCategories([]);
             }
+
         } catch (error) {
+            console.error(error);
             setSubCategories([]);
         } finally {
             setLoading(false);
         }
     }, []);
-
     useEffect(() => {
         fetchCategories();
     }, []);
@@ -120,8 +127,15 @@ const SubCategories = () => {
                 <label className="font-semibold text-gray-700">View Category:</label>
                 <Select
                     options={categories.map(cat => ({ label: cat, value: cat }))}
-                    value={formData.category ? { label: formData.category, value: formData.category } : null}
-                    onChange={(selected) => setFormData({ ...formData, category: selected.value })}
+                    value={selectedCategory ? { label: selectedCategory, value: selectedCategory } : null}
+                    onChange={(selected) => {
+                        const value = selected.value;
+
+                        setSelectedCategory(value);
+                        setFormData({ category: value, name: formData.name });
+
+                        loadSubCategories(value);
+                    }}
                     placeholder="Choose a category"
                     menuPlacement="auto"
 
@@ -177,9 +191,17 @@ const SubCategories = () => {
                                 <label className="block text-sm font-bold text-gray-600 mb-2">Select Category</label>
                                 <Select
                                     options={categories.map(cat => ({ label: cat, value: cat }))}
-                                    value={formData.category ? { label: formData.category, value: formData.category } : null}
-                                    onChange={(selected) => setFormData({ ...formData, category: selected.value })}
-                                    placeholder="Choose a category"
+                                    value={
+                                        selectedCategory
+                                            ? { label: selectedCategory, value: selectedCategory }
+                                            : null
+                                    }
+                                    onChange={(selected) => {
+                                        const value = selected.value;
+
+                                        setFormData({ ...formData, category: value });
+                                        setSelectedCategory(value);
+                                    }} placeholder="Choose a category"
                                     menuPlacement="auto"
                                     styles={{
                                         menuPortal: (base) => ({ ...base, zIndex: 9999 }),

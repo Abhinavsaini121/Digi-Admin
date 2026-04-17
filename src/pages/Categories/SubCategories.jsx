@@ -226,6 +226,33 @@ const SubCategories = () => {
                     </div>
                 </div>
             )}
+            {isDeleteModalOpen && (
+                <div className="fixed inset-0 flex items-center justify-center z-[1000] bg-black/40 backdrop-blur-sm">
+                    <div className="bg-white p-6 rounded-xl w-full max-w-sm shadow-xl text-center">
+
+                        <AlertTriangle className="mx-auto text-red-500 mb-3" size={40} />
+
+                        <h3 className="text-lg font-bold mb-2">Are you sure?</h3>
+                        <p className="text-gray-500 mb-6">Do you really want to delete this subcategory?</p>
+
+                        <div className="flex justify-center gap-4">
+                            <button
+                                onClick={() => setIsDeleteModalOpen(false)}
+                                className="px-4 py-2 rounded-lg border"
+                            >
+                                Cancel
+                            </button>
+
+                            <button
+                                onClick={confirmDelete}
+                                className="px-4 py-2 rounded-lg bg-red-600 text-white"
+                            >
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
             <ToastContainer />
         </div>
     );

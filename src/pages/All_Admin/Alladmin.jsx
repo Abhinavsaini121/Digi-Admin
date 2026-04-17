@@ -28,12 +28,12 @@ const UserTable = () => {
       setLoading(true);
       setError(null);
       const response = await getAllAdminData(page);
-      if (response && response.data) {
-        setUsers(response.data);
-        setTotalPages(response.pagination?.totalPages || 1);
-        setTotalItems(response.pagination?.totalItems || response.pagination?.total || 0);
+      if (response && response.admins) {
+        setUsers(response.admins);   // ✅ सही
+        setTotalPages(Math.ceil(response.totalAdmins / itemsPerPage)); // ✅ pagination fix
+        setTotalItems(response.totalAdmins);
       } else {
-        setUsers(Array.isArray(response) ? response : []);
+        setUsers([]);
       }
     } catch (err) {
       setError("Failed to load admin data.");

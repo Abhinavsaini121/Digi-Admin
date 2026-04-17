@@ -625,14 +625,24 @@ export const searchUsersAPI = async (name) => {
         throw error.response ? error.response.data : new Error("Network Error");
     }
 };
-
 export const registerAdmin = async (name, email, password) => {
     try {
-        const response = await apiClient.post('/admin/register', {
-            name,
-            email,
-            password
-        });
+        const token = localStorage.getItem("token"); // or wherever you're storing it
+
+        const response = await apiClient.post(
+            '/admin/register',
+            {
+                name,
+                email,
+                password
+            },
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            }
+        );
+
         return response.data;
     } catch (error) {
         throw error.response ? error.response.data : new Error("Network Error");
@@ -851,7 +861,6 @@ export const getCategoriesForDropdownAPI = async () => {
             },
         });
 
-        // Response structure: { success: true, data: ["Chemistry", "Cleaning", ...] }
         return response.data;
     } catch (error) {
         console.error("Error fetching dropdown categories:", error);

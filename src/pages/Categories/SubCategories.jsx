@@ -6,6 +6,7 @@ import {
     addSubCategory,
     deleteSubCategoryAPI,
     updateCategoryAPI,
+    updateSubCategoryAPI,
     getSubCategoriesByCategory,
     getCategoriesForDropdownAPI,
 } from "../../auth/adminLogin";
@@ -113,6 +114,27 @@ const SubCategories = () => {
         }
     };
 
+    const handleUpdate = async (e) => {
+        e.preventDefault();
+        try {
+            setLoading(true);
+            // Mapping fields to your requested JSON structure
+            const response = await updateSubCategoryAPI(
+                editData.category,
+                editData.oldSubCategory,
+                editData.newSubCategory
+            );
+            if (response.success) {
+                toast.success("Updated successfully!");
+                setIsEditModalOpen(false);
+                loadSubCategories(editData.category);
+            }
+        } catch (error) {
+            toast.error("Update failed");
+        } finally {
+            setLoading(false);
+        }
+    };
     return (
         <div className="p-6 bg-gray-50 min-h-screen">
             <div className="flex justify-between items-center mb-6">
@@ -167,8 +189,19 @@ const SubCategories = () => {
                                     <td className="p-4"><span className="px-2 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">Active</span></td>
                                     <td className="p-4 text-right">
                                         <div className="flex justify-end gap-2">
-                                            <button onClick={() => { setEditData({ category: item.category, name: item.name }); setIsEditModalOpen(true); }} className="text-amber-500 p-2"><Edit3 size={18} /></button>
-                                            <button onClick={() => { setSelectedSub(item); setIsDeleteModalOpen(true); }} className="text-red-500 p-2"><Trash2 size={18} /></button>
+                                            <button
+                                                onClick={() => {
+                                                    setEditData({
+                                                        category: item.category,
+                                                        oldSubCategory: item.name,
+                                                        newSubCategory: item.name
+                                                    });
+                                                    setIsEditModalOpen(true);
+                                                }}
+                                                className="text-amber-500 p-2"
+                                            >
+                                                <Edit3 size={18} />
+                                            </button>                                            <button onClick={() => { setSelectedSub(item); setIsDeleteModalOpen(true); }} className="text-red-500 p-2"><Trash2 size={18} /></button>
                                         </div>
                                     </td>
                                 </tr>
@@ -221,6 +254,38 @@ const SubCategories = () => {
                             </div>
                             <button type="submit" disabled={loading} className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold">
                                 {loading ? <Loader2 className="animate-spin mx-auto" size={20} /> : "Create Subcategory"}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {isEditModalOpen && (
+                <div className="fixed inset-0 flex items-center justify-center z-[1000] p-4 bg-black/40 backdrop-blur-sm">
+                    <div className="bg-white p-8 rounded-[1.5rem] w-full max-w-md relative shadow-2xl">
+                        <button onClick={() => setIsEditModalOpen(false)} className="absolute top-5 right-5 text-gray-400"><X size={24} /></button>
+                        <h3 className="text-2xl font-black mb-8">Edit Subcategory</h3>
+                        <form onSubmit={handleUpdate} className="space-y-6">
+                            <div>
+                                <label className="block text-sm font-bold text-gray-600 mb-2">Category (Read Only)</label>
+                                <input type="text" value={editData.category} disabled className="w-full border p-3.5 rounded-xl bg-gray-100" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold text-gray-600 mb-2">Old Subcategory Name</label>
+                                <input type="text" value={editData.oldSubCategory} disabled className="w-full border p-3.5 rounded-xl bg-gray-100" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold text-gray-600 mb-2">New Subcategory Name</label>
+                                <input
+                                    type="text"
+                                    value={editData.newSubCategory}
+                                    onChange={(e) => setEditData({ ...editData, newSubCategory: e.target.value })}
+                                    className="w-full border p-3.5 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                                    required
+                                />
+                            </div>
+                            <button type="submit" disabled={loading} className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold">
+                                {loading ? <Loader2 className="animate-spin mx-auto" size={20} /> : "Update Subcategory"}
                             </button>
                         </form>
                     </div>

@@ -817,7 +817,30 @@ export const updateCategoryAPI = async (id, payload) => {
     }
 };
 
+// --- UPDATE SUB-CATEGORY CONTROLLER ---
+export const updateSubCategoryAPI = async (category, oldSubCategory, newSubCategory) => {
+    try {
+        const token = localStorage.getItem("token");
 
+        const payload = {
+            category: category,
+            oldSubCategory: oldSubCategory,
+            newSubCategory: newSubCategory
+        };
+
+        const response = await apiClient.put("/admin/category/update-subCategory", payload, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json"
+            },
+        });
+
+        return response.data;
+    } catch (error) {
+        console.error("Error updating sub-category:", error);
+        throw error.response ? error.response.data : new Error("Network Error");
+    }
+};
 export const getBloodRequestsByUrgencyAPI = async (urgency) => {
     try {
         const token = localStorage.getItem("token");

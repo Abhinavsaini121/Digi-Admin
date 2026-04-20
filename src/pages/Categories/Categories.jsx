@@ -105,11 +105,16 @@ const Categories = () => {
   };
   const getTabLabel = () => "Categories";
 
-  // --- MODAL HANDLERS (remain the same) ---
   const openModal = (type, data = null) => {
     if (type === 'add') {
       setCategoryNameState('');
+      setCategoryType('jobs');
+      setCategoryRaw('');
       setImageFileState(null);
+    } else if (type === 'edit' && data) {
+      setCategoryNameState(data.name || '');
+      setCategoryType(data.type || '');     // Assuming 'type' exists in data
+      setCategoryRaw(data.category || ''); // Assuming 'category' exists in data
     }
     setModalConfig({ isOpen: true, type, data });
   };
@@ -396,10 +401,10 @@ const Categories = () => {
                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">Category Name (Main)</label>
                     <input
                       type="text"
-                      value={modalConfig.type === 'add' ? categoryNameState : (modalConfig.type === 'edit' ? categoryNameState || modalConfig.data?.name : '')}
+                      // Use ONLY the state variable here
+                      value={categoryNameState}
                       onChange={(e) => {
                         setCategoryNameState(e.target.value);
-                        setCurrentPage(1); // Search karte hi pehle page par reset karein
                       }}
                       placeholder="e.g. Home Services"
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-slate-700 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition"
@@ -412,7 +417,7 @@ const Categories = () => {
                       type="text"
                       value={categoryType}
                       onChange={(e) => setCategoryType(e.target.value)}
-                      placeholder="e.g. jobs or business"
+                      placeholder="e.g. jobs"
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-slate-700 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition"
                     />
                   </div>

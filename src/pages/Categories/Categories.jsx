@@ -398,7 +398,7 @@ const Categories = () => {
                       type="text"
                       value={modalConfig.type === 'add' ? categoryNameState : (modalConfig.type === 'edit' ? categoryNameState || modalConfig.data?.name : '')}
                       onChange={(e) => {
-                        setSearchTerm(e.target.value);
+                        setCategoryNameState(e.target.value);
                         setCurrentPage(1); // Search karte hi pehle page par reset karein
                       }}
                       placeholder="e.g. Home Services"

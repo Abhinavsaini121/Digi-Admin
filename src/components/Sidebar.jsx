@@ -42,8 +42,10 @@ const menuItems = [
     label: "Jobs",
     icon: Briefcase,
     children: [
-      { label: "Part-Time Jobs", route: "/PartTimeJobs" },
-      { label: "Full-Time Jobs", route: "/FullTimeJobs" },
+      { label: " Part-Time Jobs", route: "/PartTimeJobs" },
+      { label: " Full-Time Jobs", route: "/FullTimeJobs" }
+
+
     ],
   },
   {

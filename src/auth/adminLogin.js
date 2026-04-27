@@ -113,7 +113,7 @@ export const createNewJob = async (jobData) => {
         if (jobData instanceof FormData) {
 
             if (adminId) {
-                jobData.append("createdBy", adminId);
+                jobData.append("userId", adminId);
             }
 
             const response = await apiClient.post(`/admin/part-time/job/create`, jobData, {
@@ -124,7 +124,7 @@ export const createNewJob = async (jobData) => {
             return response.data;
         } else {
 
-            const finalData = { ...jobData, createdBy: adminId };
+            const finalData = { ...jobData, userId: adminId };
             const response = await apiClient.post(`/admin/part-time/job/create`, finalData);
             return response.data;
         }
@@ -891,6 +891,50 @@ export const getCategoriesForDropdownAPI = async () => {
         return response.data;
     } catch (error) {
         console.error("Error fetching dropdown categories:", error);
+        throw error.response ? error.response.data : new Error("Network Error");
+    }
+};
+
+
+export const postLocalJob = async (jobData) => {
+    try {
+        const token = localStorage.getItem("token");
+
+        if (!token) {
+            throw new Error("No token found. Please login as USER.");
+        }
+        const response = await apiClient.post(
+            "/job/post",
+            jobData,
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "multipart/form-data",
+                },
+            }
+        );
+        return response.data;
+    } catch (error) {
+        console.error("POST LOCAL JOB ERROR:", error);
+        throw error?.response?.data || {
+            success: false,
+            message: "Network Error",
+        };
+    }
+};
+
+
+// --- GET ALL REGULAR PART-TIME JOBS ---
+export const getAllRegularJobs = async (page = 1) => {
+    try {
+        const token = localStorage.getItem("token");
+        const response = await apiClient.get(`/admin/part-time/regular-jobs?page=${page}`, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        return response.data;
+    } catch (error) {
         throw error.response ? error.response.data : new Error("Network Error");
     }
 };

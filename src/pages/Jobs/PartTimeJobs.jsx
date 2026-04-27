@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import { AlertCircle, X, Star, Trash2, PlusCircle, Loader2, Eye, Upload, Image as ImageIcon, User, MapPin, MessageSquare, Navigation, AlignLeft, Phone, Calendar, Briefcase, IndianRupee } from "lucide-react";
 import { getAllJobs, getJobById, updateJob, deleteJob, createNewJob, getAllUsersAPI } from "../../auth/adminLogin";
 import toast, { Toaster } from "react-hot-toast";
-
+import { useNavigate } from "react-router-dom";
 // Aapki Google API Key (Optional)
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
@@ -123,6 +123,8 @@ const PartTimeJobManagement = () => {
   const editFileInputRef = useRef(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [jobIdToDelete, setJobIdToDelete] = useState(null);
+  const [jobType, setJobType] = useState("ADMIN");
+  const navigate = useNavigate();
   const initialJobState = {
     userId: "",
     title: "",
@@ -234,25 +236,26 @@ const PartTimeJobManagement = () => {
 
     try {
       setSaveLoading(true);
+      // --- REPLACE THIS BLOCK IN handleCreateNewJob ---
       const formData = new FormData();
 
-      formData.append("userId", newJob.userId);
-      formData.append("jobCategory", "PART_TIME_JOB");
       formData.append("title", newJob.title);
-      formData.append("description", newJob.description || "N/A");
+      formData.append("description", newJob.description);
       formData.append("details", newJob.details);
-      formData.append("companyName", newJob.companyName || "N/A");
-      formData.append("jobRole", newJob.jobRole || "N/A");
+      formData.append("companyName", newJob.companyName);
+      formData.append("jobRole", newJob.jobRole);           // ADD THIS
       formData.append("vacancies", newJob.vacancies);
       formData.append("whatsappNumber", newJob.whatsappNumber);
       formData.append("experience", newJob.experience);
-      formData.append("qualification", newJob.qualification);
-      formData.append("status", "active");
-      formData.append("isFeatured", String(newJob.isFeatured));
+      formData.append("qualification", newJob.qualification); // ADD THIS
+      formData.append("isFeatured", String(newJob.isFeatured)); // ADD THIS
+      formData.append("jobCategory", "PART_TIME_JOB");        // ADD THIS
+
       formData.append("salaryRange[min]", newJob.minPay);
       formData.append("salaryRange[max]", newJob.maxPay);
-      formData.append("location[type]", "Point");
+
       formData.append("location[address]", newJob.address);
+      formData.append("location[type]", "Point");
       formData.append("location[coordinates][0]", newJob.longitude);
       formData.append("location[coordinates][1]", newJob.latitude);
 
@@ -411,12 +414,38 @@ const PartTimeJobManagement = () => {
           <h1 className="text-2xl font-extrabold text-slate-800 tracking-tight">Part-time Job Management</h1>
           <p className="text-slate-500 text-sm">Create and manage your part-time listings</p>
         </div>
-        <button
-          onClick={() => setIsCreateModalOpen(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg text-sm font-medium shadow-md flex items-center gap-2"
-        >
-          <PlusCircle size={18} />Post New Job
-        </button>
+
+        <div className="flex items-center gap-3">
+
+          <select
+            value={jobType}
+            onChange={(e) => {
+              const value = e.target.value;
+              setJobType(value);
+
+              if (value === "ADMIN") {
+                navigate("/PartTimeJobs");
+              } else if (value === "USER") {
+                navigate("/user-part");
+              }
+            }}
+            className="input-field text-slate-300"
+          >
+            <option value="" disabled hidden>
+              Select Job Type
+            </option>
+            <option value="ADMIN">Admin</option>
+            <option value="USER">User</option>
+          </select>
+
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg text-sm font-medium shadow-md flex items-center gap-2"
+          >
+            <PlusCircle size={18} />Post New Job
+          </button>
+
+        </div>
       </div>
 
       {/* Table Section */}
@@ -428,6 +457,9 @@ const PartTimeJobManagement = () => {
                 <th className="p-4 text-xs font-semibold text-slate-500 uppercase w-12">S.No</th>
 
                 <th className="p-4 text-xs font-semibold text-slate-500 uppercase">Job Details</th>
+                <th className="p-4 text-xs font-semibold text-slate-500 uppercase">
+                  Job Posted By / Role
+                </th>
                 <th className="p-4 text-xs font-semibold text-slate-500 uppercase">Salary</th>
                 <th className="p-4 text-xs font-semibold text-slate-500 uppercase text-center">Featured</th>
                 <th className="p-4 text-xs font-semibold text-slate-500 uppercase text-center">Actions</th>
@@ -451,6 +483,12 @@ const PartTimeJobManagement = () => {
                             <div className="font-bold text-slate-800 text-sm">{job.title}</div>
                             <div className="text-[10px] text-blue-600 font-bold uppercase">{job.jobRole}</div>
                           </div>
+                        </div>
+                      </td>
+                      <td className="p-4 text-sm font-semibold text-slate-700">
+                        <div>{job.userId?.name || "N/A"}</div>
+                        <div className="text-[10px] text-slate-500 uppercase">
+                          {job.userId?.role || "N/A"}
                         </div>
                       </td>
                       <td className="p-4 font-bold text-slate-700 text-sm">₹{job.salaryRange?.min} - {job.salaryRange?.max}</td>
@@ -553,6 +591,15 @@ const PartTimeJobManagement = () => {
                     <option value="Fresher">Fresher</option>
                     <option value="1+ Year">1+ Year</option>
                     <option value="2+ Year">2+ Year</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="label-text">Qualification</label>
+                  <select className="input-field" value={newJob.qualification} onChange={(e) => setNewJob({ ...newJob, qualification: e.target.value })}>
+                    <option value="10th Pass">10th Pass</option>
+                    <option value="12th Pass">12th Pass</option>
+                    <option value="BCA/MCA">BCA/MCA</option>
+                    <option value="Graduate">Graduate</option>
                   </select>
                 </div>
               </div>

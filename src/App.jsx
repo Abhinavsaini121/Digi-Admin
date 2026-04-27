@@ -22,6 +22,8 @@ import Moderation from "./pages/ModerationBlocking/Moderationblocking";
 import Setting from "./pages/SystemSetting/Systemsetting";
 // import Reports from "./pages/Report_Export/Report_export";
 import Business from "./pages/Business_Varifies/business-verify";
+import UserPartTimeJobs from "./pages/Jobs/UserPartTime";
+import UserFullJobs from "./pages/Jobs/UserFullTime";
 function App() {
   return (
     <Routes>
@@ -61,7 +63,8 @@ function App() {
         <Route path="/systemsetting" element={<Setting />} />
         {/* <Route path="/report" element={<Reports />} /> */}
         <Route path="/business" element={<Business />} />
-
+        <Route path="/user-part" element={<UserPartTimeJobs />} />
+        <Route path="/user-full" element={<UserFullJobs />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/login" replace />} />

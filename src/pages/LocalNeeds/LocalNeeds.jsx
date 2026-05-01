@@ -384,11 +384,11 @@ const ThemedTaskModal = ({ onSave, onClose }) => {
                 {formData.location.coordinates[0]}
               </p>
               <input
-                name="location.coordinates[1]"
-                value={formData.location.coordinates[1]}
+                name="location.address"
+                value={formData.location.address}
                 onChange={handleChange}
-                placeholder="Lng"
-                className="border p-2 rounded"
+                placeholder="Address"
+                className="border p-2 rounded col-span-2"
               />
             </div>
             <input

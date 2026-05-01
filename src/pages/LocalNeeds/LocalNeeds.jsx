@@ -3,6 +3,7 @@ import {
   getAllLocalJobs,
   createLocalJob,
   deleteLocalJob,
+  updateLocalJob,
 } from "../../auth/adminLogin";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
@@ -11,10 +12,11 @@ const LocalNeeds = () => {
   const [tasks, setTasks] = useState([]);
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [selectedTaskId, setSelectedTaskId] = useState(null);
+  const [selectedTask, setSelectedTask] = useState(null);
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState({});
   const [jobType, setJobType] = useState("ADMIN");
+
   useEffect(() => {
     const fetchJobs = async () => {
       try {
@@ -30,7 +32,7 @@ const LocalNeeds = () => {
     fetchJobs();
   }, [page]); // 👈 IMPORTANT
 
-  const handlePostNewAPI = async (newTask) => {
+  const handlePostNewAPI = async (newTask, id) => {
     try {
       const formData = new FormData();
 
@@ -62,9 +64,18 @@ const LocalNeeds = () => {
         formData.append("images", newTask.images);
       }
 
-      const res = await createLocalJob(formData);
-
-      setTasks((prev) => [res.data, ...prev]);
+      let res;
+      if (id) {
+        res = await updateLocalJob(id, formData);
+        setTasks((prev) =>
+          prev.map((item) => (item._id === id ? res.data : item)),
+        );
+        toast.success("Updated successfully", { autoClose: 4000 });
+      } else {
+        res = await createLocalJob(formData);
+        setTasks((prev) => [res.data, ...prev]);
+        toast.success("Posted successfully", { autoClose: 4000 });
+      }
       setIsPostModalOpen(false);
     } catch (err) {
       console.error(err);
@@ -88,12 +99,13 @@ const LocalNeeds = () => {
     }
   };
   const handleEdit = (task) => {
-    console.log(task); // ya modal open logic
+    setSelectedTask(task); // Pass the whole object
+    setIsPostModalOpen(true);
   };
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mt-5 mb-6">
         <h1 className="text-2xl font-bold">Local Needs Management</h1>
 
         <div className="flex items-center gap-3">
@@ -130,7 +142,7 @@ const LocalNeeds = () => {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl shadow">
+      <div className="bg-white rounded-xl shadow mt-15">
         <table className="w-full text-sm">
           <thead className="bg-gray-50">
             <tr>
@@ -208,8 +220,12 @@ const LocalNeeds = () => {
       {/* Modal */}
       {isPostModalOpen && (
         <ThemedTaskModal
+          initialData={selectedTask} // Now passing the data
           onSave={handlePostNewAPI}
-          onClose={() => setIsPostModalOpen(false)}
+          onClose={() => {
+            setIsPostModalOpen(false);
+            setSelectedTask(null); // Reset after close
+          }}
         />
       )}
       {isDeleteModalOpen && (
@@ -243,7 +259,7 @@ const LocalNeeds = () => {
 
 // ================= MODAL =================
 
-const ThemedTaskModal = ({ onSave, onClose }) => {
+const ThemedTaskModal = ({ onSave, onClose, initialData }) => {
   const [previewImage, setPreviewImage] = useState(null);
   const [formData, setFormData] = useState({
     title: "",
@@ -258,7 +274,34 @@ const ThemedTaskModal = ({ onSave, onClose }) => {
     status: "expired",
     expiresAt: "",
   });
+  useEffect(() => {
+    if (!initialData) return;
 
+    setFormData({
+      title: initialData.title || "",
+      details: initialData.details || "",
+      workType: initialData.workType || "",
+      whatsappNumber: initialData.whatsappNumber || "",
+      budget: {
+        min: initialData.budget?.min || "",
+        max: initialData.budget?.max || "",
+      },
+      preferredCommunication: initialData.preferredCommunication || [],
+      location: {
+        type: "Point",
+        coordinates: initialData.location?.coordinates || ["", ""],
+        address: initialData.location?.address || "",
+      },
+      images: null,
+      isFeatured: initialData.isFeatured || false,
+      status: initialData.status || "expired",
+      expiresAt: initialData.expiresAt || "",
+    });
+
+    if (initialData.images?.length) {
+      setPreviewImage(initialData.images[0]);
+    }
+  }, [initialData]);
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
 
@@ -327,7 +370,25 @@ const ThemedTaskModal = ({ onSave, onClose }) => {
   };
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSave(formData);
+
+    if (
+      !formData.title ||
+      !formData.details ||
+      !formData.workType ||
+      !formData.whatsappNumber ||
+      !formData.budget.min ||
+      !formData.budget.max ||
+      !formData.location.address ||
+      !formData.location.coordinates[0] ||
+      !formData.location.coordinates[1] ||
+      formData.preferredCommunication.length === 0
+    ) {
+      toast.error("Please fill all required fields", { autoClose: 3000 });
+      return;
+    }
+
+    // Agar initialData hai toh uska _id bhejenge, warna null (for new post)
+    onSave(formData, initialData?._id || null);
   };
 
   return (
@@ -335,7 +396,9 @@ const ThemedTaskModal = ({ onSave, onClose }) => {
       <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6">
         {/* Header */}
         <div className="flex justify-between mb-4 bg-blue-600 text-white p-3 rounded-lg">
-          <h2 className="font-bold text-lg">Post New Need</h2>
+          <h2 className="font-bold text-lg">
+            {initialData ? "Edit Need" : "Post New Need"}
+          </h2>
           <button onClick={onClose}>✕</button>
         </div>
 
@@ -473,7 +536,7 @@ const ThemedTaskModal = ({ onSave, onClose }) => {
               Cancel
             </button>
             <button className="bg-blue-600 text-white px-4 py-2 rounded">
-              Post Need
+              {initialData ? "Save Changes" : "Post Need"}
             </button>
           </div>
         </form>

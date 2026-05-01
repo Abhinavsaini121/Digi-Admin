@@ -1081,3 +1081,29 @@ export const getPublicUserLocalJobs = async (page = 1) => {
     throw error.response ? error.response.data : new Error("Network Error");
   }
 };
+
+export const updateLocalJob = async (id, jobData) => {
+  try {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      throw new Error("No token found. Please login as admin.");
+    }
+
+    const response = await apiClient.put(
+      `/admin/localJobs/update-job/${id}`,
+      jobData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      },
+    );
+
+    return response.data; // { success, message, data }
+  } catch (error) {
+    console.error("UPDATE LOCAL JOB ERROR:", error);
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
+};

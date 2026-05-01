@@ -13,7 +13,9 @@ const UserLocalNeeds = () => {
   const [selectedTaskId, setSelectedTaskId] = useState(null);
 
   const [page, setPage] = useState(1);
-  const [jobType, setJobType] = useState("ADMIN");
+  const [jobType, setJobType] = useState(
+    window.location.pathname.includes("user-local") ? "USER" : "ADMIN",
+  );
 
   const itemsPerPage = pagination.pageSize || 5;
   const totalPages = pagination.totalPages || 1;
@@ -24,7 +26,7 @@ const UserLocalNeeds = () => {
   useEffect(() => {
     const fetchJobs = async () => {
       try {
-        const res = await getPublicUserLocalJobs(page);
+        const res = await getPublicUserLocalJobs(page, jobType);
         setTasks(res.data || []);
         setPagination(res.pagination || {});
       } catch (err) {
@@ -33,7 +35,7 @@ const UserLocalNeeds = () => {
     };
 
     fetchJobs();
-  }, [page]);
+  }, [page, jobType]);
 
   const handleDelete = (id) => {
     setSelectedTaskId(id);
@@ -74,10 +76,11 @@ const UserLocalNeeds = () => {
       </div>
 
       {/* TABLE */}
-      <div className="bg-white rounded-xl shadow overflow-hidden">
+      <div className="bg-white rounded-xl shadow overflow-hidden mt-15">
         <table className="w-full text-sm">
           <thead className="bg-gray-50">
             <tr>
+              <th className="p-4 text-left">S.No.</th>
               <th className="p-4 text-left">Image</th>
               <th className="p-4 text-left">Title</th>
               <th className="p-4 text-left">Location</th>
@@ -91,6 +94,9 @@ const UserLocalNeeds = () => {
           <tbody>
             {currentTasks.map((t) => (
               <tr key={t._id} className="border-t">
+                <td className="p-4">
+                  {tasks.indexOf(t) + 1 + (page - 1) * itemsPerPage}
+                </td>
                 <td className="p-4">
                   <img
                     src={t.images?.[0]}

@@ -1,4 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import Layout from "./layout/Layout";
 import ProtectedRoute from "./auth/ProtectedRoute";
 // Pages Imports
@@ -8,7 +10,7 @@ import ManageUsers from "./pages/User_Management/ManageUsers";
 import LocalNeeds from "./pages/LocalNeeds/LocalNeeds";
 import PartTimeJobs from "./pages/Jobs/PartTimeJobs";
 import FullTimeJobs from "./pages/Jobs/FullTimeJobs";
-import AllAdmin from "./pages/All_Admin/Alladmin"
+import AllAdmin from "./pages/All_Admin/Alladmin";
 import AllUsers from "./pages/All_Users/all_users";
 import BloodRequest from "./pages/Blood_Request/Blood-request";
 import Marketplace from "./pages/Marketplace/Marketplace";
@@ -24,52 +26,55 @@ import Setting from "./pages/SystemSetting/Systemsetting";
 import Business from "./pages/Business_Varifies/business-verify";
 import UserPartTimeJobs from "./pages/Jobs/UserPartTime";
 import UserFullJobs from "./pages/Jobs/UserFullTime";
+import UserLocalNeed from "./pages/LocalNeeds/UserLocalNeed";
 function App() {
   return (
-    <Routes>
+    <>
+      <Routes>
+        {/* Redirect Root to Login initially */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
 
-      {/* Redirect Root to Login initially */}
-      <Route path="/" element={<Navigate to="/login" replace />} />
+        {/* Public Route */}
+        <Route path="/login" element={<Login />} />
 
-      {/* Public Route */}
-      <Route path="/login" element={<Login />} />
+        {/* Protected Routes (Admin Panel) */}
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <Layout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Dashboard />} />
 
-      {/* Protected Routes (Admin Panel) */}
-      <Route
-        path="/"
-        element={
-          <ProtectedRoute>
-            <Layout />
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<Dashboard />} />
+          <Route path="/usersmanagement" element={<ManageUsers />} />
+          <Route path="/needsManagement" element={<LocalNeeds />} />
+          <Route path="/PartTimeJobs" element={<PartTimeJobs />} />
+          <Route path="/FullTimeJobs" element={<FullTimeJobs />} />
+          <Route path="/all-admin" element={<AllAdmin />} />
+          <Route path="/all-users" element={<AllUsers />} />
+          <Route path="/blood-request" element={<BloodRequest />} />
+          <Route path="/Marketplace" element={<Marketplace />} />
+          <Route path="/shop-management" element={<ShopManage />} />
+          {/* <Route path="/sosAlert" element={< SosAlert />} /> */}
+          <Route path="/credit" element={<Credit />} />
+          <Route path="/category" element={<Category />} />
+          <Route path="/subcategory" element={<SubCategory />} />
+          <Route path="/notifications" element={<Notification />} />
+          <Route path="/moderationblocking" element={<Moderation />} />
+          <Route path="/systemsetting" element={<Setting />} />
+          {/* <Route path="/report" element={<Reports />} /> */}
+          <Route path="/business" element={<Business />} />
+          <Route path="/user-part" element={<UserPartTimeJobs />} />
+          <Route path="/user-full" element={<UserFullJobs />} />
+          <Route path="/user-local" element={<UserLocalNeed />} />
+        </Route>
 
-        <Route path="/usersmanagement" element={<ManageUsers />} />
-        <Route path="/needsManagement" element={<LocalNeeds />} />
-        <Route path="/PartTimeJobs" element={<PartTimeJobs />} />
-        <Route path="/FullTimeJobs" element={<FullTimeJobs />} />
-        <Route path="/all-admin" element={<AllAdmin />} />
-        <Route path="/all-users" element={<AllUsers />} />
-        <Route path="/blood-request" element={<BloodRequest />} />
-        <Route path="/Marketplace" element={<Marketplace />} />
-        <Route path="/shop-management" element={<ShopManage />} />
-        {/* <Route path="/sosAlert" element={< SosAlert />} /> */}
-        <Route path="/credit" element={<Credit />} />
-        <Route path="/category" element={<Category />} />
-        <Route path="/subcategory" element={<SubCategory />} />
-        <Route path="/notifications" element={<Notification />} />
-        <Route path="/moderationblocking" element={<Moderation />} />
-        <Route path="/systemsetting" element={<Setting />} />
-        {/* <Route path="/report" element={<Reports />} /> */}
-        <Route path="/business" element={<Business />} />
-        <Route path="/user-part" element={<UserPartTimeJobs />} />
-        <Route path="/user-full" element={<UserFullJobs />} />
-      </Route>
-
-      <Route path="*" element={<Navigate to="/login" replace />} />
-
-    </Routes>
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+      <ToastContainer />
+    </>
   );
 }
 

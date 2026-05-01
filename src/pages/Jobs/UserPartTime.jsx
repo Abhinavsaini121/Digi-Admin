@@ -11,15 +11,17 @@ const UserPartTimeJobs = () => {
     const [jobIdToDelete, setJobIdToDelete] = useState(null);
     const [searchTerm, setSearchTerm] = useState("");
     const [jobType, setJobType] = useState("USER");
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
     const navigate = useNavigate();
 
-    // Fetch Jobs from API
-    const fetchJobs = async () => {
+    const fetchJobs = async (page = 1, search = searchTerm) => {
         try {
             setLoading(true);
-            const response = await getAllRegularJobs(1);
+            const response = await getAllRegularJobs(page, search);
             if (response && response.data) {
                 setJobs(response.data);
+                setTotalPages(response.totalPages);
             }
         } catch (error) {
             console.error("Failed to fetch jobs:", error);
@@ -27,11 +29,12 @@ const UserPartTimeJobs = () => {
             setLoading(false);
         }
     };
-
     useEffect(() => {
-        fetchJobs();
-    }, []);
-
+        if (searchTerm !== "") {
+            setCurrentPage(1);
+        }
+        fetchJobs(currentPage);
+    }, [currentPage, searchTerm]);
     // Delete Logic (API Call)
     const confirmDelete = async () => {
         try {
@@ -44,11 +47,7 @@ const UserPartTimeJobs = () => {
         }
     };
 
-    // Search Filter
-    const filteredJobs = jobs.filter(job =>
-        job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        job.jobCategory.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+
 
     return (
         <div className="pt-admin-wrapper">
@@ -57,6 +56,17 @@ const UserPartTimeJobs = () => {
                 .pt-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; gap: 1rem; }
                 .pt-title h1 { font-size: 1.5rem; font-weight: 800; color: #0c4a6e; margin: 0; }
                 .pt-title p { font-size: 0.85rem; color: #64748b; margin-top: 2px; }
+                .pt-dropdown {
+    padding: 0.65rem 1rem;
+    border-radius: 0.8rem;
+    border: 2px solid #38bdf8; /* This is the border color you want */
+    outline: none;
+    font-size: 0.875rem;
+    background: white;
+    cursor: pointer;
+    color: #0c4a6e;
+    font-weight: 600;
+}
                 .pt-search-input { position: relative; width: 320px; }
                 .pt-search-input input { width: 100%; padding: 0.65rem 1rem 0.65rem 2.6rem; border-radius: 0.8rem; border: 1px solid #bae6fd; outline: none; font-size: 0.875rem; background: white; }
                 .search-ico { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #38bdf8; }
@@ -105,15 +115,15 @@ const UserPartTimeJobs = () => {
                             <tr>
                                 <th>S.No</th>
                                 <th>Gig Details</th>
-                                <th>User Info</th> {/* Add this */}
+                                <th>User Info</th>
                                 <th>Salary Range</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {filteredJobs.map((job, index) => (
+                            {jobs.map((job, index) => (
                                 <tr key={job._id}>
-                                    <td>{index + 1}</td>
+                                    <td>{(currentPage - 1) * 10 + (index + 1)}</td>
                                     <td>
                                         <div className="gig-cell">
                                             <div className="gig-icon"><img src={job.images[0]} alt="gig" /></div>
@@ -127,7 +137,7 @@ const UserPartTimeJobs = () => {
                                         <div style={{ fontWeight: "600", fontSize: "0.85rem" }}>{job.userId?.fullName || "N/A"}</div>
                                         <div style={{ fontSize: "0.7rem", color: "#64748b", textTransform: "uppercase" }}>{job.userId?.role || "USER"}</div>
                                     </td>
-                                    <td><span className="pay-text">₹{job.salaryRange.min} - ₹{job.salaryRange.max}</span></td>
+                                    <td><span className="pay-text">₹{job.salaryRange?.min ?? "N/A"} - ₹{job.salaryRange?.max ?? "N/A"}</span></td>
                                     <td>
                                         <button className="pt-btn pt-delete" onClick={() => { setJobIdToDelete(job._id); setIsDeleteModalOpen(true); }}>
                                             <Trash2 size={12} /> Delete
@@ -138,6 +148,19 @@ const UserPartTimeJobs = () => {
                         </tbody>
                     </table>
                 )}
+            </div>
+            <div className="pagination" style={{ display: 'flex', gap: '10px', marginTop: '20px', justifyContent: 'center' }}>
+                <button
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(prev => prev - 1)}
+                >Previous</button>
+
+                <span>Page {currentPage} of {totalPages}</span>
+
+                <button
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage(prev => prev + 1)}
+                >Next</button>
             </div>
 
             {isDeleteModalOpen && (

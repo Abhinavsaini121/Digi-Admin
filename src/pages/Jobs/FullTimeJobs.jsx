@@ -7,6 +7,7 @@ import {
   Users, GraduationCap, Phone, Info, Layout, Navigation, FileText,
   Eye, Trash2, Edit
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { getAllFullTimeJobs, createNewFullTimeJob, getAllUsersAPI, deleteFullTimeJob, updateFullTimeJob } from "../../auth/adminLogin";
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
@@ -15,6 +16,7 @@ const normalizeJobData = (job) => {
   const salary = job.salaryRange || {};
   return {
     _id: job._id || Math.random().toString(),
+    name: job.userId?.name || "N/A",
     title: job.title || "Untitled Job",
     companyName: job.companyName || 'Individual',
     location: job.location?.address || "Location Not Set",
@@ -63,6 +65,7 @@ const FullTimeJobManagement = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editJobForm, setEditJobForm] = useState(null);
   const [isEditSuccessVisible, setIsEditSuccessVisible] = useState(false);
+  const [jobType, setJobType] = useState("FULL");
   const initialNewJobForm = {
     userId: "",
     title: "",
@@ -85,6 +88,7 @@ const FullTimeJobManagement = () => {
   const [newJobForm, setNewJobForm] = useState(initialNewJobForm);
 
   const [currentPage, setCurrentPage] = useState(1);
+  const navigate = useNavigate();
   const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
@@ -288,12 +292,32 @@ const FullTimeJobManagement = () => {
           <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Full Time Job Board</h1>
           <p className="text-slate-500 text-sm">Manage and post full-time opportunities</p>
         </div>
-        <button
-          onClick={() => { setNewJobForm(initialNewJobForm); setIsAddModalOpen(true); }}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-blue-200 transition-all active:scale-95"
-        >
-          <Plus size={20} /> Post New Job
-        </button>
+
+        {/* Add this section */}
+        <div className="flex items-center gap-4">
+          <select
+            value={jobType}
+            onChange={(e) => {
+              const value = e.target.value;
+              setJobType(value);
+              if (value === "FULL") {
+                navigate("/FullTimeJobs");
+              } else {
+                navigate("/user-full");
+              }
+            }}
+            className="bg-white border border-slate-200 text-slate-600 px-4 py-2.5 rounded-xl font-bold text-sm outline-none cursor-pointer hover:border-blue-400"
+          >
+            <option value="FULL">Admin Jobs</option>
+            <option value="PART">User Jobs</option>
+          </select>
+          <button
+            onClick={() => { setNewJobForm(initialNewJobForm); setIsAddModalOpen(true); }}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-blue-200 transition-all active:scale-95"
+          >
+            <Plus size={20} /> Post New Job
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -307,8 +331,10 @@ const FullTimeJobManagement = () => {
             <thead className="bg-slate-50 border-b border-slate-100">
               <tr>
                 <th className="p-4 text-xs font-bold text-slate-400 uppercase w-12">S.No</th>
+
                 <th className="p-4 text-xs font-bold text-slate-400 uppercase">Role & Company</th>
                 <th className="p-4 text-xs font-bold text-slate-400 uppercase">Category</th>
+                <th className="p-4 text-xs font-bold text-slate-400 uppercase">Name</th>
                 <th className="p-4 text-xs font-bold text-slate-400 uppercase text-center">Featured</th>
                 <th className="p-4 text-xs font-bold text-slate-400 uppercase text-center">Status</th>
                 <th className="p-4 text-xs font-bold text-slate-400 uppercase text-right">Action</th>
@@ -329,6 +355,9 @@ const FullTimeJobManagement = () => {
                       </td>
                       <td className="p-4">
                         <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-[10px] font-bold tracking-wider">{job.jobRole}</span>
+                      </td>
+                      <td className="p-4 text-sm font-semibold text-slate-700">
+                        {job.name}
                       </td>
                       <td className="p-4 text-center">
                         <Star size={18} className="mx-auto" fill={job.isFeatured ? "#fbbf24" : "none"} color={job.isFeatured ? "#fbbf24" : "#cbd5e1"} />

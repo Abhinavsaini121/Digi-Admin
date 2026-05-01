@@ -1,509 +1,558 @@
-
-import apiClient from './apiClient';
+import apiClient from "./apiClient";
 
 // --- Login ---
 export const adminLogin = async (email, password) => {
-    try {
-        const response = await apiClient.post('/admin/login', { email, password });
+  try {
+    const response = await apiClient.post("/admin/login", { email, password });
 
-        console.log("login success", response);
+    console.log("login success", response);
 
-        if (response.data.token) {
-            localStorage.setItem("token", response.data.token);
-            if (response.data.userId) {
-                localStorage.setItem("userId", response.data.userId);
-            }
-        }
-        return response.data;
-    } catch (error) {
-        throw error.response ? error.response.data : new Error("Network Error");
+    if (response.data.token) {
+      localStorage.setItem("token", response.data.token);
+      if (response.data.userId) {
+        localStorage.setItem("userId", response.data.userId);
+      }
     }
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
 };
 
 // --- Dashboard Stats ---
 export const getDashboardStats = async () => {
-    try {
-        const response = await apiClient.get("/admin/dashboard-stats", {
-            headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-        });
-        // Returning response.data.data to directly access the stats object
-        return response.data.data;
-    } catch (error) {
-        throw error.response ? error.response.data : new Error("Network Error");
-    }
+  try {
+    const response = await apiClient.get("/admin/dashboard-stats", {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+    // Returning response.data.data to directly access the stats object
+    return response.data.data;
+  } catch (error) {
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
 };
 export const getAllJobs = async (page = 1) => {
-    try {
-        const token = localStorage.getItem("token");
-        const response = await apiClient.get(`/admin/part-time/jobs?page=${page}`, {
-            headers: { Authorization: `Bearer ${token}` },
-        });
-        return response.data;
-    } catch (error) {
-        throw error.response ? error.response.data : new Error("Network Error");
-    }
+  try {
+    const token = localStorage.getItem("token");
+    const response = await apiClient.get(`/admin/part-time/jobs?page=${page}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
 };
 // --- Get Job By ID (Part-Time) ---
 export const getJobById = async (id) => {
-    try {
-        const response = await apiClient.get(`/admin/part-time/job/${id}`);
-        return response.data;
-    } catch (error) {
-        throw error.response ? error.response.data : new Error("Network Error");
-    }
+  try {
+    const response = await apiClient.get(`/admin/part-time/job/${id}`);
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
 };
 
 // --- UPDATE JOB (Part-Time) ---
 export const updateJob = async (id, jobData) => {
-    try {
-        // Bahut important: Check karein ki adminId kis naam se stored hai
-        // Kyunki login function mein aap "userId" use kar rahe hain
-        const adminId = localStorage.getItem("id") || localStorage.getItem("userId");
+  try {
+    // Bahut important: Check karein ki adminId kis naam se stored hai
+    // Kyunki login function mein aap "userId" use kar rahe hain
+    const adminId =
+      localStorage.getItem("id") || localStorage.getItem("userId");
 
-        let dataToSend;
-        if (jobData instanceof FormData) {
-            dataToSend = jobData;
-            // Agar adminId milta hai toh use append karein
-            if (adminId) {
-                // Ensure karein ki duplicate append na ho agar pehle se component me add kiya hai
-                if (!dataToSend.has("updatedBy")) {
-                    dataToSend.append("updatedBy", adminId);
-                }
-            }
-        } else {
-            dataToSend = { ...jobData, updatedBy: adminId };
+    let dataToSend;
+    if (jobData instanceof FormData) {
+      dataToSend = jobData;
+      // Agar adminId milta hai toh use append karein
+      if (adminId) {
+        // Ensure karein ki duplicate append na ho agar pehle se component me add kiya hai
+        if (!dataToSend.has("updatedBy")) {
+          dataToSend.append("updatedBy", adminId);
         }
-
-        const response = await apiClient.put(`/admin/part-time/job/update/${id}`, dataToSend);
-
-
-        return response.data;
-
-    } catch (error) {
-        console.error("Update Job API Error:", error);
-        throw error.response ? error.response.data : new Error("Network Error or Server Unreachable");
+      }
+    } else {
+      dataToSend = { ...jobData, updatedBy: adminId };
     }
+
+    const response = await apiClient.put(
+      `/admin/part-time/job/update/${id}`,
+      dataToSend,
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Update Job API Error:", error);
+    throw error.response
+      ? error.response.data
+      : new Error("Network Error or Server Unreachable");
+  }
 };
 
 // --- DELETE JOB (Part-Time) ---
 export const deleteJob = async (id) => {
-    try {
-        const token = localStorage.getItem("token");
+  try {
+    const token = localStorage.getItem("token");
 
-        const response = await apiClient.delete(`/admin/part-time/job/delete/${id}`, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
+    const response = await apiClient.delete(
+      `/admin/part-time/job/delete/${id}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
 
-        return response.data;
-    } catch (error) {
-        console.error("Part-Time Job Delete Error:", error);
-        throw error.response ? error.response.data : new Error("Network Error or Server Unreachable");
-    }
+    return response.data;
+  } catch (error) {
+    console.error("Part-Time Job Delete Error:", error);
+    throw error.response
+      ? error.response.data
+      : new Error("Network Error or Server Unreachable");
+  }
 };
 
 export const createNewJob = async (jobData) => {
-    try {
-        const adminId = localStorage.getItem("id");
+  try {
+    const adminId = localStorage.getItem("id");
 
+    if (jobData instanceof FormData) {
+      if (adminId) {
+        jobData.append("userId", adminId);
+      }
 
-        if (jobData instanceof FormData) {
-
-            if (adminId) {
-                jobData.append("userId", adminId);
-            }
-
-            const response = await apiClient.post(`/admin/part-time/job/create`, jobData, {
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                },
-            });
-            return response.data;
-        } else {
-
-            const finalData = { ...jobData, userId: adminId };
-            const response = await apiClient.post(`/admin/part-time/job/create`, finalData);
-            return response.data;
-        }
-    } catch (error) {
-        console.error("API Error Details:", error);
-        throw error.response ? error.response.data : new Error("Network Error");
+      const response = await apiClient.post(
+        `/admin/part-time/job/create`,
+        jobData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        },
+      );
+      return response.data;
+    } else {
+      const finalData = { ...jobData, userId: adminId };
+      const response = await apiClient.post(
+        `/admin/part-time/job/create`,
+        finalData,
+      );
+      return response.data;
     }
+  } catch (error) {
+    console.error("API Error Details:", error);
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
 };
 
 // --- Get All Full-Time Jobs ---
 export const getAllFullTimeJobs = async (page = 1) => {
-    try {
-        const token = localStorage.getItem("token");
-        const response = await apiClient.get(`/admin/full-time/all?page=${page}`, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
-        return response.data;
-    } catch (error) {
-        throw error.response ? error.response.data : new Error("Network Error");
-    }
+  try {
+    const token = localStorage.getItem("token");
+    const response = await apiClient.get(`/admin/full-time/all?page=${page}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
 };
-
-
 
 export const getAllCategories = async (page = 1, limit = 10) => {
-    try {
-        // Yahan URL mein query parameters add karna zaroori hai
-        const response = await apiClient.get(`/admin/category/all?page=${page}&limit=${limit}`);
-        return response.data;
-    } catch (error) {
-        const errorMessage = error.response?.data?.message || "Network Error";
-        throw new Error(errorMessage);
-    }
+  try {
+    // Yahan URL mein query parameters add karna zaroori hai
+    const response = await apiClient.get(
+      `/admin/category/all?page=${page}&limit=${limit}`,
+    );
+    return response.data;
+  } catch (error) {
+    const errorMessage = error.response?.data?.message || "Network Error";
+    throw new Error(errorMessage);
+  }
 };
-
 
 // --- Get Pending Businesses ---
 export const getPendingBusinesses = async () => {
-    try {
-        const response = await apiClient.get("/admin/business/pending");
-        return response.data;
-    } catch (error) {
-        console.error("Error fetching pending businesses:", error);
-        throw error;
-    }
+  try {
+    const response = await apiClient.get("/admin/business/pending");
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching pending businesses:", error);
+    throw error;
+  }
 };
 
 // --- Verify Business ---
 export const verifyBusiness = async (id, action) => {
-    try {
-        const adminId = localStorage.getItem("id");
-        const response = await apiClient.put(`/admin/business/verify/${id}`, { action, verifiedBy: adminId });
-        return response.data;
-    } catch (error) {
-        console.error("Error verifying business:", error);
-        throw error;
-    }
+  try {
+    const adminId = localStorage.getItem("id");
+    const response = await apiClient.put(`/admin/business/verify/${id}`, {
+      action,
+      verifiedBy: adminId,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error verifying business:", error);
+    throw error;
+  }
 };
 
-
 export const createNewFullTimeJob = async (formData) => {
-    try {
-        const adminId = localStorage.getItem("id");
-        if (adminId) formData.append('adminId', adminId);
+  try {
+    const adminId = localStorage.getItem("id");
+    if (adminId) formData.append("adminId", adminId);
 
-        const response = await apiClient.post(`/admin/full-time/create`, formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data'
-            }
-        });
-        return response.data;
-    } catch (error) {
-        throw error.response ? error.response.data : new Error("Network Error or Server Unreachable");
-    }
+    const response = await apiClient.post(`/admin/full-time/create`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response
+      ? error.response.data
+      : new Error("Network Error or Server Unreachable");
+  }
 };
 
 // GET /api/admin/users
 export const getAllUsersAPI = async () => {
-    try {
-        const response = await apiClient.get("/admin/users");
-        return response.data;
-    } catch (error) {
-        throw error.response ? error.response.data : new Error("Network Error");
-    }
+  try {
+    const response = await apiClient.get("/admin/users");
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
 };
 
 export const updateUserStatusAPI = async (id, status) => {
-    try {
-        const adminId = localStorage.getItem("id");
-        // Payload mein status ke sath adminId bhej rahe hain
-        const response = await apiClient.patch(`/admin/user-status/${id}`, { status, adminId });
-        return response.data;
-    } catch (error) {
-        throw error.response ? error.response.data : new Error("Network Error");
-    }
+  try {
+    const adminId = localStorage.getItem("id");
+    // Payload mein status ke sath adminId bhej rahe hain
+    const response = await apiClient.patch(`/admin/user-status/${id}`, {
+      status,
+      adminId,
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
 };
 
-
 export const getAllBloodRequestsAPI = async () => {
-    try {
-        const response = await apiClient.get("/admin/blood-requests");
-        return response.data;
-    } catch (error) {
-        throw error.response ? error.response.data : new Error("Network Error");
-    }
+  try {
+    const response = await apiClient.get("/admin/blood-requests");
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
 };
 
 // --- Update Blood Request (PUT) ---
 export const updateBloodRequestAPI = async (id, requestData) => {
-    try {
-        const adminId = localStorage.getItem("id");
-        const finalData = { ...requestData, updatedBy: adminId };
+  try {
+    const adminId = localStorage.getItem("id");
+    const finalData = { ...requestData, updatedBy: adminId };
 
-        const response = await apiClient.put(`/admin/blood-requests/${id}`, finalData);
-        return response.data;
-    } catch (error) {
-        throw error.response ? error.response.data : new Error("Network Error");
-    }
+    const response = await apiClient.put(
+      `/admin/blood-requests/${id}`,
+      finalData,
+    );
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
 };
 
 // --- Delete Blood Request (DELETE) ---
 export const deleteBloodRequestAPI = async (id) => {
-    try {
-        const response = await apiClient.delete(`/admin/blood-requests/${id}`);
-        return response.data;
-    } catch (error) {
-        throw error.response ? error.response.data : new Error("Network Error");
-    }
+  try {
+    const response = await apiClient.delete(`/admin/blood-requests/${id}`);
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
 };
 
 export const getBloodRequestByIdAPI = async (id) => {
-    try {
-        const response = await apiClient.get(`/admin/blood-requests/${id}`);
-        return response.data.data || response.data;
-    } catch (error) {
-        throw error.response ? error.response.data : new Error("Network Error");
-    }
+  try {
+    const response = await apiClient.get(`/admin/blood-requests/${id}`);
+    return response.data.data || response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
 };
 
-
-
 export const getAllAdminData = async (page = 1) => {
-    try {
-        const token = localStorage.getItem("token");
-        const response = await apiClient.get(`/admin/all?page=${page}`, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
-        return response.data;
-    }
-    catch (error) {
-        throw error.response ? error.response.data : new Error("Network Error");
-    }
+  try {
+    const token = localStorage.getItem("token");
+    const response = await apiClient.get(`/admin/all?page=${page}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
 };
 // --- Modified Shop Management API Function ---
 
 export const getAllShopsForAdmin = async (page = 1) => {
-    const token = localStorage.getItem("token"); // or wherever you store it
-    try {
-        const response = await apiClient.get(`/admin/manage-business/all?page=${page}`, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
-        return response.data;
-    } catch (error) {
-        throw error.response ? error.response.data : new Error("Network Error");
-    }
+  const token = localStorage.getItem("token"); // or wherever you store it
+  try {
+    const response = await apiClient.get(
+      `/admin/manage-business/all?page=${page}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    );
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
 };
 
 export const getShopDetailsById = async (id) => {
-    try {
-        const response = await apiClient.get(`/admin/manage-business/${id}`);
+  try {
+    const response = await apiClient.get(`/admin/manage-business/${id}`);
 
-        return response.data.data || response.data;
-    } catch (error) {
-        console.error(`Error fetching shop details for ID ${id}:`, error);
-        throw error.response
-            ? error.response.data
-            : new Error("Network Error or Shop Details Service Unreachable");
-    }
+    return response.data.data || response.data;
+  } catch (error) {
+    console.error(`Error fetching shop details for ID ${id}:`, error);
+    throw error.response
+      ? error.response.data
+      : new Error("Network Error or Shop Details Service Unreachable");
+  }
 };
 
 export const deletebusiness = async (id) => {
-    try {
-        const response = await apiClient.delete(`admin/manage-business/delete/${id}`);
-        return response.data;
-    } catch (error) {
-        throw error.response ? error.response.data : new Error("Network Error");
-    }
+  try {
+    const response = await apiClient.delete(
+      `admin/manage-business/delete/${id}`,
+    );
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
 };
 
 export const toggleBusinessStatusAPI = async (businessId, status) => {
-    try {
-        const adminId = localStorage.getItem("id");
+  try {
+    const adminId = localStorage.getItem("id");
 
+    const response = await apiClient.patch(
+      `/admin/manage-business/toggle-status/${businessId}`,
+      { status, adminId },
+    );
 
-        const response = await apiClient.patch(
-            `/admin/manage-business/toggle-status/${businessId}`,
-            { status, adminId }
-        );
-
-        return response.data;
-    } catch (error) {
-
-        throw error.response ? error.response.data : new Error("Network Error");
-    }
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
 };
-
 
 export const createNewShopAPI = async (formData) => {
-    try {
-
-        const response = await apiClient.post("/admin/manage-business/create", formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data'
-            }
-        });
-        return response.data;
-    } catch (error) {
-        throw error.response ? error.response.data : new Error("Network Error or Shop Creation Failed");
-    }
-
+  try {
+    const response = await apiClient.post(
+      "/admin/manage-business/create",
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      },
+    );
+    return response.data;
+  } catch (error) {
+    throw error.response
+      ? error.response.data
+      : new Error("Network Error or Shop Creation Failed");
+  }
 };
 
-
 export const createBusinessForUserAPI = async (formData) => {
-    try {
-        const response = await apiClient.post("/admin/manage-business/create-for-user", formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-            },
-        });
-        return response.data;
-    } catch (error) {
-        throw error.response ? error.response.data : new Error("Network Error");
-    }
+  try {
+    const response = await apiClient.post(
+      "/admin/manage-business/create-for-user",
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      },
+    );
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
 };
 
 export const addServiceToBusinessAPI = async (businessId, formData) => {
-    try {
-        const response = await apiClient.post(`/admin/manage-business/add-service/${businessId}`, formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-            },
-        });
-        return response.data;
-    } catch (error) {
-        throw error.response ? error.response.data : new Error("Network Error");
-    }
+  try {
+    const response = await apiClient.post(
+      `/admin/manage-business/add-service/${businessId}`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      },
+    );
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
 };
 
 export const getBusinessServicesAPI = async (businessId) => {
-    try {
-        const response = await apiClient.get(`/business/${businessId}/services`);
-        return response.data;
-    } catch (error) {
-        throw error.response ? error.response.data : new Error("An unexpected error occurred");
-    }
+  try {
+    const response = await apiClient.get(`/business/${businessId}/services`);
+    return response.data;
+  } catch (error) {
+    throw error.response
+      ? error.response.data
+      : new Error("An unexpected error occurred");
+  }
 };
 
 export const updateBusinessDetailsAPI = async (businessId, formData) => {
-    try {
-        const token = localStorage.getItem("token");
+  try {
+    const token = localStorage.getItem("token");
 
-        const response = await apiClient.put(`/admin/manage-business/update/${businessId}`, formData, {
-            headers: {
-                "Authorization": `Bearer ${token}`,
-                "Content-Type": "multipart/form-data",
-            },
-        });
+    const response = await apiClient.put(
+      `/admin/manage-business/update/${businessId}`,
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      },
+    );
 
-        return response.data;
-    } catch (error) {
-        throw error.response ? error.response.data : new Error("Network Error");
-    }
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
 };
 
-
-export const updateBusinessServiceAPI = async (businessId, serviceId, formData) => {
-    try {
-        const response = await apiClient.put(
-            `/admin/manage-business/update-service/${businessId}/${serviceId}`,
-            formData,
-            {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
-            }
-        );
-        return response.data;
-    } catch (error) {
-        throw error.response ? error.response.data : new Error("An unexpected error occurred");
-    }
+export const updateBusinessServiceAPI = async (
+  businessId,
+  serviceId,
+  formData,
+) => {
+  try {
+    const response = await apiClient.put(
+      `/admin/manage-business/update-service/${businessId}/${serviceId}`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      },
+    );
+    return response.data;
+  } catch (error) {
+    throw error.response
+      ? error.response.data
+      : new Error("An unexpected error occurred");
+  }
 };
-
 
 export const deleteBusinessServiceAPI = async (businessId, serviceId) => {
-    try {
-        const response = await apiClient.delete(
-            `/admin/manage-business/delete-service/${businessId}/${serviceId}`
-        );
-        return response.data;
-    } catch (error) {
-        throw error.response ? error.response.data : new Error("An unexpected error occurred");
-    }
+  try {
+    const response = await apiClient.delete(
+      `/admin/manage-business/delete-service/${businessId}/${serviceId}`,
+    );
+    return response.data;
+  } catch (error) {
+    throw error.response
+      ? error.response.data
+      : new Error("An unexpected error occurred");
+  }
 };
 
-
-
 export const addCategory = async (formData) => {
-    try {
-        const adminId = localStorage.getItem("id") || localStorage.getItem("userId");
+  try {
+    const adminId =
+      localStorage.getItem("id") || localStorage.getItem("userId");
 
-        // Agar image upload ho rahi hai (FormData use ho raha hai)
-        if (formData instanceof FormData) {
-            if (adminId) formData.append("createdBy", adminId);
-            const response = await apiClient.post("/admin/category/add", formData, {
-                headers: { "Content-Type": "multipart/form-data" }
-            });
-            return response.data;
-        }
-        // Agar normal JSON data bhej rahe hain
-        else {
-            const finalData = { ...formData, createdBy: adminId };
-            const response = await apiClient.post("/admin/category/add", finalData);
-            return response.data;
-        }
-    } catch (error) {
-        throw error.response ? error.response.data : new Error("Network Error or Category Creation Failed");
+    // Agar image upload ho rahi hai (FormData use ho raha hai)
+    if (formData instanceof FormData) {
+      if (adminId) formData.append("createdBy", adminId);
+      const response = await apiClient.post("/admin/category/add", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      return response.data;
     }
+    // Agar normal JSON data bhej rahe hain
+    else {
+      const finalData = { ...formData, createdBy: adminId };
+      const response = await apiClient.post("/admin/category/add", finalData);
+      return response.data;
+    }
+  } catch (error) {
+    throw error.response
+      ? error.response.data
+      : new Error("Network Error or Category Creation Failed");
+  }
 };
 
 // --- DELETE CATEGORY CONTROLLER ---
 export const deleteCategory = async (categoryId) => {
-    const token = localStorage.getItem("token");
+  const token = localStorage.getItem("token");
 
-    const response = await apiClient.delete(
-        `/admin/category/delete/${categoryId}`,
-        {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        }
-    );
+  const response = await apiClient.delete(
+    `/admin/category/delete/${categoryId}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  );
 
-    return response.data;
+  return response.data;
 };
 
 export const createSubCategory = async (categoryName, subCategoryName) => {
-    try {
-        // Payload as per your requirement
-        const payload = {
-            category: categoryName,
-            subCategory: subCategoryName
-        };
+  try {
+    // Payload as per your requirement
+    const payload = {
+      category: categoryName,
+      subCategory: subCategoryName,
+    };
 
-        const response = await apiClient.post("/admin/category/create-subCategory", payload);
+    const response = await apiClient.post(
+      "/admin/category/create-subCategory",
+      payload,
+    );
 
-        return response.data;
-    } catch (error) {
-        console.error("Error creating sub-category:", error);
-        throw error.response ? error.response.data : new Error("Network Error");
-    }
+    return response.data;
+  } catch (error) {
+    console.error("Error creating sub-category:", error);
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
 };
 
 // --- DELETE SUB-CATEGORY ---
 export const deleteSubCategoryAPI = async (categoryName, subCategoryName) => {
-    try {
-        const response = await apiClient.delete("/admin/category/delete-subCategory", {
-            data: {
-                category: categoryName,
-                subCategoryToDelete: subCategoryName
-            }
-        });
-        return response.data;
-    } catch (error) {
-        console.error("Error deleting sub-category:", error);
-        throw error.response ? error.response.data : new Error("Network Error");
-    }
+  try {
+    const response = await apiClient.delete(
+      "/admin/category/delete-subCategory",
+      {
+        data: {
+          category: categoryName,
+          subCategoryToDelete: subCategoryName,
+        },
+      },
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error deleting sub-category:", error);
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
 };
 
 // // --- UPDATE CATEGORY ---
@@ -528,413 +577,507 @@ export const deleteSubCategoryAPI = async (categoryName, subCategoryName) => {
 //     }
 // };
 
-
 // --- Add Sub Category ---
 export const addSubCategory = async (categoryName, subCategoryName) => {
-    try {
-        // Payload as per your requirement
-        const payload = {
-            category: categoryName,    // e.g., "electronics"
-            subCategory: subCategoryName // e.g., "Laptops"
-        };
+  try {
+    // Payload as per your requirement
+    const payload = {
+      category: categoryName, // e.g., "electronics"
+      subCategory: subCategoryName, // e.g., "Laptops"
+    };
 
-        const response = await apiClient.post("/admin/category/create-subCategory", payload);
+    const response = await apiClient.post(
+      "/admin/category/create-subCategory",
+      payload,
+    );
 
-        // Success response logic
-        return response.data;
-    } catch (error) {
-        // Error handling consistency check
-        console.error("Error adding sub-category:", error);
-        throw error.response ? error.response.data : new Error("Network Error");
-    }
+    // Success response logic
+    return response.data;
+  } catch (error) {
+    // Error handling consistency check
+    console.error("Error adding sub-category:", error);
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
 };
-
 
 export const getSubCategoriesByCategory = async (categoryName) => {
-    try {
-        const token = localStorage.getItem("token");
+  try {
+    const token = localStorage.getItem("token");
 
-        const response = await apiClient.get(
-            `/admin/category/get-subCategories`,
-            {
-                params: { categoryName },
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            }
-        );
-        return response.data?.data || [];
-
-    } catch (error) {
-        console.error("Error fetching sub-categories:", error);
-        throw error.response?.data?.message || "Failed to fetch sub-categories";
-    }
+    const response = await apiClient.get(`/admin/category/get-subCategories`, {
+      params: { categoryName },
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data?.data || [];
+  } catch (error) {
+    console.error("Error fetching sub-categories:", error);
+    throw error.response?.data?.message || "Failed to fetch sub-categories";
+  }
 };
 export const getAllMasterUsers = async (page = 1) => {
-    try {
-        // Query parameter (?page=) add kiya gaya hai
-        const response = await apiClient.get(`/admin/users/all-users?page=${page}`);
-        return response.data;
-    } catch (error) {
-        throw error.response ? error.response.data : new Error("Network Error or Server Unreachable");
-    }
+  try {
+    // Query parameter (?page=) add kiya gaya hai
+    const response = await apiClient.get(`/admin/users/all-users?page=${page}`);
+    return response.data;
+  } catch (error) {
+    throw error.response
+      ? error.response.data
+      : new Error("Network Error or Server Unreachable");
+  }
 };
 
 export const updateUserProfileAPI = async (userId, userData) => {
-    try {
-        const adminId = localStorage.getItem("id") || localStorage.getItem("userId");
+  try {
+    const adminId =
+      localStorage.getItem("id") || localStorage.getItem("userId");
 
-        let dataToSend;
-        let headers = {};
+    let dataToSend;
+    let headers = {};
 
-        if (userData instanceof FormData) {
-            dataToSend = userData;
-            if (adminId) dataToSend.append("updatedBy", adminId);
-            headers = { "Content-Type": "multipart/form-data" };
-        } else {
-            dataToSend = { ...userData, updatedBy: adminId };
-        }
-
-        const response = await apiClient.put(`/admin/users/update-profile/${userId}`, dataToSend, {
-            headers: headers
-        });
-
-        return response.data;
-    } catch (error) {
-        throw error.response ? error.response.data : new Error("Network Error");
+    if (userData instanceof FormData) {
+      dataToSend = userData;
+      if (adminId) dataToSend.append("updatedBy", adminId);
+      headers = { "Content-Type": "multipart/form-data" };
+    } else {
+      dataToSend = { ...userData, updatedBy: adminId };
     }
-};
 
+    const response = await apiClient.put(
+      `/admin/users/update-profile/${userId}`,
+      dataToSend,
+      {
+        headers: headers,
+      },
+    );
+
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
+};
 
 export const deleteUserAPI = async (id) => {
-    try {
-        const response = await apiClient.delete(`/admin/users/delete/${id}`);
-        return response.data;
-    } catch (error) {
-        throw error.response ? error.response.data : new Error("Network Error");
-    }
+  try {
+    const response = await apiClient.delete(`/admin/users/delete/${id}`);
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
 };
-
 
 export const searchUsersAPI = async (name) => {
-    try {
-        const response = await apiClient.get("/admin/users/search", {
-            params: { name }, // This will append ?name=... to the URL
-            headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-        });
-        return response.data; // Returns { status, message, data }
-    } catch (error) {
-        throw error.response ? error.response.data : new Error("Network Error");
-    }
+  try {
+    const response = await apiClient.get("/admin/users/search", {
+      params: { name }, // This will append ?name=... to the URL
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+    return response.data; // Returns { status, message, data }
+  } catch (error) {
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
 };
 export const registerAdmin = async (name, email, password) => {
-    try {
-        const token = localStorage.getItem("token"); // or wherever you're storing it
+  try {
+    const token = localStorage.getItem("token"); // or wherever you're storing it
 
-        const response = await apiClient.post(
-            '/admin/register',
-            {
-                name,
-                email,
-                password
-            },
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            }
-        );
+    const response = await apiClient.post(
+      "/admin/register",
+      {
+        name,
+        email,
+        password,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
 
-        return response.data;
-    } catch (error) {
-        throw error.response ? error.response.data : new Error("Network Error");
-    }
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
 };
 
 export const searchAdminAPI = async (query) => {
-    try {
-        const token = localStorage.getItem("token");
-        const response = await apiClient.get("/admin/search-admin", {
-            params: { query },
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
-        return response.data;
-    } catch (error) {
-        throw error.response ? error.response.data : new Error("Network Error");
-    }
+  try {
+    const token = localStorage.getItem("token");
+    const response = await apiClient.get("/admin/search-admin", {
+      params: { query },
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
 };
 
-
 export const deleteAdminAPI = async (id) => {
-    try {
-        const token = localStorage.getItem("token");
-        const response = await apiClient.delete(`/admin/delete/${id}`, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
-        return response.data; // Expected: { "message": "Admin deleted successfully" }
-    } catch (error) {
-        throw error.response ? error.response.data : new Error("Network Error");
-    }
+  try {
+    const token = localStorage.getItem("token");
+    const response = await apiClient.delete(`/admin/delete/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data; // Expected: { "message": "Admin deleted successfully" }
+  } catch (error) {
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
 };
 
 export const updateAdminAPI = async (id, adminData) => {
-    try {
-        const token = localStorage.getItem("token");
-        const adminId = localStorage.getItem("id") || localStorage.getItem("userId");
+  try {
+    const token = localStorage.getItem("token");
+    const adminId =
+      localStorage.getItem("id") || localStorage.getItem("userId");
 
-        // Including updatedBy for tracking, similar to your other update controllers
-        const dataToSend = { ...adminData, updatedBy: adminId };
+    // Including updatedBy for tracking, similar to your other update controllers
+    const dataToSend = { ...adminData, updatedBy: adminId };
 
-        const response = await apiClient.put(`/admin/update/${id}`, dataToSend, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
+    const response = await apiClient.put(`/admin/update/${id}`, dataToSend, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-        return response.data; // Expected: { "message": "Admin updated successfully", "admin": {...} }
-    } catch (error) {
-        throw error.response ? error.response.data : new Error("Network Error");
-    }
+    return response.data; // Expected: { "message": "Admin updated successfully", "admin": {...} }
+  } catch (error) {
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
 };
 
 // --- SEARCH USERS BY NAME ---
 export const searchUsersByNameAPI = async (name) => {
-    try {
-        const token = localStorage.getItem("token");
+  try {
+    const token = localStorage.getItem("token");
 
-        const response = await apiClient.get("/admin/users/search", {
-            params: { name }, // This adds ?name=Digi to the URL
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
+    const response = await apiClient.get("/admin/users/search", {
+      params: { name }, // This adds ?name=Digi to the URL
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-        return response.data; // This returns the { status, message, data: [...] } object
-    } catch (error) {
-        throw error.response ? error.response.data : new Error("Network Error");
-    }
+    return response.data; // This returns the { status, message, data: [...] } object
+  } catch (error) {
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
 };
 
 export const createBloodRequestAPI = async (requestData) => {
-    try {
-        const adminId = localStorage.getItem("id") || localStorage.getItem("userId");
+  try {
+    const adminId =
+      localStorage.getItem("id") || localStorage.getItem("userId");
 
-        // Payload mein adminId add kar rahe hain agar localStorage mein available hai
-        const finalData = {
-            ...requestData,
-            adminId: requestData.adminId || adminId
-        };
+    // Payload mein adminId add kar rahe hain agar localStorage mein available hai
+    const finalData = {
+      ...requestData,
+      adminId: requestData.adminId || adminId,
+    };
 
-        const response = await apiClient.post('/admin/blood-requests', finalData);
-        return response.data;
-    } catch (error) {
-        throw error.response ? error.response.data : new Error("Network Error");
-    }
+    const response = await apiClient.post("/admin/blood-requests", finalData);
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
 };
-
 export const deleteFullTimeJob = async (jobId) => {
-    try {
-        const token = localStorage.getItem("token"); // Apne token ka key name yahan use karein
+  const token = localStorage.getItem("token");
 
-        const response = await fetch(`https://digiapp-node-1.onrender.com/api/admin/full-time/delete/${jobId}`, {
-            method: "DELETE",
-            headers: {
-                "Authorization": `Bearer ${token}`,
-                "Content-Type": "application/json"
-            }
-        });
+  const response = await apiClient.delete(`/admin/full-time/delete/${jobId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
 
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(data.message || "Failed to delete job");
-        }
-
-        return data;
-    } catch (error) {
-        throw error;
-    }
+  return response.data;
 };
 
 // --- UPDATE FULL-TIME JOB CONTROLLER ---
 export const updateFullTimeJob = async (id, formData) => {
-    try {
-        const token = localStorage.getItem("token");
-        const adminId = localStorage.getItem("id") || localStorage.getItem("userId");
+  try {
+    const token = localStorage.getItem("token");
+    const adminId =
+      localStorage.getItem("id") || localStorage.getItem("userId");
 
-        // Agar updatedBy track karna chahte hain toh add karein
-        if (formData instanceof FormData) {
-            if (adminId && !formData.has("updatedBy")) {
-                formData.append("updatedBy", adminId);
-            }
-        }
-
-        const response = await apiClient.put(`/admin/full-time/update/${id}`, formData, {
-            headers: {
-                "Authorization": `Bearer ${token}`,
-                "Content-Type": "multipart/form-data",
-            },
-        });
-
-        return response.data;
-    } catch (error) {
-        console.error("Full-Time Job Update Error:", error);
-        throw error.response ? error.response.data : new Error("Network Error");
+    // Agar updatedBy track karna chahte hain toh add karein
+    if (formData instanceof FormData) {
+      if (adminId && !formData.has("updatedBy")) {
+        formData.append("updatedBy", adminId);
+      }
     }
+
+    const response = await apiClient.put(
+      `/admin/full-time/update/${id}`,
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      },
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Full-Time Job Update Error:", error);
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
 };
 // --- GET USERS FOR DROPDOWN ---
 export const getUsersForDropdownAPI = async () => {
-    try {
-        const response = await apiClient.get("/admin/users/dropdown-users");
-        return response.data;
-    } catch (error) {
-        throw error.response ? error.response.data : new Error("Network Error");
-    }
+  try {
+    const response = await apiClient.get("/admin/users/dropdown-users");
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
 };
 
-
-
-
-
 export const updateCategoryAPI = async (id, payload) => {
-    try {
-        const token = localStorage.getItem("token");
-        const response = await apiClient.put(`/admin/category/update/${id}`, payload, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json"
-            },
-        });
-        return response.data;
-    } catch (error) {
-        throw error.response ? error.response.data : new Error("Network Error");
-    }
+  try {
+    const token = localStorage.getItem("token");
+    const response = await apiClient.put(
+      `/admin/category/update/${id}`,
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      },
+    );
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
 };
 
 // --- UPDATE SUB-CATEGORY CONTROLLER ---
-export const updateSubCategoryAPI = async (category, oldSubCategory, newSubCategory) => {
-    try {
-        const token = localStorage.getItem("token");
+export const updateSubCategoryAPI = async (
+  category,
+  oldSubCategory,
+  newSubCategory,
+) => {
+  try {
+    const token = localStorage.getItem("token");
 
-        const payload = {
-            category: category,
-            oldSubCategory: oldSubCategory,
-            newSubCategory: newSubCategory
-        };
+    const payload = {
+      category: category,
+      oldSubCategory: oldSubCategory,
+      newSubCategory: newSubCategory,
+    };
 
-        const response = await apiClient.put("/admin/category/update-subCategory", payload, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json"
-            },
-        });
+    const response = await apiClient.put(
+      "/admin/category/update-subCategory",
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      },
+    );
 
-        return response.data;
-    } catch (error) {
-        console.error("Error updating sub-category:", error);
-        throw error.response ? error.response.data : new Error("Network Error");
-    }
+    return response.data;
+  } catch (error) {
+    console.error("Error updating sub-category:", error);
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
 };
 export const getBloodRequestsByUrgencyAPI = async (urgency) => {
-    try {
-        const token = localStorage.getItem("token");
-        const response = await apiClient.get(`/admin/bloodRequest-urgency?urgency=${urgency}`, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
-        return response.data; // Return karega { success, results, data }
-    } catch (error) {
-        throw error.response ? error.response.data : new Error("Network Error");
-    }
+  try {
+    const token = localStorage.getItem("token");
+    const response = await apiClient.get(
+      `/admin/bloodRequest-urgency?urgency=${urgency}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+    return response.data; // Return karega { success, results, data }
+  } catch (error) {
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
 };
-
-
 
 // --- SEARCH CATEGORY BY NAME ---
 export const searchCategoriesAPI = async (query) => {
-    try {
-        const token = localStorage.getItem("token");
+  try {
+    const token = localStorage.getItem("token");
 
-        // GET Request with query parameter 'q'
-        const response = await apiClient.get(`/admin/category/search-category`, {
-            params: { q: query },
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
+    // GET Request with query parameter 'q'
+    const response = await apiClient.get(`/admin/category/search-category`, {
+      params: { q: query },
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-        return response.data; // Yeh { success, count, data } return karega
-    } catch (error) {
-        console.error("Search Category API Error:", error);
-        throw error.response ? error.response.data : new Error("Network Error");
-    }
+    return response.data; // Yeh { success, count, data } return karega
+  } catch (error) {
+    console.error("Search Category API Error:", error);
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
 };
-
 
 // --- GET CATEGORIES FOR DROPDOWN ---
 export const getCategoriesForDropdownAPI = async () => {
-    try {
-        const token = localStorage.getItem("token");
-        const response = await apiClient.get("/admin/category/dropdown-categories", {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
+  try {
+    const token = localStorage.getItem("token");
+    const response = await apiClient.get(
+      "/admin/category/dropdown-categories",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
 
-        return response.data;
-    } catch (error) {
-        console.error("Error fetching dropdown categories:", error);
-        throw error.response ? error.response.data : new Error("Network Error");
-    }
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching dropdown categories:", error);
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
 };
-
 
 export const postLocalJob = async (jobData) => {
-    try {
-        const token = localStorage.getItem("token");
+  try {
+    const token = localStorage.getItem("token");
 
-        if (!token) {
-            throw new Error("No token found. Please login as USER.");
-        }
-        const response = await apiClient.post(
-            "/job/post",
-            jobData,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "multipart/form-data",
-                },
-            }
-        );
-        return response.data;
-    } catch (error) {
-        console.error("POST LOCAL JOB ERROR:", error);
-        throw error?.response?.data || {
-            success: false,
-            message: "Network Error",
-        };
+    if (!token) {
+      throw new Error("No token found. Please login as USER.");
     }
+    const response = await apiClient.post("/job/post", jobData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("POST LOCAL JOB ERROR:", error);
+    throw (
+      error?.response?.data || {
+        success: false,
+        message: "Network Error",
+      }
+    );
+  }
 };
 
-
 // --- GET ALL REGULAR PART-TIME JOBS ---
-export const getAllRegularJobs = async (page = 1) => {
-    try {
-        const token = localStorage.getItem("token");
-        const response = await apiClient.get(`/admin/part-time/regular-jobs?page=${page}`, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
-        return response.data;
-    } catch (error) {
-        throw error.response ? error.response.data : new Error("Network Error");
+export const getAllRegularJobs = async (page = 1, searchTerm = "") => {
+  try {
+    const token = localStorage.getItem("token");
+    const response = await apiClient.get(
+      `/admin/part-time/regular-jobs?page=${page}&title=${searchTerm}`,
+      { headers: { Authorization: `Bearer ${token}` } },
+    );
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
+};
+
+export const getNonAdminFullTimeJobs = async (page = 1) => {
+  try {
+    const response = await apiClient.get(
+      `/admin/full-time/non-admin-jobs?page=${page}`,
+    );
+
+    // Returns the object containing { success, count, pagination, data }
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching non-admin jobs:", error);
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
+};
+
+// --- CREATE LOCAL JOB (ADMIN) ---
+export const createLocalJob = async (jobData) => {
+  try {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      throw new Error("No token found. Please login as admin.");
     }
+
+    const response = await apiClient.post("/admin/localJobs/create", jobData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("CREATE LOCAL JOB ERROR:", error);
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
+};
+
+export const deleteLocalJob = async (id) => {
+  try {
+    const token = localStorage.getItem("token");
+
+    const response = await apiClient.delete(`/admin/localJobs/delete/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return response.data; // { success: true, message: "Local Job deleted successfully" }
+  } catch (error) {
+    console.error("DELETE LOCAL JOB ERROR:", error);
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
+};
+
+export const getAllLocalJobs = async (page = 1) => {
+  try {
+    const token = localStorage.getItem("token");
+
+    const response = await apiClient.get(
+      `/admin/localJobs/admin-get-jobs?page=${page}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+
+    return response.data; // { success, count, pagination, data: [...] }
+  } catch (error) {
+    console.error("GET LOCAL JOBS ERROR:", error);
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
+};
+
+export const getPublicUserLocalJobs = async (page = 1) => {
+  try {
+    const token = localStorage.getItem("token");
+
+    const response = await apiClient.get(
+      `/admin/localJobs/public/local-jobs?page=${page}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
 };

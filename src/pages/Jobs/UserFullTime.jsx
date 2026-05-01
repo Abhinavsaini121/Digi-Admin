@@ -1,61 +1,37 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Trash2, Eye, MapPin, Briefcase, Star, X, Search, Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { getNonAdminFullTimeJobs } from "../../auth/adminLogin";
 
 const UserFullJobs = () => {
     // --- STATIC / DUMMY DATA ---
-    const [jobs, setJobs] = useState([
-        {
-            _id: "1",
-            title: "Senior Software Engineer",
-            location: { address: "Bangalore, Karnataka, India" },
-            salaryRange: { min: "15L", max: "25L" },
-            jobCategory: "FULL_TIME_JOB",
-            isFeatured: true,
-            images: ["https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=100&h=100&fit=crop"],
-        },
-        {
-            _id: "2",
-            title: "Full Stack Developer",
-            location: { address: "Mumbai, Maharashtra, India" },
-            salaryRange: { min: "12L", max: "18L" },
-            jobCategory: "FULL_TIME_JOB",
-            isFeatured: false,
-            images: [],
-        },
-        {
-            _id: "3",
-            title: "Product Designer (UI/UX)",
-            location: { address: "Remote, India" },
-            salaryRange: { min: "10L", max: "15L" },
-            jobCategory: "FULL_TIME_JOB",
-            isFeatured: true,
-            images: ["https://images.unsplash.com/photo-1572021335469-31706a17aaef?w=100&h=100&fit=crop"],
-        },
-        {
-            _id: "4",
-            title: "Marketing Manager",
-            location: { address: "Delhi, India" },
-            salaryRange: { min: "8L", max: "12L" },
-            jobCategory: "FULL_TIME_JOB",
-            isFeatured: false,
-            images: [],
-        },
-        {
-            _id: "5",
-            title: "Data Scientist",
-            location: { address: "Hyderabad, Telangana" },
-            salaryRange: { min: "20L", max: "35L" },
-            jobCategory: "FULL_TIME_JOB",
-            isFeatured: true,
-            images: ["https://images.unsplash.com/photo-1551434678-e076c223a692?w=100&h=100&fit=crop"],
-        }
-    ]);
+    const [jobs, setJobs] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     // States
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [jobIdToDelete, setJobIdToDelete] = useState(null);
     const [searchTerm, setSearchTerm] = useState("");
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pagination, setPagination] = useState({});
 
+    const navigate = useNavigate();
+    useEffect(() => {
+        const fetchJobs = async () => {
+            try {
+                setLoading(true);
+                // Pass the currentPage to your API function
+                const response = await getNonAdminFullTimeJobs(currentPage);
+                setJobs(response.data);
+                setPagination(response.pagination); // Save pagination metadata
+            } catch (error) {
+                console.error("Failed to fetch jobs");
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchJobs();
+    }, [currentPage]);
     // Delete Logic (Static)
     const confirmDelete = () => {
         setJobs(jobs.filter(job => job._id !== jobIdToDelete));
@@ -306,6 +282,20 @@ const UserFullJobs = () => {
                     <h1>Full-time Job Management</h1>
                     <p>You have {jobs.length} active listings</p>
                 </div>
+
+                {/* --- ADDED DROPDOWN SECTION --- */}
+                <select
+                    onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === "ADMIN") navigate("/FullTimeJobs");
+                        else if (val === "USER") navigate("/user-full");
+                    }}
+                    className="bg-white border border-slate-200 text-slate-600 px-4 py-2 rounded-xl font-bold text-sm outline-none cursor-pointer hover:border-blue-400"
+                >
+                    <option value="USER">User Jobs</option>
+                    <option value="ADMIN">Admin Jobs</option>
+                </select>
+
                 <div className="search-box">
                     <Search size={16} className="search-icon" />
                     <input
@@ -316,7 +306,6 @@ const UserFullJobs = () => {
                     />
                 </div>
             </div>
-
             {/* Main Table */}
             <div className="table-wrapper">
                 <table>
@@ -330,16 +319,22 @@ const UserFullJobs = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {filteredJobs.length > 0 ? (
+                        {loading ? (
+                            <tr>
+                                <td colSpan="5" style={{ textAlign: "center", padding: "3rem" }}>
+                                    <Loader2 className="animate-spin text-blue-600" size={32} />
+                                </td>
+                            </tr>
+                        ) : filteredJobs.length > 0 ? (
                             filteredJobs.map((job, index) => (
                                 <tr key={job._id}>
                                     <td style={{ fontWeight: "700", color: "#cbd5e1" }}>
-                                        {String(index + 1).padStart(2, '0')}
+                                        {String((currentPage - 1) * 10 + index + 1).padStart(2, '0')}
                                     </td>
                                     <td>
                                         <div className="job-cell">
                                             <div className="job-logo">
-                                                {job.images[0] ? (
+                                                {job.images && job.images[0] ? (
                                                     <img src={job.images[0]} alt="job" />
                                                 ) : (
                                                     <Briefcase size={20} color="#94a3b8" />
@@ -348,14 +343,14 @@ const UserFullJobs = () => {
                                             <div>
                                                 <div className="job-name">{job.title}</div>
                                                 <div className="job-loc">
-                                                    <MapPin size={10} /> {job.location.address.split(',')[0]}
+                                                    <MapPin size={10} /> {job.location?.address?.split(',')[0] || "N/A"}
                                                 </div>
                                             </div>
                                         </div>
                                     </td>
                                     <td>
                                         <span className="salary-badge">
-                                            ₹{job.salaryRange.min} - {job.salaryRange.max}
+                                            ₹{job.salaryRange?.min} - {job.salaryRange?.max}
                                         </span>
                                     </td>
                                     <td style={{ textAlign: "center" }}>
@@ -388,6 +383,23 @@ const UserFullJobs = () => {
                         )}
                     </tbody>
                 </table>
+            </div>
+            <div className="pagination-controls" style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '1.5rem', alignItems: 'center' }}>
+                <button
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(prev => prev - 1)}
+                    className="px-4 py-2 bg-white border rounded-lg disabled:opacity-50"
+                >
+                    Previous
+                </button>
+                <span className="text-sm font-bold">Page {pagination.currentPage} of {pagination.totalPages}</span>
+                <button
+                    disabled={currentPage === pagination.totalPages}
+                    onClick={() => setCurrentPage(prev => prev + 1)}
+                    className="px-4 py-2 bg-white border rounded-lg disabled:opacity-50"
+                >
+                    Next
+                </button>
             </div>
 
             {/* DELETE MODAL */}

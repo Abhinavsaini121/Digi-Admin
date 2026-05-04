@@ -27,6 +27,8 @@ import Business from "./pages/Business_Varifies/business-verify";
 import UserPartTimeJobs from "./pages/Jobs/UserPartTime";
 import UserFullJobs from "./pages/Jobs/UserFullTime";
 import UserLocalNeed from "./pages/LocalNeeds/UserLocalNeed";
+import UserMarketPlace from "./pages/Marketplace/UserMarketPlace";
+
 function App() {
   return (
     <>
@@ -69,6 +71,7 @@ function App() {
           <Route path="/user-part" element={<UserPartTimeJobs />} />
           <Route path="/user-full" element={<UserFullJobs />} />
           <Route path="/user-local" element={<UserLocalNeed />} />
+          <Route path="/user-marketplace" element={<UserMarketPlace />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/login" replace />} />

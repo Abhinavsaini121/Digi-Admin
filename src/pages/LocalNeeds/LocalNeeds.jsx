@@ -16,7 +16,7 @@ const LocalNeeds = () => {
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState({});
   const [jobType, setJobType] = useState("ADMIN");
-
+  const [selectedTaskId, setSelectedTaskId] = useState(null);
   useEffect(() => {
     const fetchJobs = async () => {
       try {

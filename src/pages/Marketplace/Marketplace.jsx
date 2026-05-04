@@ -14,8 +14,11 @@ import {
   AlertTriangle,
   CheckCircle,
 } from "lucide-react";
-
+import { useNavigate, useLocation } from "react-router-dom";
+import { updateMarketplaceItemAPI } from "../../auth/adminLogin";
 const MarketplaceManager = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [items, setItems] = useState([]);
   const [stats, setStats] = useState({
     total: 0,
@@ -24,7 +27,6 @@ const MarketplaceManager = () => {
     sum: 0,
   });
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -52,43 +54,38 @@ const MarketplaceManager = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
+
       const response = await fetch(
         `https://digiapp-node-1.onrender.com/api/admin/items/Items?page=${page}&limit=${itemsPerPage}`,
         {
-          method: "GET",
           headers: {
-            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
         },
       );
 
-      if (response.status === 401) {
-        setError("Session expired. Please login again.");
-        setLoading(false);
-        return;
-      }
-
-      const result = await response.json();
+      const result = await response.json(); // ✅ अब result defined
 
       if (result.success) {
         setItems(result.data);
+
         setStats({
           total: result.totalItems || 0,
           active: result.activeItems || 0,
           featured: result.featuredItems || 0,
           sum: result.totalPriceSum || 0,
         });
+
         setTotalItems(result.totalItems || 0);
         setTotalPages(
           result.totalPages ||
             Math.ceil((result.totalItems || 0) / itemsPerPage),
         );
       } else {
-        setError("Failed to load data");
+        showToast("Failed to load data", "error");
       }
-    } catch (err) {
-      setError("API Error: " + err.message);
+    } catch {
+      showToast("Error fetching job list", "error");
     } finally {
       setLoading(false);
     }
@@ -107,25 +104,18 @@ const MarketplaceManager = () => {
     if (!currentItem) return;
     setActionLoading(true);
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(
-        `https://digiapp-node-1.onrender.com/api/admin/items/update/${currentItem._id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            title: currentItem.title,
-            price: currentItem.price,
-            isActive: currentItem.isActive,
-            category: currentItem.category,
-          }),
+      const result = await updateMarketplaceItemAPI(currentItem._id, {
+        title: currentItem.title,
+        price: currentItem.price,
+        isActive: currentItem.isActive,
+        isFeatured: currentItem.isFeatured,
+        preferredCommunication: currentItem.preferredCommunication,
+        images: currentItem.images,
+        location: {
+          address: currentItem.location?.address,
+          coordinates: currentItem.location?.coordinates,
         },
-      );
-
-      const result = await response.json();
+      });
       if (result.success) {
         setItems(
           items.map((item) =>
@@ -206,14 +196,31 @@ const MarketplaceManager = () => {
         </div>
       )}
 
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-        <div>
+      <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+        <div className="flex-1">
           <h1 className="text-2xl font-extrabold tracking-tight text-slate-800">
             MarketPlace Dashboard
           </h1>
           <p className="text-slate-500 text-sm">
             Real-time Marketplace Management
           </p>
+        </div>
+
+        <div className="flex justify-end flex-1">
+          <select
+            value={location.pathname === "/user-marketplace" ? "User" : "Admin"}
+            onChange={(e) => {
+              if (e.target.value === "Admin") {
+                navigate("/Marketplace");
+              } else if (e.target.value === "User") {
+                navigate("/user-marketplace");
+              }
+            }}
+            className="border border-indigo-200 bg-indigo-50 text-indigo-700 px-4 py-2 rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer shadow-sm hover:bg-indigo-100 transition-colors mr-3"
+          >
+            <option value="Admin">Admin View</option>
+            <option value="User">User View</option>
+          </select>
         </div>
         <button
           onClick={() => fetchMarketplaceData(currentPage)}
@@ -224,8 +231,9 @@ const MarketplaceManager = () => {
         </button>
       </div>
 
-      {!loading && !error && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      {!loading && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-13 mt-13">
+          {" "}
           <StatCard
             title="Total Items"
             value={stats.total}
@@ -262,14 +270,7 @@ const MarketplaceManager = () => {
         </div>
       )}
 
-      {error && !loading && (
-        <div className="p-8 text-center bg-red-50 rounded-2xl border border-red-100 text-red-600">
-          <AlertCircle size={40} className="mx-auto mb-2" />
-          <p className="font-bold">Error: {error}</p>
-        </div>
-      )}
-
-      {!loading && !error && (
+      {!loading && (
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
@@ -425,8 +426,10 @@ const MarketplaceManager = () => {
       {isEditModalOpen && currentItem && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
-            <div className="flex items-center justify-between px-6 py-4 border-b">
-              <h2 className="text-lg font-bold">Edit Listing</h2>
+            <div className="flex items-center justify-between px-6 py-4 bg-indigo-600 border-b">
+              <h2 className="text-lg font-bold text-center w-full">
+                Edit Listing
+              </h2>
               <button
                 onClick={() => setIsEditModalOpen(false)}
                 className="text-slate-400 hover:text-slate-600"
@@ -434,71 +437,172 @@ const MarketplaceManager = () => {
                 <X size={20} />
               </button>
             </div>
-            <div className="p-6 space-y-4">
+            <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+              {/* Title */}
               <div>
                 <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
-                  Product Title
+                  Title
                 </label>
                 <input
                   type="text"
-                  value={currentItem.title}
+                  value={currentItem.title || ""}
                   onChange={(e) =>
                     setCurrentItem({ ...currentItem, title: e.target.value })
                   }
-                  className="w-full p-2.5 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full p-2.5 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
+
+              {/* Price + Active */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
-                    Price (₹)
-                  </label>
+                  <label className="block text-xs font-bold mb-1">Price</label>
                   <input
                     type="number"
-                    value={currentItem.price}
+                    value={currentItem.price || ""}
                     onChange={(e) =>
                       setCurrentItem({
                         ...currentItem,
-                        price: parseInt(e.target.value),
+                        price: Number(e.target.value),
                       })
                     }
-                    className="w-full p-2.5 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full p-2.5 border rounded-lg"
                   />
                 </div>
+
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
-                    Category
-                  </label>
-                  <input
-                    type="text"
-                    value={currentItem.category}
+                  <label className="block text-xs font-bold mb-1">Active</label>
+                  <select
+                    value={currentItem.isActive ? "true" : "false"}
                     onChange={(e) =>
                       setCurrentItem({
                         ...currentItem,
-                        category: e.target.value,
+                        isActive: e.target.value === "true",
                       })
                     }
-                    className="w-full p-2.5 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
+                    className="w-full p-2.5 border rounded-lg"
+                  >
+                    <option value="true">Active</option>
+                    <option value="false">Inactive</option>
+                  </select>
                 </div>
               </div>
+
+              {/* Featured */}
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
-                  Active Status
-                </label>
+                <label className="block text-xs font-bold mb-1">Featured</label>
                 <select
-                  value={currentItem.isActive ? "true" : "false"}
+                  value={currentItem.isFeatured ? "true" : "false"}
                   onChange={(e) =>
                     setCurrentItem({
                       ...currentItem,
-                      isActive: e.target.value === "true",
+                      isFeatured: e.target.value === "true",
                     })
                   }
-                  className="w-full p-2.5 border rounded-lg text-sm outline-none bg-white focus:ring-2 focus:ring-indigo-500"
+                  className="w-full p-2.5 border rounded-lg"
                 >
-                  <option value="true">Active</option>
-                  <option value="false">Inactive</option>
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
                 </select>
+              </div>
+
+              {/* Address */}
+              <div>
+                <label className="block text-xs font-bold mb-1">Address</label>
+                <input
+                  type="text"
+                  value={currentItem.location?.address || ""}
+                  onChange={(e) =>
+                    setCurrentItem({
+                      ...currentItem,
+                      location: {
+                        ...currentItem.location,
+                        address: e.target.value,
+                      },
+                    })
+                  }
+                  className="w-full p-2.5 border rounded-lg"
+                />
+              </div>
+
+              {/* Coordinates */}
+              <div className="grid grid-cols-2 gap-4">
+                <input
+                  type="text"
+                  placeholder="Latitude"
+                  value={currentItem.location?.coordinates?.[0] || ""}
+                  onChange={(e) =>
+                    setCurrentItem({
+                      ...currentItem,
+                      location: {
+                        ...currentItem.location,
+                        coordinates: [
+                          e.target.value,
+                          currentItem.location?.coordinates?.[1] || "",
+                        ],
+                      },
+                    })
+                  }
+                  className="p-2.5 border rounded-lg"
+                />
+                <input
+                  type="text"
+                  placeholder="Longitude"
+                  value={currentItem.location?.coordinates?.[1] || ""}
+                  onChange={(e) =>
+                    setCurrentItem({
+                      ...currentItem,
+                      location: {
+                        ...currentItem.location,
+                        coordinates: [
+                          currentItem.location?.coordinates?.[0] || "",
+                          e.target.value,
+                        ],
+                      },
+                    })
+                  }
+                  className="p-2.5 border rounded-lg"
+                />
+              </div>
+
+              {/* Preferred Communication */}
+              <div>
+                <label className="block text-xs font-bold mb-1">
+                  Preferred Communication
+                </label>
+                <input
+                  type="text"
+                  value={currentItem.preferredCommunication || ""}
+                  onChange={(e) =>
+                    setCurrentItem({
+                      ...currentItem,
+                      preferredCommunication: e.target.value,
+                    })
+                  }
+                  className="w-full p-2.5 border rounded-lg"
+                />
+              </div>
+
+              {/* Images */}
+              <div>
+                <label className="block text-xs font-bold mb-1">
+                  Upload Image
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      const imageUrl = URL.createObjectURL(file); // local preview
+                      setCurrentItem({
+                        ...currentItem,
+                        images: [imageUrl],
+                      });
+                    }
+                  }}
+                  className="w-full p-2.5 border rounded-lg"
+                />
               </div>
             </div>
             <div className="px-6 py-4 bg-slate-50 border-t flex justify-end gap-3">

@@ -1107,3 +1107,74 @@ export const updateLocalJob = async (id, jobData) => {
     throw error.response ? error.response.data : new Error("Network Error");
   }
 };
+
+export const updateMarketplaceItemAPI = async (id, itemData) => {
+  try {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      throw new Error("No token found. Please login as admin.");
+    }
+
+    const response = await apiClient.put(
+      `/admin/items/update/${id}`,
+      itemData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      },
+    );
+
+    return response.data; // { success, message, data }
+  } catch (error) {
+    console.error("UPDATE MARKETPLACE ITEM ERROR:", error);
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
+};
+
+// --- GET ALL USER CREATED ITEMS ---
+export const getAllUserItems = async (page = 1) => {
+  try {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      throw new Error("No token found. Please login as admin.");
+    }
+    const response = await apiClient.get(
+      `/admin/items/getItems-users?page=${page}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+    return response.data;
+  } catch (error) {
+    console.error("GET USER ITEMS ERROR:", error);
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
+};
+
+// --- DELETE USER ITEM ---
+export const deleteUserItem = async (id) => {
+  try {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      throw new Error("No token found. Please login as admin.");
+    }
+
+    const response = await apiClient.delete(`/admin/items/delete/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("DELETE ITEM ERROR:", error);
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
+};

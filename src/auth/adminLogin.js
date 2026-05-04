@@ -1178,3 +1178,39 @@ export const deleteUserItem = async (id) => {
     throw error.response ? error.response.data : new Error("Network Error");
   }
 };
+
+// --- CREATE MARKETPLACE ITEM (ADMIN) ---
+export const createMarketplaceItemAPI = async (itemData) => {
+  try {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      throw new Error("No token found. Please login as admin.");
+    }
+
+    let dataToSend = itemData;
+
+    // If FormData (for images upload)
+    if (itemData instanceof FormData) {
+      dataToSend = itemData;
+    }
+
+    const response = await apiClient.post(
+      "/admin/items/create",
+      dataToSend,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          ...(itemData instanceof FormData
+            ? { "Content-Type": "multipart/form-data" }
+            : { "Content-Type": "application/json" }),
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("CREATE MARKETPLACE ITEM ERROR:", error);
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
+};

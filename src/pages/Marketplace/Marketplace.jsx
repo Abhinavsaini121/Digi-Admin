@@ -15,7 +15,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { updateMarketplaceItemAPI } from "../../auth/adminLogin";
+import { updateMarketplaceItemAPI, createMarketplaceItemAPI } from "../../auth/adminLogin";
 const MarketplaceManager = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -32,7 +32,33 @@ const MarketplaceManager = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [currentItem, setCurrentItem] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
+const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+const [newItem, setNewItem] = useState({});
+const getCurrentLocation = () => {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(async (position) => {
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
 
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
+        );
+        const data = await res.json();
+
+        setNewItem((prev) => ({
+          ...prev,
+          location: {
+            address: data.display_name || "",
+            coordinates: [lat, lng],   // 👈 lat/lng set here
+          },
+        }));
+      } catch (err) {
+        console.log(err);
+      }
+    });
+  }
+};
   const [toast, setToast] = useState({
     visible: false,
     message: "",
@@ -94,6 +120,23 @@ const MarketplaceManager = () => {
   useEffect(() => {
     fetchMarketplaceData(currentPage);
   }, [currentPage]);
+
+  useEffect(() => {
+  if (isAddModalOpen && navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition((position) => {
+      setNewItem((prev) => ({
+        ...prev,
+        location: {
+          ...prev.location,
+          coordinates: [
+            position.coords.latitude,
+            position.coords.longitude,
+          ],
+        },
+      }));
+    });
+  }
+}, [isAddModalOpen]);
 
   const openEditModal = (item) => {
     setCurrentItem({ ...item });
@@ -172,7 +215,34 @@ const MarketplaceManager = () => {
   };
 
   const indexOfFirstItem = (currentPage - 1) * itemsPerPage;
+const handleCreateItem = async () => {
+  try {
+    const formData = new FormData();
 
+    Object.keys(newItem).forEach((key) => {
+      if (key === "images") {
+        formData.append("images", newItem.images[0]); // file
+      } else if (key === "location") {
+        formData.append("location", JSON.stringify(newItem.location));
+      } else {
+        formData.append(key, newItem[key]);
+      }
+    });
+
+    const result = await createMarketplaceItemAPI(formData);
+
+    if (result.success) {
+      setIsAddModalOpen(false);
+      setNewItem({});
+      fetchMarketplaceData(currentPage);
+      showToast("Item created successfully", "success");
+    } else {
+      showToast(result.message || "Create failed", "error");
+    }
+  } catch (err) {
+    showToast(err.message || "Error creating item", "error");
+  }
+};
   return (
     <div className="p-4 md:p-8 bg-[#f8fafc] min-h-screen font-sans text-slate-900 relative">
       {toast.visible && (
@@ -229,6 +299,11 @@ const MarketplaceManager = () => {
           <Loader2 size={16} className={loading ? "animate-spin" : "hidden"} />
           Refresh List
         </button>
+        <button
+onClick={() => setIsAddModalOpen(true)}  className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-lg text-sm font-bold shadow-md flex items-center gap-2 transition-all active:scale-95"
+>
+  + Add New
+</button>
       </div>
 
       {!loading && (
@@ -627,6 +702,124 @@ const MarketplaceManager = () => {
         </div>
       )}
 
+{isAddModalOpen && (
+  <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
+
+      {/* Header same as edit */}
+      <div className="flex items-center justify-between px-6 py-4 bg-emerald-600 border-b">
+        <h2 className="text-lg font-bold text-center w-full">
+          Add New Listing
+        </h2>
+        <button
+          onClick={() => setIsAddModalOpen(false)}
+          className="text-slate-400 hover:text-slate-600"
+        >
+          <X size={20} />
+        </button>
+      </div>
+
+      {/* Body same structure */}
+      <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+
+        <input placeholder="Title"
+          onChange={(e)=>setNewItem({...newItem,title:e.target.value})}
+          className="w-full p-2.5 border rounded-lg"
+        />
+
+        <input placeholder="Details"
+          onChange={(e)=>setNewItem({...newItem,details:e.target.value})}
+          className="w-full p-2.5 border rounded-lg"
+        />
+
+        <input placeholder="Category"
+          onChange={(e)=>setNewItem({...newItem,category:e.target.value})}
+          className="w-full p-2.5 border rounded-lg"
+        />
+
+        <input placeholder="SubCategory"
+          onChange={(e)=>setNewItem({...newItem,subCategory:e.target.value})}
+          className="w-full p-2.5 border rounded-lg"
+        />
+<button
+  type="button"
+  onClick={getCurrentLocation}
+  className="bg-indigo-600 text-white px-3 py-2 rounded-lg text-sm font-bold"
+>
+  Fetch Location
+</button>
+        <input placeholder="Address"
+          onChange={(e)=>setNewItem({
+            ...newItem,
+            location:{...newItem.location,address:e.target.value}
+          })}
+          className="w-full p-2.5 border rounded-lg"
+        />
+
+        <div className="grid grid-cols-2 gap-4">
+          <input placeholder="Latitude"
+            onChange={(e)=>setNewItem({
+              ...newItem,
+              location:{...newItem.location,coordinates:[e.target.value,newItem.location?.coordinates?.[1]]}
+            })}
+            className="p-2.5 border rounded-lg"
+          />
+          <input placeholder="Longitude"
+            onChange={(e)=>setNewItem({
+              ...newItem,
+              location:{...newItem.location,coordinates:[newItem.location?.coordinates?.[0],e.target.value]}
+            })}
+            className="p-2.5 border rounded-lg"
+          />
+        </div>
+
+        <input placeholder="Preferred Communication"
+          onChange={(e)=>setNewItem({...newItem,preferredCommunication:e.target.value})}
+          className="w-full p-2.5 border rounded-lg"
+        />
+
+        <select
+          onChange={(e)=>setNewItem({...newItem,isActive:e.target.value==="true"})}
+          className="w-full p-2.5 border rounded-lg"
+        >
+          <option value="true">Active</option>
+          <option value="false">Inactive</option>
+        </select>
+
+        <select
+          onChange={(e)=>setNewItem({...newItem,isFeatured:e.target.value==="true"})}
+          className="w-full p-2.5 border rounded-lg"
+        >
+          <option value="true">Featured</option>
+          <option value="false">Not Featured</option>
+        </select>
+
+        <input type="file"
+          onChange={(e)=>setNewItem({...newItem,images:[e.target.files[0]]})}
+          className="w-full p-2.5 border rounded-lg"
+        />
+
+      </div>
+
+      {/* Footer same as edit */}
+      <div className="px-6 py-4 bg-slate-50 border-t flex justify-end gap-3">
+        <button
+          onClick={() => setIsAddModalOpen(false)}
+          className="text-sm font-bold text-slate-500 hover:text-slate-700"
+        >
+          Cancel
+        </button>
+       <button
+  onClick={handleCreateItem}
+  className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg text-sm font-bold"
+>
+  Add Item
+</button>
+      </div>
+
+    </div>
+  </div>
+)}
       {isDeleteModalOpen && currentItem && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in duration-200">

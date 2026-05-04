@@ -1179,7 +1179,7 @@ export const deleteUserItem = async (id) => {
   }
 };
 
-// --- CREATE MARKETPLACE ITEM (ADMIN) ---
+
 export const createMarketplaceItemAPI = async (itemData) => {
   try {
     const token = localStorage.getItem("token");
@@ -1190,13 +1190,12 @@ export const createMarketplaceItemAPI = async (itemData) => {
 
     let dataToSend = itemData;
 
-    // If FormData (for images upload)
     if (itemData instanceof FormData) {
       dataToSend = itemData;
     }
 
     const response = await apiClient.post(
-      "/admin/items/create",
+      "/admin/items/create",   // ✅ THIS matches your API
       dataToSend,
       {
         headers: {

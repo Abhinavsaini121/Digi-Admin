@@ -35,8 +35,10 @@ const MarketplaceManager = () => {
 const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 const [newItem, setNewItem] = useState({});
 const getCurrentLocation = () => {
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(async (position) => {
+  if (!navigator.geolocation) return;
+
+  navigator.geolocation.getCurrentPosition(
+    async (position) => {
       const lat = position.coords.latitude;
       const lng = position.coords.longitude;
 
@@ -50,14 +52,14 @@ const getCurrentLocation = () => {
           ...prev,
           location: {
             address: data.display_name || "",
-            coordinates: [lat, lng],   // 👈 lat/lng set here
-          },
+coordinates: [lat, lng],           },
         }));
       } catch (err) {
         console.log(err);
       }
-    });
-  }
+    },
+    (err) => console.log(err)
+  );
 };
   const [toast, setToast] = useState({
     visible: false,
@@ -121,22 +123,6 @@ const getCurrentLocation = () => {
     fetchMarketplaceData(currentPage);
   }, [currentPage]);
 
-  useEffect(() => {
-  if (isAddModalOpen && navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition((position) => {
-      setNewItem((prev) => ({
-        ...prev,
-        location: {
-          ...prev.location,
-          coordinates: [
-            position.coords.latitude,
-            position.coords.longitude,
-          ],
-        },
-      }));
-    });
-  }
-}, [isAddModalOpen]);
 
   const openEditModal = (item) => {
     setCurrentItem({ ...item });
@@ -219,15 +205,22 @@ const handleCreateItem = async () => {
   try {
     const formData = new FormData();
 
-    Object.keys(newItem).forEach((key) => {
-      if (key === "images") {
-        formData.append("images", newItem.images[0]); // file
-      } else if (key === "location") {
-        formData.append("location", JSON.stringify(newItem.location));
-      } else {
-        formData.append(key, newItem[key]);
-      }
+   Object.keys(newItem).forEach((key) => {
+  if (key === "images") {
+    newItem.images.forEach((img) => {
+      formData.append("images", img);
     });
+  } 
+  else if (key === "location") {
+    formData.append("location", JSON.stringify(newItem.location));
+  } 
+  else if (key === "preferredCommunication") {
+    formData.append(key, newItem[key]); // already stringified
+  } 
+  else {
+    formData.append(key, newItem[key]);
+  }
+});
 
     const result = await createMarketplaceItemAPI(formData);
 
@@ -748,35 +741,51 @@ onClick={() => setIsAddModalOpen(true)}  className="bg-emerald-600 hover:bg-emer
 >
   Fetch Location
 </button>
-        <input placeholder="Address"
-          onChange={(e)=>setNewItem({
-            ...newItem,
-            location:{...newItem.location,address:e.target.value}
-          })}
-          className="w-full p-2.5 border rounded-lg"
-        />
+  <input
+  placeholder="Address"
+  value={newItem.location?.address || ""}
+  onChange={(e) =>
+    setNewItem({
+      ...newItem,
+      location: {
+        ...newItem.location,
+        address: e.target.value,
+      },
+    })
+  }
+  className="w-full p-2.5 border rounded-lg"
+/>
 
-        <div className="grid grid-cols-2 gap-4">
-          <input placeholder="Latitude"
-            onChange={(e)=>setNewItem({
-              ...newItem,
-              location:{...newItem.location,coordinates:[e.target.value,newItem.location?.coordinates?.[1]]}
-            })}
-            className="p-2.5 border rounded-lg"
-          />
-          <input placeholder="Longitude"
-            onChange={(e)=>setNewItem({
-              ...newItem,
-              location:{...newItem.location,coordinates:[newItem.location?.coordinates?.[0],e.target.value]}
-            })}
-            className="p-2.5 border rounded-lg"
-          />
-        </div>
+<div className="grid grid-cols-2 gap-4">
+  <input
+    placeholder="Latitude"
+    value={newItem.location?.coordinates?.[0] || ""}
+    readOnly   // optional but recommended
+    className="p-2.5 border rounded-lg"
+  />
 
-        <input placeholder="Preferred Communication"
-          onChange={(e)=>setNewItem({...newItem,preferredCommunication:e.target.value})}
-          className="w-full p-2.5 border rounded-lg"
-        />
+  <input
+    placeholder="Longitude"
+    value={newItem.location?.coordinates?.[1] || ""}
+    readOnly   // optional but recommended
+    className="p-2.5 border rounded-lg"
+  />
+</div>
+
+     <select
+onChange={(e)=>
+  setNewItem({
+    ...newItem,
+    preferredCommunication: JSON.stringify({
+      call: e.target.value === "call",
+      chat: e.target.value === "chat"
+    })
+  })
+}
+>
+  <option value="call">Call</option>
+  <option value="chat">Chat</option>
+</select>
 
         <select
           onChange={(e)=>setNewItem({...newItem,isActive:e.target.value==="true"})}

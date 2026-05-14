@@ -23,6 +23,7 @@ const UserMarketPlace = () => {
   const [pagination, setPagination] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const [stats, setStats] = useState(null);
   const [toast, setToast] = useState({
     visible: false,
     message: "",
@@ -43,6 +44,7 @@ const UserMarketPlace = () => {
       const data = await getAllUserItems(page);
       setItems(data.data || []);
       setPagination(data.pagination || null);
+      setStats(data); 
     } catch (err) {
       showToast(err.message || "Failed to fetch items", "error");
     } finally {
@@ -121,7 +123,31 @@ const UserMarketPlace = () => {
           </select>
         </div>
       </div>
+<div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
 
+  <div className="bg-gradient-to-r from-indigo-500 to-indigo-600 text-white p-5 rounded-2xl shadow-lg hover:scale-[1.02] transition">
+    <p className="text-xs font-semibold opacity-80">TOTAL ITEMS</p>
+    <p className="text-3xl font-extrabold mt-2">{stats?.totalItems || 0}</p>
+  </div>
+
+  <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white p-5 rounded-2xl shadow-lg hover:scale-[1.02] transition">
+    <p className="text-xs font-semibold opacity-80">ACTIVE ITEMS</p>
+    <p className="text-3xl font-extrabold mt-2">{stats?.activeItems || 0}</p>
+  </div>
+
+  <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white p-5 rounded-2xl shadow-lg hover:scale-[1.02] transition">
+    <p className="text-xs font-semibold opacity-80">FEATURED</p>
+    <p className="text-3xl font-extrabold mt-2">{stats?.isFeatured || 0}</p>
+  </div>
+
+  <div className="bg-gradient-to-r from-pink-500 to-rose-500 text-white p-5 rounded-2xl shadow-lg hover:scale-[1.02] transition">
+    <p className="text-xs font-semibold opacity-80">TOTAL SUM</p>
+    <p className="text-3xl font-extrabold mt-2">
+      ₹{(stats?.totalPriceSum || 0).toLocaleString()}
+    </p>
+  </div>
+
+</div>
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mt-15">
         <div className="overflow-x-auto">
           {loading ? (

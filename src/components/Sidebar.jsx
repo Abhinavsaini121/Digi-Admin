@@ -43,9 +43,7 @@ const menuItems = [
     icon: Briefcase,
     children: [
       { label: " Part-Time Jobs", route: "/PartTimeJobs" },
-      { label: " Full-Time Jobs", route: "/FullTimeJobs" }
-
-
+      { label: " Full-Time Jobs", route: "/FullTimeJobs" },
     ],
   },
   {
@@ -103,11 +101,11 @@ const menuItems = [
       { label: "Subcategory", route: "/subcategory" },
     ],
   },
-  {
-    label: "Content Moderation",
-    icon: AlertTriangle,
-    route: "/moderationblocking",
-  },
+  // {
+  //   label: "Content Moderation",
+  //   icon: AlertTriangle,
+  //   route: "/moderationblocking",
+  // },
   {
     label: "Notifications",
     icon: Bell,
@@ -119,7 +117,6 @@ const menuItems = [
     icon: Settings,
     route: "/systemsetting",
   },
-
 ];
 
 export default function Sidebar({ sidebarOpen, closeSidebar }) {
@@ -136,7 +133,7 @@ export default function Sidebar({ sidebarOpen, closeSidebar }) {
     menuItems.forEach((item, index) => {
       if (item.children) {
         const isChildActive = item.children.some(
-          (child) => child.route === location.pathname
+          (child) => child.route === location.pathname,
         );
         if (isChildActive) {
           setOpenMenu(index);
@@ -204,10 +201,11 @@ export default function Sidebar({ sidebarOpen, closeSidebar }) {
                   onClick={() => handleMenuClick(item, index)}
                   className={`flex items-center justify-between p-3 rounded-xl
                   cursor-pointer transition-colors duration-200
-                  ${isActive || isParentMenuActive
+                  ${
+                    isActive || isParentMenuActive
                       ? "bg-orange-100 text-[#FE702E]"
                       : "text-gray-700 hover:bg-orange-100"
-                    }`}
+                  }`}
                 >
                   <div className="flex items-center gap-3">
                     <item.icon className="w-5 h-5" />
@@ -215,8 +213,9 @@ export default function Sidebar({ sidebarOpen, closeSidebar }) {
                   </div>
                   {item.children && (
                     <ChevronDown
-                      className={`w-4 h-4 transition-transform duration-300 ${openMenu === index ? "rotate-180" : ""
-                        }`}
+                      className={`w-4 h-4 transition-transform duration-300 ${
+                        openMenu === index ? "rotate-180" : ""
+                      }`}
                     />
                   )}
                 </div>
@@ -231,10 +230,11 @@ export default function Sidebar({ sidebarOpen, closeSidebar }) {
                           key={i}
                           onClick={() => handleSubMenuClick(sub.route)}
                           className={`text-sm p-2 rounded-lg cursor-pointer transition-colors duration-200
-                          ${isSubActive
+                          ${
+                            isSubActive
                               ? "bg-orange-100 text-[#FE702E] font-medium"
                               : "text-gray-600 hover:text-[#FE702E] hover:bg-orange-50"
-                            }`}
+                          }`}
                         >
                           {sub.label}
                         </div>

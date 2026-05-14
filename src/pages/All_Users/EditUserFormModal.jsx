@@ -262,7 +262,7 @@ const EditUserFormModal = ({ visible, onClose, onSuccess, user }) => {
                         <Form.Item name="status" label="Status">
                             <Select>
                                 <Option value="Active">Active</Option>
-                                <Option value="Inactive">Inactive</Option>
+                                <Option value="Blocked">Inactive</Option>
                             </Select>
                         </Form.Item>
                     </Col>

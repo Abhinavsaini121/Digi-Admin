@@ -1,11 +1,9 @@
-
-
 import React, { useEffect, useState } from 'react';
 import { Table, Tag, Space, Button, message, Avatar, Modal } from 'antd';
 import { UserOutlined, CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
 
 // Import the new controller functions
-import { getPendingBusinesses, verifyBusiness } from '../../auth/adminLogin'; 
+import {  getAllBusiness, updateBusinessStatusAPI } from '../../auth/adminLogin'; 
 
 const PendingBusinessTable = () => {
     const [data, setData] = useState([]);
@@ -22,10 +20,10 @@ const PendingBusinessTable = () => {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const result = await getPendingBusinesses();
+            const result = await getAllBusiness(1);
             
-            if (result.success && Array.isArray(result.businesses)) {
-                setData(result.businesses);
+             if (result.success && Array.isArray(result.data)) {
+    setData(result.data);
             } else {
                 setData([]);
                 // Optional: message.warning("No pending businesses found");
@@ -44,11 +42,12 @@ const PendingBusinessTable = () => {
         setActionLoading({ id: id, action: actionType }); 
 
         try {
-            // Call API with ID and Action ('approve' or 'reject')
-            // This sends payload: { "action": "approve" } or { "action": "reject" }
-            const response = await verifyBusiness(id, actionType);
-            
-            if (response.success) {
+            const statusMap = {
+  approve: "Approved",
+  reject: "Rejected",
+};
+
+const response = await updateBusinessStatusAPI(id, statusMap[actionType]);if (response.success) {
                 message.success(`Business ${actionType === 'approve' ? 'Approved' : 'Rejected'} Successfully!`);
                 // Remove the item from the list instantly (Optimistic UI)
                 setData((prevData) => prevData.filter((item) => item._id !== id));
@@ -88,11 +87,13 @@ const PendingBusinessTable = () => {
             dataIndex: 'category',
             key: 'category',
         },
-        {
-            title: 'Location',
-            dataIndex: 'location',
-            key: 'location',
-        },
+       {
+    title: 'Location',
+    key: 'location',
+    render: (_, record) => (
+        <span>{record?.location?.address || 'N/A'}</span>
+    ),
+},
         {
             title: 'Status',
             dataIndex: 'status',
@@ -140,7 +141,7 @@ const PendingBusinessTable = () => {
 
     return (
         <div className="p-4 bg-white rounded-lg shadow-sm">
-            <h2 className="text-xl font-bold mb-4">Pending Verifications</h2>
+            <h2 className="text-xl font-bold mb-15">Pending Verifications</h2>
             <Table 
                 columns={columns} 
                 dataSource={data} 

@@ -174,29 +174,49 @@ export const getAllCategories = async (page = 1, limit = 10) => {
   }
 };
 
-// --- Get Pending Businesses ---
-export const getPendingBusinesses = async () => {
+export const getAllBusiness = async (page = 1) => {
+  const token = localStorage.getItem("token");
+
   try {
-    const response = await apiClient.get("/admin/business/pending");
+    const response = await apiClient.get(
+      `/admin/manage-business/all?page=${page}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
     return response.data;
   } catch (error) {
-    console.error("Error fetching pending businesses:", error);
-    throw error;
+    throw error.response ? error.response.data : new Error("Network Error");
   }
 };
 
-// --- Verify Business ---
-export const verifyBusiness = async (id, action) => {
+// --- UPDATE BUSINESS STATUS (PATCH) ---
+export const updateBusinessStatusAPI = async (businessId, status) => {
   try {
-    const adminId = localStorage.getItem("id");
-    const response = await apiClient.put(`/admin/business/verify/${id}`, {
-      action,
-      verifiedBy: adminId,
-    });
+    const token = localStorage.getItem("token");
+    const adminId =
+      localStorage.getItem("id") || localStorage.getItem("userId");
+
+    const response = await apiClient.patch(
+      `/admin/manage-business/update-status/${businessId}`,
+      {
+        status,        // e.g. "Pending", "Approved", "Rejected"
+        adminId,       // optional (if backend uses it)
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
     return response.data;
   } catch (error) {
-    console.error("Error verifying business:", error);
-    throw error;
+    console.error("Update Business Status Error:", error);
+    throw error.response ? error.response.data : new Error("Network Error");
   }
 };
 

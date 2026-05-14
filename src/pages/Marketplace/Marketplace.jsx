@@ -15,7 +15,10 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { updateMarketplaceItemAPI, createMarketplaceItemAPI } from "../../auth/adminLogin";
+import {
+  updateMarketplaceItemAPI,
+  createMarketplaceItemAPI,
+} from "../../auth/adminLogin";
 const MarketplaceManager = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -32,35 +35,36 @@ const MarketplaceManager = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [currentItem, setCurrentItem] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
-const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-const [newItem, setNewItem] = useState({});
-const getCurrentLocation = () => {
-  if (!navigator.geolocation) return;
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [newItem, setNewItem] = useState({});
+  const getCurrentLocation = () => {
+    if (!navigator.geolocation) return;
 
-  navigator.geolocation.getCurrentPosition(
-    async (position) => {
-      const lat = position.coords.latitude;
-      const lng = position.coords.longitude;
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
 
-      try {
-        const res = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
-        );
-        const data = await res.json();
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`,
+          );
+          const data = await res.json();
 
-        setNewItem((prev) => ({
-          ...prev,
-          location: {
-            address: data.display_name || "",
-coordinates: [lat, lng],           },
-        }));
-      } catch (err) {
-        console.log(err);
-      }
-    },
-    (err) => console.log(err)
-  );
-};
+          setNewItem((prev) => ({
+            ...prev,
+            location: {
+              address: data.display_name || "",
+              coordinates: [lat, lng],
+            },
+          }));
+        } catch (err) {
+          console.log(err);
+        }
+      },
+      (err) => console.log(err),
+    );
+  };
   const [toast, setToast] = useState({
     visible: false,
     message: "",
@@ -122,7 +126,6 @@ coordinates: [lat, lng],           },
   useEffect(() => {
     fetchMarketplaceData(currentPage);
   }, [currentPage]);
-
 
   const openEditModal = (item) => {
     setCurrentItem({ ...item });
@@ -201,41 +204,38 @@ coordinates: [lat, lng],           },
   };
 
   const indexOfFirstItem = (currentPage - 1) * itemsPerPage;
-const handleCreateItem = async () => {
-  try {
-    const formData = new FormData();
+  const handleCreateItem = async () => {
+    try {
+      const formData = new FormData();
 
-   Object.keys(newItem).forEach((key) => {
-  if (key === "images") {
-    newItem.images.forEach((img) => {
-      formData.append("images", img);
-    });
-  } 
-  else if (key === "location") {
-    formData.append("location", JSON.stringify(newItem.location));
-  } 
-  else if (key === "preferredCommunication") {
-    formData.append(key, newItem[key]); // already stringified
-  } 
-  else {
-    formData.append(key, newItem[key]);
-  }
-});
+      Object.keys(newItem).forEach((key) => {
+        if (key === "images") {
+          newItem.images.forEach((img) => {
+            formData.append("images", img);
+          });
+        } else if (key === "location") {
+          formData.append("location", JSON.stringify(newItem.location));
+        } else if (key === "preferredCommunication") {
+          formData.append(key, newItem[key]); // already stringified
+        } else {
+          formData.append(key, newItem[key]);
+        }
+      });
 
-    const result = await createMarketplaceItemAPI(formData);
+      const result = await createMarketplaceItemAPI(formData);
 
-    if (result.success) {
-      setIsAddModalOpen(false);
-      setNewItem({});
-      fetchMarketplaceData(currentPage);
-      showToast("Item created successfully", "success");
-    } else {
-      showToast(result.message || "Create failed", "error");
+      if (result.success) {
+        setIsAddModalOpen(false);
+        setNewItem({});
+        fetchMarketplaceData(currentPage);
+        showToast("Item created successfully", "success");
+      } else {
+        showToast(result.message || "Create failed", "error");
+      }
+    } catch (err) {
+      showToast(err.message || "Error creating item", "error");
     }
-  } catch (err) {
-    showToast(err.message || "Error creating item", "error");
-  }
-};
+  };
   return (
     <div className="p-4 md:p-8 bg-[#f8fafc] min-h-screen font-sans text-slate-900 relative">
       {toast.visible && (
@@ -293,10 +293,11 @@ const handleCreateItem = async () => {
           Refresh List
         </button>
         <button
-onClick={() => setIsAddModalOpen(true)}  className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-lg text-sm font-bold shadow-md flex items-center gap-2 transition-all active:scale-95"
->
-  + Add New
-</button>
+          onClick={() => setIsAddModalOpen(true)}
+          className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-lg text-sm font-bold shadow-md flex items-center gap-2 transition-all active:scale-95"
+        >
+          + Add New
+        </button>
       </div>
 
       {!loading && (
@@ -322,7 +323,7 @@ onClick={() => setIsAddModalOpen(true)}  className="bg-emerald-600 hover:bg-emer
           />
           <StatCard
             title="Total Sum"
-            value={`₹${(stats.sum / 1000).toFixed(0)}k`}
+            value={`₹${stats.sum.toLocaleString()}`}
             icon={<DollarSign size={20} />}
             color="indigo"
           />
@@ -695,140 +696,161 @@ onClick={() => setIsAddModalOpen(true)}  className="bg-emerald-600 hover:bg-emer
         </div>
       )}
 
-{isAddModalOpen && (
-  <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
+      {isAddModalOpen && (
+        <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
+            {/* Header same as edit */}
+            <div className="flex items-center justify-between px-6 py-4 bg-emerald-600 border-b">
+              <h2 className="text-lg font-bold text-center w-full">
+                Add New Listing
+              </h2>
+              <button
+                onClick={() => setIsAddModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600"
+              >
+                <X size={20} />
+              </button>
+            </div>
 
-      {/* Header same as edit */}
-      <div className="flex items-center justify-between px-6 py-4 bg-emerald-600 border-b">
-        <h2 className="text-lg font-bold text-center w-full">
-          Add New Listing
-        </h2>
-        <button
-          onClick={() => setIsAddModalOpen(false)}
-          className="text-slate-400 hover:text-slate-600"
-        >
-          <X size={20} />
-        </button>
-      </div>
+            {/* Body same structure */}
+            <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+              <input
+                placeholder="Title"
+                onChange={(e) =>
+                  setNewItem({ ...newItem, title: e.target.value })
+                }
+                className="w-full p-2.5 border rounded-lg"
+              />
 
-      {/* Body same structure */}
-      <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+              <input
+                placeholder="Details"
+                onChange={(e) =>
+                  setNewItem({ ...newItem, details: e.target.value })
+                }
+                className="w-full p-2.5 border rounded-lg"
+              />
 
-        <input placeholder="Title"
-          onChange={(e)=>setNewItem({...newItem,title:e.target.value})}
-          className="w-full p-2.5 border rounded-lg"
-        />
+              <input
+                placeholder="Category"
+                onChange={(e) =>
+                  setNewItem({ ...newItem, category: e.target.value })
+                }
+                className="w-full p-2.5 border rounded-lg"
+              />
 
-        <input placeholder="Details"
-          onChange={(e)=>setNewItem({...newItem,details:e.target.value})}
-          className="w-full p-2.5 border rounded-lg"
-        />
+              <input
+                placeholder="SubCategory"
+                onChange={(e) =>
+                  setNewItem({ ...newItem, subCategory: e.target.value })
+                }
+                className="w-full p-2.5 border rounded-lg"
+              />
+              <button
+                type="button"
+                onClick={getCurrentLocation}
+                className="bg-indigo-600 text-white px-3 py-2 rounded-lg text-sm font-bold"
+              >
+                Fetch Location
+              </button>
+              <input
+                placeholder="Address"
+                value={newItem.location?.address || ""}
+                onChange={(e) =>
+                  setNewItem({
+                    ...newItem,
+                    location: {
+                      ...newItem.location,
+                      address: e.target.value,
+                    },
+                  })
+                }
+                className="w-full p-2.5 border rounded-lg"
+              />
 
-        <input placeholder="Category"
-          onChange={(e)=>setNewItem({...newItem,category:e.target.value})}
-          className="w-full p-2.5 border rounded-lg"
-        />
+              <div className="grid grid-cols-2 gap-4">
+                <input
+                  placeholder="Latitude"
+                  value={newItem.location?.coordinates?.[0] || ""}
+                  readOnly // optional but recommended
+                  className="p-2.5 border rounded-lg"
+                />
 
-        <input placeholder="SubCategory"
-          onChange={(e)=>setNewItem({...newItem,subCategory:e.target.value})}
-          className="w-full p-2.5 border rounded-lg"
-        />
-<button
-  type="button"
-  onClick={getCurrentLocation}
-  className="bg-indigo-600 text-white px-3 py-2 rounded-lg text-sm font-bold"
->
-  Fetch Location
-</button>
-  <input
-  placeholder="Address"
-  value={newItem.location?.address || ""}
-  onChange={(e) =>
-    setNewItem({
-      ...newItem,
-      location: {
-        ...newItem.location,
-        address: e.target.value,
-      },
-    })
-  }
-  className="w-full p-2.5 border rounded-lg"
-/>
+                <input
+                  placeholder="Longitude"
+                  value={newItem.location?.coordinates?.[1] || ""}
+                  readOnly // optional but recommended
+                  className="p-2.5 border rounded-lg"
+                />
+              </div>
 
-<div className="grid grid-cols-2 gap-4">
-  <input
-    placeholder="Latitude"
-    value={newItem.location?.coordinates?.[0] || ""}
-    readOnly   // optional but recommended
-    className="p-2.5 border rounded-lg"
-  />
+              <select
+                onChange={(e) =>
+                  setNewItem({
+                    ...newItem,
+                    preferredCommunication: JSON.stringify({
+                      call: e.target.value === "call",
+                      chat: e.target.value === "chat",
+                    }),
+                  })
+                }
+              >
+                <option value="call">Call</option>
+                <option value="chat">Chat</option>
+              </select>
 
-  <input
-    placeholder="Longitude"
-    value={newItem.location?.coordinates?.[1] || ""}
-    readOnly   // optional but recommended
-    className="p-2.5 border rounded-lg"
-  />
-</div>
+              <select
+                onChange={(e) =>
+                  setNewItem({
+                    ...newItem,
+                    isActive: e.target.value === "true",
+                  })
+                }
+                className="w-full p-2.5 border rounded-lg"
+              >
+                <option value="true">Active</option>
+                <option value="false">Inactive</option>
+              </select>
 
-     <select
-onChange={(e)=>
-  setNewItem({
-    ...newItem,
-    preferredCommunication: JSON.stringify({
-      call: e.target.value === "call",
-      chat: e.target.value === "chat"
-    })
-  })
-}
->
-  <option value="call">Call</option>
-  <option value="chat">Chat</option>
-</select>
+              <select
+                onChange={(e) =>
+                  setNewItem({
+                    ...newItem,
+                    isFeatured: e.target.value === "true",
+                  })
+                }
+                className="w-full p-2.5 border rounded-lg"
+              >
+                <option value="true">Featured</option>
+                <option value="false">Not Featured</option>
+              </select>
 
-        <select
-          onChange={(e)=>setNewItem({...newItem,isActive:e.target.value==="true"})}
-          className="w-full p-2.5 border rounded-lg"
-        >
-          <option value="true">Active</option>
-          <option value="false">Inactive</option>
-        </select>
+              <input
+                type="file"
+                onChange={(e) =>
+                  setNewItem({ ...newItem, images: [e.target.files[0]] })
+                }
+                className="w-full p-2.5 border rounded-lg"
+              />
+            </div>
 
-        <select
-          onChange={(e)=>setNewItem({...newItem,isFeatured:e.target.value==="true"})}
-          className="w-full p-2.5 border rounded-lg"
-        >
-          <option value="true">Featured</option>
-          <option value="false">Not Featured</option>
-        </select>
-
-        <input type="file"
-          onChange={(e)=>setNewItem({...newItem,images:[e.target.files[0]]})}
-          className="w-full p-2.5 border rounded-lg"
-        />
-
-      </div>
-
-      {/* Footer same as edit */}
-      <div className="px-6 py-4 bg-slate-50 border-t flex justify-end gap-3">
-        <button
-          onClick={() => setIsAddModalOpen(false)}
-          className="text-sm font-bold text-slate-500 hover:text-slate-700"
-        >
-          Cancel
-        </button>
-       <button
-  onClick={handleCreateItem}
-  className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg text-sm font-bold"
->
-  Add Item
-</button>
-      </div>
-
-    </div>
-  </div>
-)}
+            {/* Footer same as edit */}
+            <div className="px-6 py-4 bg-slate-50 border-t flex justify-end gap-3">
+              <button
+                onClick={() => setIsAddModalOpen(false)}
+                className="text-sm font-bold text-slate-500 hover:text-slate-700"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCreateItem}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg text-sm font-bold"
+              >
+                Add Item
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {isDeleteModalOpen && currentItem && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in duration-200">
@@ -877,15 +899,18 @@ onChange={(e)=>
 
 const StatCard = ({ title, value, icon, color }) => {
   const colors = {
-    blue: "bg-blue-50 text-blue-600",
-    emerald: "bg-emerald-50 text-emerald-600",
-    amber: "bg-amber-50 text-amber-600",
-    indigo: "bg-indigo-50 text-indigo-600",
+    blue: "bg-gradient-to-r from-blue-500 to-blue-600 text-white",
+    emerald: "bg-gradient-to-r from-green-500 to-emerald-600 text-white",
+    amber: "bg-gradient-to-r from-orange-400 to-orange-600 text-white",
+    indigo: "bg-gradient-to-r from-pink-500 to-rose-500 text-white",
   };
   return (
-    <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-100 flex items-start justify-between transition-transform hover:translate-y-[-2px]">
+    <div
+      className={`p-5 rounded-xl shadow-md flex items-start justify-between transition-transform hover:translate-y-[-2px] ${colors[color]}`}
+    >
+      {" "}
       <div>
-        <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">
+        <p className="text-xs font-bold text-black-900 uppercase tracking-wide">
           {title}
         </p>
         <h2 className="text-2xl font-extrabold text-slate-800 mt-1">{value}</h2>

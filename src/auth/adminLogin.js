@@ -1233,3 +1233,72 @@ export const createMarketplaceItemAPI = async (itemData) => {
     throw error.response ? error.response.data : new Error("Network Error");
   }
 };
+
+export const GsendNotificationAPI = async (payload) => {
+  try {
+    const token = localStorage.getItem("token");
+
+    const response = await apiClient.post(
+      "/admin/notifications/send",
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("SEND NOTIFICATION ERROR:", error);
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
+};
+
+export const getAllUserCitiesAPI = async () => {
+  try {
+    const token = localStorage.getItem("token");
+
+    const response = await apiClient.get(
+      "/admin/users/cities",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    return response.data;
+
+  } catch (error) {
+    console.error("GET USER CITIES ERROR:", error);
+
+    throw error.response
+      ? error.response.data
+      : new Error("Network Error");
+  }
+};
+
+export const getUsersForNotificationAPI = async () => {
+  try {
+    const token = localStorage.getItem("token");
+
+    const response = await apiClient.get(
+      "/admin/users/users-for-notification",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    return response.data;
+
+  } catch (error) {
+    console.error("GET USERS FOR NOTIFICATION ERROR:", error);
+
+    throw error.response
+      ? error.response.data
+      : new Error("Network Error");
+  }
+};

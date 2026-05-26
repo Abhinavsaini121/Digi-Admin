@@ -11,6 +11,7 @@ import {
 const Notify = () => {
   const [activeTab, setActiveTab] = useState("notifications");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isUserListOpen, setIsUserListOpen] = useState(false);
   const tabs = [
     {
       id: "notifications",
@@ -67,7 +68,8 @@ const PushNotificationsView = () => {
 
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState("");
-
+  const [isUserListOpen, setIsUserListOpen] = useState(false);
+  const [isCityListOpen, setIsCityListOpen] = useState(false);
   useEffect(() => {
     fetchCities();
     fetchUsers();
@@ -225,70 +227,107 @@ const PushNotificationsView = () => {
               </div>
             </div>
 
-            {/* CITY SELECT */}
-
             {audience === "City-based" && (
-              <div>
+              <div className="relative">
                 <label className="block text-sm font-medium text-slate-700 mb-1">
                   Select City
                 </label>
 
-                <select
-                  value={selectedCity}
-                  onChange={(e) => setSelectedCity(e.target.value)}
-                  className="w-full p-2.5 border border-slate-200 rounded-lg bg-white"
+                {/* TRIGGER BOX */}
+                <div
+                  onClick={() => setIsCityListOpen(!isCityListOpen)}
+                  className="w-full p-2.5 border border-slate-200 rounded-lg bg-white text-sm cursor-pointer flex justify-between items-center"
                 >
-                  <option value="">Select City</option>
+                  {selectedCity || "Select City"}
+                  <span>{isCityListOpen ? "▲" : "▼"}</span>
+                </div>
 
-                  {cities.map((city, index) => (
-                    <option key={index} value={city}>
-                      {city}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            {/* USER SELECT */}
-
-
-            {audience === "Specific User" && (
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Select User
-                </label>
-
-                {/* CUSTOM SCROLLABLE BOX */}
-                <div className="w-full h-32 overflow-y-auto border border-slate-200 rounded-lg bg-white p-1">
-                  {users.length > 0 ? (
-                    users.map((user, index) => {
-                      const userId = user._id || user.id || user.userId;
-                      const userName =
-                        user.fullName ||
-                        user.name ||
-                        user.email ||
-                        "Unnamed User";
-
-                      return (
+                {/* DROPDOWN LIST */}
+                {isCityListOpen && (
+                  <div className="absolute z-10 w-full max-h-40 mt-1 overflow-y-auto border border-slate-200 rounded-lg bg-white p-1 shadow-lg">
+                    {cities.length > 0 ? (
+                      cities.map((city, index) => (
                         <div
-                          key={userId || index}
-                          onClick={() => setSelectedUser(userId)}
+                          key={index}
+                          onClick={() => {
+                            setSelectedCity(city);
+                            setIsCityListOpen(false); // Closes dropdown
+                          }}
                           className={`p-2 text-sm cursor-pointer rounded-md ${
-                            selectedUser === userId
+                            selectedCity === city
                               ? "bg-blue-100 text-blue-700"
                               : "hover:bg-slate-100"
                           }`}
                         >
-                          {userName}
+                          {city}
                         </div>
-                      );
-                    })
-                  ) : (
-                    <div className="p-2 text-sm text-slate-400">
-                      No users found
-                    </div>
-                  )}
+                      ))
+                    ) : (
+                      <div className="p-2 text-sm text-slate-400">
+                        No cities found
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+            {/* USER SELECT */}
+
+            {audience === "Specific User" && (
+              <div className="relative">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Select User
+                </label>
+
+                {/* This acts like a dropdown trigger */}
+                <div
+                  onClick={() => setIsUserListOpen(!isUserListOpen)}
+                  className="w-full p-2.5 border border-slate-200 rounded-lg bg-white text-sm cursor-pointer flex justify-between items-center"
+                >
+                  {selectedUser
+                    ? users.find(
+                        (u) => (u._id || u.id || u.userId) === selectedUser,
+                      )?.fullName || "User Selected"
+                    : "Select a user..."}
+                  <span>{isUserListOpen ? "▲" : "▼"}</span>
                 </div>
+
+                {/* This is the list that closes automatically */}
+                {isUserListOpen && (
+                  <div className="absolute z-10 w-full h-32 mt-1 overflow-y-auto border border-slate-200 rounded-lg bg-white p-1 shadow-lg">
+                    {users.length > 0 ? (
+                      users.map((user, index) => {
+                        const userId = user._id || user.id || user.userId;
+                        const userName =
+                          user.fullName ||
+                          user.name ||
+                          user.email ||
+                          "Unnamed User";
+
+                        return (
+                          <div
+                            key={userId || index}
+                            onClick={() => {
+                              setSelectedUser(userId);
+                              setIsUserListOpen(false); // <--- THIS CLOSES THE LIST
+                            }}
+                            className={`p-2 text-sm cursor-pointer rounded-md ${
+                              selectedUser === userId
+                                ? "bg-blue-100 text-blue-700"
+                                : "hover:bg-slate-100"
+                            }`}
+                          >
+                            {userName}
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <div className="p-2 text-sm text-slate-400">
+                        No users found
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 

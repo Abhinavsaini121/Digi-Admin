@@ -75,18 +75,12 @@ const menuItems = [
   {
     label: "Credits",
     icon: Coins,
-    route: "/credit",
+    children: [
+      { label: " Plans", route: "/credit" },
+      { label: " Coupon", route: "/coupon" },
+    ],
   },
-  // {
-  //   label: "Safety",
-  //   icon: Shield,
-  //     label: "SOS Alerts", route: "/sosAlert",
-  // },
-  // {
-  //   label: "Reports & Export",
-  //   icon: BarChart,
-  //   route: "/report",
-  // },
+
   {
     label: "Business verifies",
     icon: BarChart,

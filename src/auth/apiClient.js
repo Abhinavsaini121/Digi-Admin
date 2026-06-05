@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Base URL definition
-const BASE_URL = "https://digiapp-node-1.onrender.com/api";
+const BASE_URL = "https://digiapp-node-1-t1w3.onrender.com/api";
 
 const apiClient = axios.create({
     baseURL: BASE_URL,

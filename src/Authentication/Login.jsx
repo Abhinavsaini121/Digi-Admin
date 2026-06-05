@@ -9,7 +9,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false); 
+  const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
 
@@ -54,7 +54,9 @@ const Login = () => {
           <div className="w-20 h-20 mx-auto rounded-2xl bg-orange-100 flex items-center justify-center shadow-lg mb-4">
             <img src={defaulting} alt="logo" className="w-12 h-12" />
           </div>
-          <h1 className="text-3xl font-extrabold text-gray-800">Digi Admin Login</h1>
+          <h1 className="text-3xl font-extrabold text-gray-800">
+            Digi Admin Login
+          </h1>
           <p className="text-gray-500 text-sm mt-1">Sign in to continue</p>
         </div>
 
@@ -62,7 +64,9 @@ const Login = () => {
           <form onSubmit={handleLogin}>
             {/* Email */}
             <div className="mb-5">
-              <label className="text-sm font-medium text-gray-600 mb-1 block">Email</label>
+              <label className="text-sm font-medium text-gray-600 mb-1 block">
+                Email
+              </label>
               <div className="relative">
                 <FiMail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
@@ -78,14 +82,20 @@ const Login = () => {
 
             {/* Password */}
             <div className="mb-6">
-              <label className="text-sm font-medium text-gray-600 mb-1 block">Password</label>
+              <label className="text-sm font-medium text-gray-600 mb-1 block">
+                Password
+              </label>
               <div className="relative">
                 <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    if (e.target.value.length <= 6) {
+                      setPassword(e.target.value);
+                    }
+                  }}
                   className="w-full pl-11 pr-12 py-3 rounded-xl border border-orange-200 bg-orange-50 focus:ring-2 focus:ring-orange-200 outline-none"
                   required
                 />
@@ -111,7 +121,9 @@ const Login = () => {
             </button>
           </form>
         </div>
-        <p className="text-center text-xs text-gray-400 mt-6">© 2026 Digi App Admin Panel</p>
+        <p className="text-center text-xs text-gray-400 mt-6">
+          © 2026 Digi App Admin Panel
+        </p>
       </div>
     </div>
   );

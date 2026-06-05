@@ -28,6 +28,7 @@ import UserPartTimeJobs from "./pages/Jobs/UserPartTime";
 import UserFullJobs from "./pages/Jobs/UserFullTime";
 import UserLocalNeed from "./pages/LocalNeeds/UserLocalNeed";
 import UserMarketPlace from "./pages/Marketplace/UserMarketPlace";
+import Coupon from "./pages/Credits-Management/CouponModule";
 
 function App() {
   return (
@@ -72,6 +73,7 @@ function App() {
           <Route path="/user-full" element={<UserFullJobs />} />
           <Route path="/user-local" element={<UserLocalNeed />} />
           <Route path="/user-marketplace" element={<UserMarketPlace />} />
+          <Route path="/coupon" element={<Coupon />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/login" replace />} />

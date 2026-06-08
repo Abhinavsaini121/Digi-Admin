@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { getAllCouponsAPI, createCouponAPI } from "../../auth/credit";
+import {
+  getAllCouponsAPI,
+  createCouponAPI,
+  searchCouponAPI,
+  deleteCouponAPI,
+  updateCouponAPI,
+} from "../../auth/credit";
+import CouponDetailsModal from "../../components/CouponDetailsModal";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 export default function Coupon() {
@@ -10,7 +17,7 @@ export default function Coupon() {
   const [discountAmount, setDiscountAmount] = useState(0);
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
-
+  const [searchTerm, setSearchTerm] = useState("");
   const [newCoupon, setNewCoupon] = useState({
     code: "",
     credits: "",
@@ -22,6 +29,8 @@ export default function Coupon() {
   const [couponToDelete, setCouponToDelete] = useState(null);
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [selectedCoupon, setSelectedCoupon] = useState(null);
   const [editCouponData, setEditCouponData] = useState({
     id: "",
     code: "",
@@ -44,11 +53,38 @@ export default function Coupon() {
     fetchCoupons();
   }, []);
 
+  const calculateDiscount = (coupon, currentCartVal) => {
+    let discount = Number(coupon.credits) || 0;
+    if (discount > currentCartVal) {
+      discount = currentCartVal;
+    }
+    setDiscountAmount(discount);
+  };
   useEffect(() => {
     if (appliedCoupon) {
       calculateDiscount(appliedCoupon, cartValue);
     }
-  }, [cartValue]);
+  }, [cartValue, appliedCoupon]);
+
+  const handleSearchCoupon = async (value) => {
+    setSearchTerm(value);
+
+    try {
+      if (!value.trim()) {
+        const response = await getAllCouponsAPI();
+        setCoupons(response.data);
+        return;
+      }
+
+      const response = await searchCouponAPI(value);
+
+      if (response?.success) {
+        setCoupons(response.data);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   const handleCreateCoupon = async (e) => {
     e.preventDefault();
@@ -82,13 +118,6 @@ export default function Coupon() {
       console.error(error);
       toast.error(error?.message || "Failed to create coupon");
     }
-  };
-  const calculateDiscount = (coupon, currentCartVal) => {
-    let discount = Number(coupon.credits) || 0;
-    if (discount > currentCartVal) {
-      discount = currentCartVal;
-    }
-    setDiscountAmount(discount);
   };
 
   const handleApplyCoupon = () => {
@@ -141,21 +170,38 @@ export default function Coupon() {
   };
 
   const openDeleteModal = (coupon) => {
+    console.log("Clicked coupon =", coupon);
+
     setCouponToDelete(coupon);
     setIsDeleteModalOpen(true);
   };
 
-  const confirmDeleteCoupon = () => {
-    if (couponToDelete) {
-      setCoupons(coupons.filter((c) => c.id !== couponToDelete.id));
-      if (appliedCoupon && appliedCoupon.id === couponToDelete.id) {
-        handleRemoveCoupon();
+  const confirmDeleteCoupon = async () => {
+    console.log("couponToDelete =", couponToDelete);
+
+    if (!couponToDelete) return;
+
+    try {
+      console.log("couponToDelete =", couponToDelete);
+      const response = await deleteCouponAPI(couponToDelete.id);
+
+      if (response?.success) {
+        setCoupons((prev) => prev.filter((c) => c.id !== couponToDelete.id));
+
+        if (appliedCoupon && appliedCoupon._id === couponToDelete._id) {
+          handleRemoveCoupon();
+        }
+
+        toast.success(response.message || "Coupon deleted successfully!");
+
+        setIsDeleteModalOpen(false);
+        setCouponToDelete(null);
       }
-      setIsDeleteModalOpen(false);
-      setCouponToDelete(null);
+    } catch (error) {
+      console.error(error);
+      toast.error(error?.message || "Failed to delete coupon");
     }
   };
-
   const openEditModal = (coupon) => {
     setEditCouponData({
       id: coupon.id,
@@ -166,42 +212,42 @@ export default function Coupon() {
     });
     setIsEditModalOpen(true);
   };
-
-  const handleUpdateCoupon = (e) => {
-    e.preventDefault();
-    const uppercaseCode = editCouponData.code.toUpperCase().trim();
-
-    if (
-      coupons.some(
-        (c) => c.code === uppercaseCode && c.id !== editCouponData.id,
-      )
-    ) {
-      alert("This coupon code already exists!");
-      return;
-    }
-
-    const updatedCoupons = coupons.map((c) => {
-      if (c.id === editCouponData.id) {
-        const updated = {
-          ...c,
-          code: uppercaseCode,
-          credits: Number(editCouponData.credits),
-          expiry: editCouponData.expiry,
-          limit: Number(editCouponData.limit) || 100,
-        };
-        if (appliedCoupon && appliedCoupon.id === c.id) {
-          setAppliedCoupon(updated);
-          calculateDiscount(updated, cartValue);
-        }
-        return updated;
-      }
-      return c;
-    });
-
-    setCoupons(updatedCoupons);
-    setIsEditModalOpen(false);
+  const openCouponDetails = (coupon) => {
+    setSelectedCoupon(coupon);
+    setIsDetailsModalOpen(true);
   };
 
+  const handleUpdateCoupon = async (e) => {
+    e.preventDefault();
+
+    try {
+      const payload = {
+        code: editCouponData.code.toUpperCase().trim(),
+      };
+
+      const response = await updateCouponAPI(editCouponData.id, payload);
+
+      if (response?.success) {
+        setCoupons((prev) =>
+          prev.map((coupon) =>
+            coupon.id === editCouponData.id
+              ? {
+                  ...coupon,
+                  code: payload.code,
+                }
+              : coupon,
+          ),
+        );
+
+        toast.success(response.message || "Coupon updated successfully!");
+
+        setIsEditModalOpen(false);
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error(error?.message || "Failed to update coupon");
+    }
+  };
   const finalPrice = cartValue - discountAmount;
 
   return (
@@ -372,16 +418,36 @@ export default function Coupon() {
       <div style={{ marginTop: "32px" }}>
         <div style={styles.cardFull}>
           <h2 style={styles.cardTitle}>Available Offers</h2>
+
+          <div className="mt-4 mb-4">
+            <input
+              type="text"
+              placeholder="Search coupon by code..."
+              value={searchTerm}
+              onChange={(e) => handleSearchCoupon(e.target.value)}
+              className="w-full md:w-80 px-4 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
           <div style={styles.couponGrid}>
             {coupons.map((coupon) => (
-              <div key={coupon.id} style={styles.couponCard}>
+              <div
+                key={coupon._id}
+                style={styles.couponCard}
+                onClick={() => openCouponDetails(coupon)}
+              >
                 <div style={styles.couponHeader}>
                   <span style={styles.couponBadge}>{coupon.code}</span>
                   <div style={styles.actionButtonGroup}>
                     <button
-                      onClick={() => {
-                        setCouponCodeInput(coupon.code);
-                        setErrorMsg("");
+                      onClick={async () => {
+                        try {
+                          await navigator.clipboard.writeText(coupon.code);
+                          setCouponCodeInput(coupon.code);
+                          toast.success("Coupon code copied!");
+                        } catch (err) {
+                          toast.error("Failed to copy code");
+                        }
                       }}
                       style={styles.actionBtnCopy}
                       title="Copy Code"
@@ -478,49 +544,7 @@ export default function Coupon() {
                   required
                 />
               </div>
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Credits *</label>
-                <input
-                  type="number"
-                  value={editCouponData.credits}
-                  onChange={(e) =>
-                    setEditCouponData({
-                      ...editCouponData,
-                      credits: e.target.value,
-                    })
-                  }
-                  style={styles.input}
-                  required
-                />
-              </div>
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Usage Limit</label>
-                <input
-                  type="number"
-                  value={editCouponData.limit}
-                  onChange={(e) =>
-                    setEditCouponData({
-                      ...editCouponData,
-                      limit: e.target.value,
-                    })
-                  }
-                  style={styles.input}
-                />
-              </div>
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Expiry Date</label>
-                <input
-                  type="date"
-                  value={editCouponData.expiry}
-                  onChange={(e) =>
-                    setEditCouponData({
-                      ...editCouponData,
-                      expiry: e.target.value,
-                    })
-                  }
-                  style={styles.input}
-                />
-              </div>
+
               <div style={styles.modalFooter}>
                 <button
                   type="button"
@@ -537,6 +561,14 @@ export default function Coupon() {
           </div>
         </div>
       )}
+      <CouponDetailsModal
+        isOpen={isDetailsModalOpen}
+        coupon={selectedCoupon}
+        onClose={() => {
+          setIsDetailsModalOpen(false);
+          setSelectedCoupon(null);
+        }}
+      />
     </div>
   );
 }
@@ -795,17 +827,22 @@ const styles = {
   },
   modalContent: {
     backgroundColor: "#ffffff",
-    padding: "24px",
-    borderRadius: "12px",
+    padding: "28px",
+    borderRadius: "20px",
     width: "100%",
-    maxWidth: "400px",
-    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+    maxWidth: "480px",
+    border: "1px solid #e5e7eb",
+    boxShadow: "0 20px 40px rgba(0,0,0,0.12), 0 8px 16px rgba(0,0,0,0.08)",
+    position: "relative",
+    animation: "fadeIn 0.25s ease",
   },
   modalTitle: {
-    fontSize: "18px",
+    fontSize: "22px",
     fontWeight: "700",
-    marginBottom: "12px",
-    color: "#1f2937",
+    color: "#111827",
+    marginBottom: "20px",
+    paddingBottom: "12px",
+    borderBottom: "2px solid #f3f4f6",
   },
   modalText: {
     fontSize: "14px",

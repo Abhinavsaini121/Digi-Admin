@@ -121,3 +121,149 @@ export const createCouponAPI = async (couponData) => {
       : new Error("Network Error");
   }
 };
+
+// --- CREATE PLAN ---
+export const createPlanAPI = async (planData) => {
+  try {
+    const token = localStorage.getItem("token");
+
+    const response = await apiClient.post(
+      "/admin/create-plan",
+      planData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    return response.data; 
+  } catch (error) {
+    console.error("CREATE PLAN ERROR:", error);
+
+    throw error.response
+      ? error.response.data
+      : new Error("Network Error");
+  }
+};
+
+export const searchPlanAPI = async (planId) => {
+  try {
+    const token = localStorage.getItem("token");
+
+    const response = await apiClient.get(
+      `/admin/search-plan?q=${planId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("SEARCH PLAN ERROR:", error);
+
+    throw error.response
+      ? error.response.data
+      : new Error("Network Error");
+  }
+};
+
+// --- GET PLAN BY ID ---
+export const getPlanByIdAPI = async (planId) => {
+  try {
+    const token = localStorage.getItem("token");
+
+    const response = await apiClient.get(
+      `/admin/get-plan-by-id/${planId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("GET PLAN BY ID ERROR:", error);
+
+    throw error.response
+      ? error.response.data
+      : new Error("Network Error");
+  }
+};
+
+
+export const searchCouponAPI = async (code) => {
+  try {
+    const token = localStorage.getItem("token");
+
+    const response = await apiClient.get(
+      `/admin/coupon/search-coupon?q=${code}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    throw error.response
+      ? error.response.data
+      : new Error("Network Error");
+  }
+};
+
+
+// --- DELETE COUPON API ---
+export const deleteCouponAPI = async (couponId) => {
+  try {
+    const token = localStorage.getItem("token");
+
+    const response = await apiClient.delete(
+      `/admin/coupon/delete/${couponId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("DELETE COUPON ERROR:", error);
+
+    throw error.response
+      ? error.response.data
+      : new Error("Network Error");
+  }
+};
+
+// --- UPDATE COUPON API ---
+export const updateCouponAPI = async (couponId, couponData) => {
+  try {
+    const token = localStorage.getItem("token");
+
+    const response = await apiClient.put(
+      `/admin/coupon/update-coupon/${couponId}`,
+      couponData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("UPDATE COUPON ERROR:", error);
+
+    throw error.response
+      ? error.response.data
+      : new Error("Network Error");
+  }
+};

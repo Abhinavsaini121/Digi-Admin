@@ -11,12 +11,8 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 export default function Coupon() {
   const [coupons, setCoupons] = useState([]);
-  const [cartValue, setCartValue] = useState(1200);
   const [couponCodeInput, setCouponCodeInput] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState(null);
-  const [discountAmount, setDiscountAmount] = useState(0);
-  const [errorMsg, setErrorMsg] = useState("");
-  const [successMsg, setSuccessMsg] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [newCoupon, setNewCoupon] = useState({
     code: "",
@@ -52,19 +48,6 @@ export default function Coupon() {
     };
     fetchCoupons();
   }, []);
-
-  const calculateDiscount = (coupon, currentCartVal) => {
-    let discount = Number(coupon.credits) || 0;
-    if (discount > currentCartVal) {
-      discount = currentCartVal;
-    }
-    setDiscountAmount(discount);
-  };
-  useEffect(() => {
-    if (appliedCoupon) {
-      calculateDiscount(appliedCoupon, cartValue);
-    }
-  }, [cartValue, appliedCoupon]);
 
   const handleSearchCoupon = async (value) => {
     setSearchTerm(value);
@@ -120,55 +103,10 @@ export default function Coupon() {
     }
   };
 
-  const handleApplyCoupon = () => {
-    setErrorMsg("");
-    setSuccessMsg("");
-
-    const trimmedCode = couponCodeInput.toUpperCase().trim();
-    if (!trimmedCode) {
-      setErrorMsg("Please enter a coupon code.");
-      return;
-    }
-
-    const coupon = coupons.find((c) => c.code === trimmedCode);
-
-    if (!coupon) {
-      setErrorMsg("Invalid coupon code.");
-      setAppliedCoupon(null);
-      setDiscountAmount(0);
-      return;
-    }
-
-    if (!coupon.status) {
-      setErrorMsg("This coupon is currently inactive.");
-      return;
-    }
-
-    const today = new Date();
-    const expiry = new Date(coupon.expiry);
-    if (today > expiry) {
-      setErrorMsg("This coupon has expired.");
-      return;
-    }
-
-    if (coupon.totalUsed >= coupon.limit) {
-      setErrorMsg("Coupon usage limit has been reached.");
-      return;
-    }
-
-    setAppliedCoupon(coupon);
-    calculateDiscount(coupon, cartValue);
-    setSuccessMsg(`${coupon.credits} credits applied using ${coupon.code}`);
-  };
-
   const handleRemoveCoupon = () => {
     setAppliedCoupon(null);
-    setDiscountAmount(0);
     setCouponCodeInput("");
-    setSuccessMsg("");
-    setErrorMsg("");
   };
-
   const openDeleteModal = (coupon) => {
     console.log("Clicked coupon =", coupon);
 
@@ -248,7 +186,6 @@ export default function Coupon() {
       toast.error(error?.message || "Failed to update coupon");
     }
   };
-  const finalPrice = cartValue - discountAmount;
 
   return (
     <div className="min-h-screen bg-[#F8F9FA] p-6 text-slate-800">
@@ -324,95 +261,6 @@ export default function Coupon() {
             </form>
           </div>
         </div>
-
-        <div style={styles.column}>
-          <div style={styles.card}>
-            <h2 style={styles.cardTitle}>Shopping Cart Simulator</h2>
-
-            <div style={styles.formGroup}>
-              <label style={styles.label}>Enter Cart Amount (₹)</label>
-              <input
-                type="number"
-                value={cartValue}
-                onChange={(e) => {
-                  const val = Number(e.target.value);
-                  setCartValue(val < 0 ? 0 : val);
-                }}
-                style={{
-                  ...styles.input,
-                  fontSize: "18px",
-                  fontWeight: "bold",
-                }}
-              />
-            </div>
-
-            <div style={styles.couponInputArea}>
-              <input
-                type="text"
-                placeholder="ENTER PROMO CODE"
-                value={couponCodeInput}
-                onChange={(e) => setCouponCodeInput(e.target.value)}
-                disabled={!!appliedCoupon}
-                style={{
-                  ...styles.input,
-                  textTransform: "uppercase",
-                  flex: 1,
-                  margin: 0,
-                  opacity: appliedCoupon ? 0.7 : 1,
-                }}
-              />
-              {appliedCoupon ? (
-                <button onClick={handleRemoveCoupon} style={styles.btnRemove}>
-                  Remove
-                </button>
-              ) : (
-                <button onClick={handleApplyCoupon} style={styles.btnApply}>
-                  Apply
-                </button>
-              )}
-            </div>
-
-            {errorMsg && <div style={styles.errorText}>{errorMsg}</div>}
-            {successMsg && <div style={styles.successText}>{successMsg}</div>}
-
-            <div style={styles.billContainer}>
-              <h3 style={styles.billTitle}>Checkout Summary</h3>
-
-              <div style={styles.billRow}>
-                <span>Subtotal Amount:</span>
-                <span>₹{cartValue.toFixed(2)}</span>
-              </div>
-
-              {appliedCoupon && (
-                <div style={{ ...styles.billRow, color: "#059669" }}>
-                  <span>Coupon Applied ({appliedCoupon.code}):</span>
-                  <span>- ₹{discountAmount.toFixed(2)}</span>
-                </div>
-              )}
-
-              <div style={styles.divider}></div>
-
-              <div
-                style={{
-                  ...styles.billRow,
-                  fontSize: "18px",
-                  fontWeight: "bold",
-                  color: "#111827",
-                }}
-              >
-                <span>Final Price:</span>
-                <span>₹{finalPrice.toFixed(2)}</span>
-              </div>
-            </div>
-
-            {appliedCoupon && (
-              <div style={styles.savedBanner}>
-                🎉 Total savings of ₹{discountAmount.toFixed(2)} successfully
-                applied!
-              </div>
-            )}
-          </div>
-        </div>
       </div>
 
       <div style={{ marginTop: "32px" }}>
@@ -440,31 +288,36 @@ export default function Coupon() {
                   <span style={styles.couponBadge}>{coupon.code}</span>
                   <div style={styles.actionButtonGroup}>
                     <button
-                      onClick={async () => {
+                      onClick={async (e) => {
+                        e.stopPropagation();
+
                         try {
                           await navigator.clipboard.writeText(coupon.code);
                           setCouponCodeInput(coupon.code);
                           toast.success("Coupon code copied!");
-                        } catch (err) {
+                        } catch {
                           toast.error("Failed to copy code");
                         }
                       }}
                       style={styles.actionBtnCopy}
-                      title="Copy Code"
                     >
                       Copy
                     </button>
                     <button
-                      onClick={() => openEditModal(coupon)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openEditModal(coupon);
+                      }}
                       style={styles.actionBtnEdit}
-                      title="Edit Coupon"
                     >
                       Edit
                     </button>
                     <button
-                      onClick={() => openDeleteModal(coupon)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openDeleteModal(coupon);
+                      }}
                       style={styles.actionBtnDelete}
-                      title="Delete Coupon"
                     >
                       Delete
                     </button>

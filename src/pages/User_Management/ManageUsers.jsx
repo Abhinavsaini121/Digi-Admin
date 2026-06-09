@@ -110,7 +110,6 @@ export default function UserMasterProfile() {
   // Filter Logic
   const filteredUsers = users;
 
-  // --- ACTIONS ---
 
   // 1. Delete User
   const handleDelete = (user) => {

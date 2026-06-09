@@ -26,6 +26,9 @@ const Credits = () => {
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const limit = 10;
   const [editForm, setEditForm] = useState({
     name: "",
     price: "",
@@ -41,14 +44,19 @@ const Credits = () => {
     description: "",
   });
   useEffect(() => {
-    fetchPlans();
+    fetchPlans(1);
   }, []);
 
-  const fetchPlans = async () => {
+  const fetchPlans = async (page = 1) => {
     try {
       setLoading(true);
-      const res = await getAllPlans(1, 10);
+
+      const res = await getAllPlans(page, limit);
+
       setPlans(res?.data || []);
+
+      setTotalPages(res?.pagination?.totalPages || 1);
+      setCurrentPage(res?.pagination?.currentPage || page);
     } catch (err) {
       console.log(err);
     } finally {
@@ -146,6 +154,8 @@ const Credits = () => {
           <table className="w-full text-sm">
             <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
               <tr>
+                <th className="p-4 text-left w-16">S.No.</th>
+
                 <th className="p-4 text-left">Plan ID</th>
                 <th className="p-4 text-left">Name</th>
                 <th className="p-4 text-left">Category</th>
@@ -157,8 +167,11 @@ const Credits = () => {
             </thead>
 
             <tbody>
-              {plans?.map((plan) => (
+              {plans?.map((plan, index) => (
                 <tr key={plan._id} className="border-b hover:bg-gray-50">
+                  <td className="p-4 font-medium text-gray-500">
+                    {(currentPage - 1) * limit + index + 1}
+                  </td>
                   <td className="p-4 font-mono text-xs text-gray-500">
                     {plan.planId}
                   </td>
@@ -195,6 +208,37 @@ const Credits = () => {
               ))}
             </tbody>
           </table>
+          <div className="flex justify-between items-center p-4 border-t">
+            <button
+              disabled={currentPage === 1}
+              onClick={() => fetchPlans(currentPage - 1)}
+              className="px-4 py-2 border rounded disabled:opacity-50"
+            >
+              Previous
+            </button>
+
+            <div className="flex gap-2">
+              {Array.from({ length: totalPages }, (_, i) => (
+                <button
+                  key={i + 1}
+                  onClick={() => fetchPlans(i + 1)}
+                  className={`px-3 py-1 border rounded ${
+                    currentPage === i + 1 ? "bg-black text-white" : ""
+                  }`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+            </div>
+
+            <button
+              disabled={currentPage === totalPages}
+              onClick={() => fetchPlans(currentPage + 1)}
+              className="px-4 py-2 border rounded disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
         </div>
       )}
 
@@ -371,7 +415,7 @@ const Credits = () => {
 
       {modalConfig.isOpen && modalConfig.type === "view" && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl">
+          <div className="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl">
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b">
               <h2 className="text-2xl font-bold">Plan Details</h2>
@@ -387,7 +431,7 @@ const Credits = () => {
             {/* Body */}
             <div className="p-6">
               {/* Body */}
-              <div className="p-6 space-y-6">
+              <div className="p-4 space-y-4">
                 {/* Top Card */}
                 <div className="bg-gradient-to-r from-[#090E1A] to-slate-700 rounded-2xl p-6 text-white">
                   <p className="text-sm opacity-80">Plan ID</p>

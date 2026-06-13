@@ -10,11 +10,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@ant-design/icons": "^6.1.0",
+    "@ant-design/icons": "^6.2.5",
     "@tailwindcss/vite": "^4.1.17",
-    "antd": "^6.3.7",
+    "antd": "^6.4.4",
     "axios": "^1.13.2",
     "cors": "^2.8.5",
+    "dayjs": "^1.11.21",
     "expo": "^54.0.31",
     "lucide-react": "^0.556.0",
     "react": "^19.2.0",

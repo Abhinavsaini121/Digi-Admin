@@ -12,6 +12,11 @@ import {
   BarChart3,
   Search,
   X,
+  Loader2,
+  AlertCircle,
+  CheckCircle2,
+  Coins,
+  DollarSign
 } from "lucide-react";
 import { toast } from "react-toastify";
 import {
@@ -21,6 +26,7 @@ import {
   createPlanAPI,
   searchPlanAPI,
 } from "../../auth/credit";
+
 const Credits = () => {
   const [activeTab, setActiveTab] = useState("plans");
   const [plans, setPlans] = useState([]);
@@ -43,6 +49,7 @@ const Credits = () => {
     category: "SUBSCRIPTION",
     description: "",
   });
+
   useEffect(() => {
     fetchPlans(1);
   }, []);
@@ -50,11 +57,8 @@ const Credits = () => {
   const fetchPlans = async (page = 1) => {
     try {
       setLoading(true);
-
       const res = await getAllPlans(page, limit);
-
       setPlans(res?.data || []);
-
       setTotalPages(res?.pagination?.totalPages || 1);
       setCurrentPage(res?.pagination?.currentPage || page);
     } catch (err) {
@@ -63,23 +67,22 @@ const Credits = () => {
       setLoading(false);
     }
   };
+
   const handleSearch = async (value) => {
     try {
       setSearchTerm(value);
-
       if (!value.trim()) {
         fetchPlans();
         return;
       }
-
       const res = await searchPlanAPI(value);
-
       setPlans(res?.data || []);
     } catch (err) {
       console.log(err);
       setPlans([]);
     }
   };
+
   const [modalConfig, setModalConfig] = useState({
     isOpen: false,
     type: "",
@@ -95,7 +98,6 @@ const Credits = () => {
         description: data?.description || "",
       });
     }
-
     setModalConfig({ isOpen: true, type, data });
   };
 
@@ -105,14 +107,14 @@ const Credits = () => {
 
   const StatusBadge = ({ status }) => {
     const styles = {
-      CREDIT: "bg-blue-100 text-blue-700",
-      SUBSCRIPTION: "bg-purple-100 text-purple-700",
+      CREDIT: "bg-indigo-50 text-indigo-600 border-indigo-100/50",
+      SUBSCRIPTION: "bg-purple-50 text-purple-600 border-purple-100/50",
     };
 
     return (
       <span
-        className={`px-3 py-1 rounded-full text-xs font-semibold ${
-          styles[status] || "bg-gray-100 text-gray-600"
+        className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border ${
+          styles[status] || "bg-slate-50 text-slate-500 border-slate-100"
         }`}
       >
         {status}
@@ -121,109 +123,134 @@ const Credits = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] p-6 text-slate-800">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Admin Credits Dashboard</h1>
-        <p className="text-sm text-gray-500">
-          Manage credit plans and subscriptions
-        </p>
+    <div className="min-h-screen bg-[#fafbfe] p-4 md:p-8 text-slate-800 font-sans">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Admin Credits Dashboard</h1>
+          <p className="text-slate-400 text-xs mt-1">
+            Manage your listing parameters, credit plans, and pricing structures
+          </p>
+        </div>
       </div>
 
       {activeTab === "plans" && (
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm">
-          <div className="p-4 border-b flex justify-between items-center">
-            <div className="relative w-96">
-              <Search className="absolute left-3 top-2.5 text-gray-400" />
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+          <div className="p-5 flex flex-col sm:flex-row gap-4 justify-between items-stretch sm:items-center bg-white">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => handleSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border rounded-lg text-sm"
-                placeholder="Search by Plan ID..."
+                className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-200"
+                placeholder="Search plan by identifier ID..."
               />
             </div>
             <button
               onClick={() => openModal("create")}
-              className="bg-[#090E1A] text-white px-4 py-2 rounded-lg flex items-center gap-2"
+              className="bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98] text-white px-5 py-3 rounded-xl text-xs font-semibold shadow-sm transition-all duration-200 flex items-center justify-center gap-2"
             >
-              <PlusCircle size={18} />
-              Create Plan
+              <PlusCircle size={15} />
+              Create New Plan
             </button>
           </div>
 
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
-              <tr>
-                <th className="p-4 text-left w-16">S.No.</th>
-
-                <th className="p-4 text-left">Plan ID</th>
-                <th className="p-4 text-left">Name</th>
-                <th className="p-4 text-left">Category</th>
-                <th className="p-4 text-left">Price</th>
-                <th className="p-4 text-left">Credits</th>
-                <th className="p-4 text-left">Description</th>
-                <th className="p-4 text-right">Actions</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {plans?.map((plan, index) => (
-                <tr key={plan._id} className="border-b hover:bg-gray-50">
-                  <td className="p-4 font-medium text-gray-500">
-                    {(currentPage - 1) * limit + index + 1}
-                  </td>
-                  <td className="p-4 font-mono text-xs text-gray-500">
-                    {plan.planId}
-                  </td>
-                  <td className="p-4 font-semibold">{plan.name}</td>
-                  <td className="p-4">
-                    <StatusBadge status={plan.category} />
-                  </td>
-                  <td className="p-4">₹{plan.price}</td>
-                  <td className="p-4">{plan.credits}</td>
-                  <td className="p-4 text-gray-500">{plan.description}</td>
-                  <td className="p-4">
-                    <div className="flex justify-end gap-2">
-                      <button
-                        onClick={() => openModal("view", plan)}
-                        className="p-2 border rounded"
-                      >
-                        <Eye size={16} />
-                      </button>
-                      <button
-                        onClick={() => openModal("edit", plan)}
-                        className="p-2 border rounded"
-                      >
-                        <Edit3 size={16} />
-                      </button>
-                      <button
-                        onClick={() => openModal("delete", plan)}
-                        className="p-2 border rounded text-red-500"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-50/75 border-b border-slate-100">
+                  <th className="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider w-14 text-center">S.No.</th>
+                  <th className="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Plan ID</th>
+                  <th className="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Plan Title</th>
+                  <th className="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Category</th>
+                  <th className="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Pricing</th>
+                  <th className="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Allocated Credits</th>
+                  <th className="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Brief Description</th>
+                  <th className="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-          <div className="flex justify-between items-center p-4 border-t">
+              </thead>
+
+              <tbody className="divide-y divide-slate-100">
+                {loading ? (
+                  <tr>
+                    <td colSpan="8" className="p-16 text-center">
+                      <Loader2 className="animate-spin mx-auto text-indigo-600" size={24} />
+                    </td>
+                  </tr>
+                ) : plans.length === 0 ? (
+                  <tr>
+                    <td colSpan="8" className="p-16 text-center text-slate-400 text-xs">
+                      No plans configured currently
+                    </td>
+                  </tr>
+                ) : (
+                  plans.map((plan, index) => (
+                    <tr key={plan._id} className="hover:bg-slate-50/50 transition-colors duration-150">
+                      <td className="p-4 text-xs font-semibold text-slate-400 text-center">
+                        {(currentPage - 1) * limit + index + 1}
+                      </td>
+                      <td className="p-4 text-xs font-semibold text-slate-500 font-mono tracking-tight">
+                        {plan.planId}
+                      </td>
+                      <td className="p-4 text-xs font-bold text-slate-700">{plan.name}</td>
+                      <td className="p-4">
+                        <StatusBadge status={plan.category} />
+                      </td>
+                      <td className="p-4 text-xs font-bold text-emerald-600">₹{plan.price}</td>
+                      <td className="p-4 text-xs font-bold text-slate-700">
+                        <div className="flex items-center gap-1.5">
+                          <Coins size={12} className="text-amber-500" />
+                          <span>{plan.credits}</span>
+                        </div>
+                      </td>
+                      <td className="p-4 text-xs text-slate-400 max-w-xs truncate">{plan.description}</td>
+                      <td className="p-4">
+                        <div className="flex justify-center items-center gap-1.5">
+                          <button
+                            onClick={() => openModal("view", plan)}
+                            className="flex items-center gap-1 px-2.5 py-1.5 text-[10px] font-bold rounded-lg border border-indigo-100 bg-indigo-50/70 text-indigo-600 hover:bg-indigo-600 hover:text-white hover:border-transparent transition-all duration-150"
+                          >
+                            <Eye size={11} /> View
+                          </button>
+                          <button
+                            onClick={() => openModal("edit", plan)}
+                            className="flex items-center gap-1 px-2.5 py-1.5 text-[10px] font-bold rounded-lg border border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-800 hover:text-white hover:border-transparent transition-all duration-150"
+                          >
+                            <Edit3 size={11} /> Edit
+                          </button>
+                          <button
+                            onClick={() => openModal("delete", plan)}
+                            className="flex items-center gap-1 px-2.5 py-1.5 text-[10px] font-bold rounded-lg border border-rose-100 bg-rose-50/70 text-rose-600 hover:bg-rose-600 hover:text-white hover:border-transparent transition-all duration-150"
+                          >
+                            <Trash2 size={11} /> Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between">
             <button
               disabled={currentPage === 1}
               onClick={() => fetchPlans(currentPage - 1)}
-              className="px-4 py-2 border rounded disabled:opacity-50"
+              className="px-3.5 py-1.5 text-xs font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:hover:bg-white rounded-lg transition-all duration-150"
             >
               Previous
             </button>
 
-            <div className="flex gap-2">
+            <div className="flex gap-1.5">
               {Array.from({ length: totalPages }, (_, i) => (
                 <button
                   key={i + 1}
                   onClick={() => fetchPlans(i + 1)}
-                  className={`px-3 py-1 border rounded ${
-                    currentPage === i + 1 ? "bg-black text-white" : ""
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all duration-150 border ${
+                    currentPage === i + 1
+                      ? "bg-indigo-600 text-white border-transparent shadow-sm"
+                      : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
                   }`}
                 >
                   {i + 1}
@@ -234,7 +261,7 @@ const Credits = () => {
             <button
               disabled={currentPage === totalPages}
               onClick={() => fetchPlans(currentPage + 1)}
-              className="px-4 py-2 border rounded disabled:opacity-50"
+              className="px-3.5 py-1.5 text-xs font-semibold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:hover:bg-white rounded-lg transition-all duration-150"
             >
               Next
             </button>
@@ -243,18 +270,20 @@ const Credits = () => {
       )}
 
       {modalConfig.isOpen && modalConfig.type === "delete" && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50">
-          <div className="bg-white w-[400px] rounded-xl p-6">
-            <h2 className="font-bold text-lg">Confirm Delete</h2>
-
-            <p className="mt-4 text-sm text-gray-600">
-              Are you sure you want to delete <b>{modalConfig.data?.name}</b>?
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-md transition-all duration-300 animate-fadeIn">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 text-center transform transition-all duration-300 scale-100 animate-scaleUp border border-slate-100">
+            <div className="w-14 h-14 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <AlertCircle size={24} />
+            </div>
+            <h3 className="text-base font-bold text-slate-800 mb-1">Confirm Plan Deletion</h3>
+            <p className="text-slate-400 text-xs mb-6">
+              Are you sure you want to remove plan <strong>{modalConfig.data?.name}</strong>?
             </p>
 
-            <div className="flex gap-3 mt-6">
+            <div className="flex gap-2">
               <button
                 onClick={closeModal}
-                className="w-1/2 bg-gray-200 text-black py-2 rounded-lg"
+                className="flex-1 px-4 py-2.5 border border-slate-200 text-slate-500 hover:text-slate-700 rounded-xl font-semibold text-xs transition-colors duration-150 bg-white"
               >
                 Cancel
               </button>
@@ -262,21 +291,18 @@ const Credits = () => {
               <button
                 onClick={async () => {
                   try {
-                    await deletePlanAPI(modalConfig.data?.planId); // or _id if backend uses _id
-
-                    // remove deleted plan from UI
+                    await deletePlanAPI(modalConfig.data?.planId);
                     setPlans((prev) =>
-                      prev.filter((p) => p.planId !== modalConfig.data?.planId),
+                      prev.filter((p) => p.planId !== modalConfig.data?.planId)
                     );
-
                     closeModal();
                   } catch (err) {
                     console.log("Delete failed:", err);
                   }
                 }}
-                className="w-1/2 bg-red-600 text-white py-2 rounded-lg"
+                className="flex-1 px-4 py-2.5 bg-rose-500 hover:bg-rose-600 text-white rounded-xl font-semibold text-xs shadow-sm transition-colors duration-150"
               >
-                Confirm
+                Delete Plan
               </button>
             </div>
           </div>
@@ -284,27 +310,21 @@ const Credits = () => {
       )}
 
       {modalConfig.isOpen && modalConfig.type === "edit" && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl">
-            {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b">
-              <h2 className="text-2xl font-bold text-slate-800">Edit Plan</h2>
-
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-md transition-all duration-300 animate-fadeIn">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto transform transition-all duration-300 scale-100 animate-scaleUp border border-slate-100">
+            <div className="sticky top-0 bg-white/95 backdrop-blur z-10 flex items-center justify-between px-6 py-4 border-b border-slate-100">
+              <h2 className="text-lg font-bold text-slate-800">Edit Credit Plan</h2>
               <button
                 onClick={closeModal}
-                className="p-2 rounded-lg hover:bg-gray-100"
+                className="p-2 hover:bg-slate-100 text-slate-400 hover:text-slate-600 rounded-full transition-all duration-200"
               >
-                <X size={20} />
+                <X size={18} />
               </button>
             </div>
 
-            {/* Body */}
-            <div className="p-6 space-y-5">
+            <div className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2">
-                  Plan Name
-                </label>
-
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2.5 ml-1">Plan Name</label>
                 <input
                   type="text"
                   value={editForm.name}
@@ -314,16 +334,13 @@ const Credits = () => {
                       name: e.target.value,
                     })
                   }
-                  className="w-full border rounded-xl px-4 py-3"
+                  className="w-full bg-slate-50 border border-slate-200 text-slate-600 rounded-xl px-4 py-3 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-200"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Price
-                  </label>
-
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2.5 ml-1">Price (₹)</label>
                   <input
                     type="number"
                     value={editForm.price}
@@ -333,15 +350,12 @@ const Credits = () => {
                         price: e.target.value,
                       })
                     }
-                    className="w-full border rounded-xl px-4 py-3"
+                    className="w-full bg-slate-50 border border-slate-200 text-slate-600 rounded-xl px-4 py-3 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-200"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Credits
-                  </label>
-
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2.5 ml-1">Credits</label>
                   <input
                     type="number"
                     value={editForm.credits}
@@ -351,18 +365,15 @@ const Credits = () => {
                         credits: e.target.value,
                       })
                     }
-                    className="w-full border rounded-xl px-4 py-3"
+                    className="w-full bg-slate-50 border border-slate-200 text-slate-600 rounded-xl px-4 py-3 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-200"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">
-                  Description
-                </label>
-
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2.5 ml-1">Description</label>
                 <textarea
-                  rows="5"
+                  rows="4"
                   value={editForm.description}
                   onChange={(e) =>
                     setEditForm({
@@ -370,16 +381,15 @@ const Credits = () => {
                       description: e.target.value,
                     })
                   }
-                  className="w-full border rounded-xl px-4 py-3 resize-none"
+                  className="w-full bg-slate-50 border border-slate-200 text-slate-600 rounded-xl px-4 py-3 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-200 resize-none"
                 />
               </div>
             </div>
 
-            {/* Footer */}
-            <div className="flex justify-end gap-3 p-6 border-t">
+            <div className="sticky bottom-0 bg-white/95 backdrop-blur pt-4 pb-4 px-6 flex justify-end gap-2.5 border-t border-slate-100">
               <button
                 onClick={closeModal}
-                className="px-6 py-3 rounded-xl border"
+                className="px-5 py-2.5 text-xs font-semibold text-slate-500 hover:text-slate-700"
               >
                 Cancel
               </button>
@@ -393,18 +403,14 @@ const Credits = () => {
                       credits: Number(editForm.credits),
                       description: editForm.description,
                     };
-
-                    console.log(payload);
-
                     await updatePlanAPI(modalConfig.data.planId, payload);
-
                     closeModal();
                     fetchPlans();
                   } catch (err) {
                     console.log(err);
                   }
                 }}
-                className="px-6 py-3 rounded-xl bg-[#090E1A] text-white"
+                className="bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98] text-white px-7 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 shadow-sm"
               >
                 Update Plan
               </button>
@@ -414,189 +420,166 @@ const Credits = () => {
       )}
 
       {modalConfig.isOpen && modalConfig.type === "view" && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl">
-            {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b">
-              <h2 className="text-2xl font-bold">Plan Details</h2>
-
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-md transition-all duration-300 animate-fadeIn">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto transform transition-all duration-300 scale-100 animate-scaleUp border border-slate-100">
+            <div className="sticky top-0 bg-white/95 backdrop-blur z-10 flex items-center justify-between px-6 py-4 border-b border-slate-100">
+              <h2 className="text-lg font-bold text-slate-800">Plan Overview</h2>
               <button
                 onClick={closeModal}
-                className="p-2 rounded-lg hover:bg-gray-100"
+                className="p-2 hover:bg-slate-100 text-slate-400 hover:text-slate-600 rounded-full transition-all duration-200"
               >
-                <X size={20} />
+                <X size={18} />
               </button>
             </div>
 
-            {/* Body */}
-            <div className="p-6">
-              {/* Body */}
-              <div className="p-4 space-y-4">
-                {/* Top Card */}
-                <div className="bg-gradient-to-r from-[#090E1A] to-slate-700 rounded-2xl p-6 text-white">
-                  <p className="text-sm opacity-80">Plan ID</p>
-                  <h3 className="text-2xl font-bold">
-                    {modalConfig.data?.planId}
-                  </h3>
+            <div className="p-6 space-y-5">
+              <div className="bg-gradient-to-br from-indigo-900 to-slate-800 rounded-2xl p-6 text-white shadow-md">
+                <p className="text-[10px] opacity-75 font-bold uppercase tracking-wider mb-1">Plan Identifier ID</p>
+                <h3 className="text-2xl font-mono font-semibold tracking-tight">
+                  {modalConfig.data?.planId}
+                </h3>
+                <div className="flex gap-2 mt-4">
+                  <span className="bg-white/10 backdrop-blur px-3 py-1 rounded-lg text-[10px] font-bold tracking-wider uppercase border border-white/5">
+                    {modalConfig.data?.category}
+                  </span>
+                  <span className="bg-white/10 backdrop-blur px-3 py-1 rounded-lg text-[10px] font-bold tracking-wider uppercase border border-white/5 flex items-center gap-1">
+                    <Coins size={10} className="text-amber-300" />
+                    {modalConfig.data?.credits} Credits
+                  </span>
+                </div>
+              </div>
 
-                  <div className="flex gap-3 mt-4">
-                    <span className="bg-white/20 px-3 py-1 rounded-full text-sm">
-                      {modalConfig.data?.category}
-                    </span>
-
-                    <span className="bg-white/20 px-3 py-1 rounded-full text-sm">
-                      {modalConfig.data?.credits} Credits
-                    </span>
-                  </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Plan Title</p>
+                  <p className="font-semibold text-xs text-slate-700">{modalConfig.data?.name}</p>
                 </div>
 
-                {/* Details */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-gray-50 rounded-xl p-4">
-                    <p className="text-xs text-gray-500 mb-1">Plan Name</p>
-                    <p className="font-semibold text-lg">
-                      {modalConfig.data?.name}
-                    </p>
-                  </div>
-
-                  <div className="bg-gray-50 rounded-xl p-4">
-                    <p className="text-xs text-gray-500 mb-1">Price</p>
-                    <p className="font-semibold text-lg text-green-600">
-                      ₹ {modalConfig.data?.price}
-                    </p>
-                  </div>
-
-                  <div className="bg-gray-50 rounded-xl p-4">
-                    <p className="text-xs text-gray-500 mb-1">Credits</p>
-                    <p className="font-semibold text-lg">
-                      {modalConfig.data?.credits}
-                    </p>
-                  </div>
-
-                  <div className="bg-gray-50 rounded-xl p-4">
-                    <p className="text-xs text-gray-500 mb-1">Version</p>
-                    <p className="font-semibold text-lg">
-                      {modalConfig.data?.__v}
-                    </p>
-                  </div>
+                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Cost Structure</p>
+                  <p className="font-bold text-sm text-emerald-600">₹{modalConfig.data?.price}</p>
                 </div>
+              </div>
 
-                {/* Description */}
-                <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
-                  <p className="text-xs text-gray-500 mb-2">Description</p>
-                  <p className="text-gray-700">
-                    {modalConfig.data?.description}
+              <div className="bg-indigo-50/40 border border-indigo-100/50 rounded-xl p-4">
+                <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider mb-1.5">Description details</p>
+                <p className="text-xs text-slate-600 leading-relaxed">{modalConfig.data?.description}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 pt-2 border-t border-slate-100">
+                <div>
+                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Created At</p>
+                  <p className="text-[11px] font-semibold text-slate-500">
+                    {new Date(modalConfig.data?.createdAt).toLocaleString()}
                   </p>
                 </div>
 
-                {/* Dates */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="border rounded-xl p-4">
-                    <p className="text-xs text-gray-500 mb-1">Created At</p>
-                    <p className="font-medium">
-                      {new Date(modalConfig.data?.createdAt).toLocaleString()}
-                    </p>
-                  </div>
-
-                  <div className="border rounded-xl p-4">
-                    <p className="text-xs text-gray-500 mb-1">Updated At</p>
-                    <p className="font-medium">
-                      {new Date(modalConfig.data?.updatedAt).toLocaleString()}
-                    </p>
-                  </div>
+                <div>
+                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Updated At</p>
+                  <p className="text-[11px] font-semibold text-slate-500">
+                    {new Date(modalConfig.data?.updatedAt).toLocaleString()}
+                  </p>
                 </div>
               </div>
             </div>
 
-            {/* Footer */}
-            <div className="flex justify-end p-6 border-t">
+            <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end">
               <button
                 onClick={closeModal}
-                className="px-6 py-2 bg-[#090E1A] text-white rounded-lg"
+                className="bg-slate-800 text-white px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-slate-700 transition-all duration-200"
               >
-                Close
+                Close details
               </button>
             </div>
           </div>
         </div>
       )}
-      {modalConfig.isOpen && modalConfig.type === "create" && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="bg-white w-full max-w-lg rounded-2xl p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">Create Plan</h2>
 
-              <button onClick={closeModal}>
-                <X size={20} />
+      {modalConfig.isOpen && modalConfig.type === "create" && (
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-md transition-all duration-300 animate-fadeIn">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all duration-300 scale-100 animate-scaleUp border border-slate-100">
+            <div className="sticky top-0 bg-white/95 backdrop-blur z-10 flex items-center justify-between px-6 py-4 border-b border-slate-100">
+              <h2 className="text-lg font-bold text-slate-800">Create Premium Plan</h2>
+              <button
+                onClick={closeModal}
+                className="p-2 hover:bg-slate-100 text-slate-400 hover:text-slate-600 rounded-full transition-all duration-200"
+              >
+                <X size={18} />
               </button>
             </div>
 
-            <input
-              type="text"
-              placeholder="Plan ID"
-              value={createForm.planId}
-              onChange={(e) =>
-                setCreateForm({ ...createForm, planId: e.target.value })
-              }
-              className="w-full border rounded-lg p-3 mb-3"
-            />
+            <div className="p-6 space-y-4">
+              <input
+                type="text"
+                placeholder="Unique Plan ID (e.g. STARTER_SUB)"
+                value={createForm.planId}
+                onChange={(e) =>
+                  setCreateForm({ ...createForm, planId: e.target.value })
+                }
+                className="w-full bg-slate-50 border border-slate-200 text-slate-600 rounded-xl px-4 py-3 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-200"
+              />
 
-            <input
-              type="text"
-              placeholder="Plan Name"
-              value={createForm.name}
-              onChange={(e) =>
-                setCreateForm({ ...createForm, name: e.target.value })
-              }
-              className="w-full border rounded-lg p-3 mb-3"
-            />
+              <input
+                type="text"
+                placeholder="Plan Display Name"
+                value={createForm.name}
+                onChange={(e) =>
+                  setCreateForm({ ...createForm, name: e.target.value })
+                }
+                className="w-full bg-slate-50 border border-slate-200 text-slate-600 rounded-xl px-4 py-3 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-200"
+              />
 
-            <input
-              type="number"
-              placeholder="Price"
-              value={createForm.price}
-              onChange={(e) =>
-                setCreateForm({ ...createForm, price: e.target.value })
-              }
-              className="w-full border rounded-lg p-3 mb-3"
-            />
+              <div className="grid grid-cols-2 gap-3">
+                <input
+                  type="number"
+                  placeholder="Price (₹)"
+                  value={createForm.price}
+                  onChange={(e) =>
+                    setCreateForm({ ...createForm, price: e.target.value })
+                  }
+                  className="w-full bg-slate-50 border border-slate-200 text-slate-600 rounded-xl px-4 py-3 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-200"
+                />
 
-            <input
-              type="number"
-              placeholder="Credits"
-              value={createForm.credits}
-              onChange={(e) =>
-                setCreateForm({ ...createForm, credits: e.target.value })
-              }
-              className="w-full border rounded-lg p-3 mb-3"
-            />
+                <input
+                  type="number"
+                  placeholder="Credits amount"
+                  value={createForm.credits}
+                  onChange={(e) =>
+                    setCreateForm({ ...createForm, credits: e.target.value })
+                  }
+                  className="w-full bg-slate-50 border border-slate-200 text-slate-600 rounded-xl px-4 py-3 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-200"
+                />
+              </div>
 
-            <select
-              value={createForm.category}
-              onChange={(e) =>
-                setCreateForm({ ...createForm, category: e.target.value })
-              }
-              className="w-full border rounded-lg p-3 mb-3"
-            >
-              <option value="SUBSCRIPTION">SUBSCRIPTION</option>
-              <option value="CREDIT">CREDIT</option>
-            </select>
+              <select
+                value={createForm.category}
+                onChange={(e) =>
+                  setCreateForm({ ...createForm, category: e.target.value })
+                }
+                className="w-full bg-slate-50 border border-slate-200 text-slate-600 rounded-xl px-4 py-3 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-200"
+              >
+                <option value="SUBSCRIPTION">SUBSCRIPTION</option>
+                <option value="CREDIT">CREDIT</option>
+              </select>
 
-            <textarea
-              placeholder="Description"
-              value={createForm.description}
-              onChange={(e) =>
-                setCreateForm({
-                  ...createForm,
-                  description: e.target.value,
-                })
-              }
-              className="w-full border rounded-lg p-3 mb-3"
-            />
-            <div className="flex justify-end gap-3">
+              <textarea
+                placeholder="Plan description details..."
+                rows="4"
+                value={createForm.description}
+                onChange={(e) =>
+                  setCreateForm({
+                    ...createForm,
+                    description: e.target.value,
+                  })
+                }
+                className="w-full bg-slate-50 border border-slate-200 text-slate-600 rounded-xl px-4 py-3 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-200 resize-none"
+              />
+            </div>
+
+            <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-2">
               <button
                 onClick={closeModal}
-                className="px-4 py-2 border rounded-lg"
+                className="px-5 py-2.5 text-xs font-semibold text-slate-500 hover:text-slate-700"
               >
                 Cancel
               </button>
@@ -612,9 +595,6 @@ const Credits = () => {
                       category: createForm.category,
                       description: createForm.description,
                     };
-
-                    console.log(payload);
-
                     await createPlanAPI(payload);
                     toast.success("Plan created successfully!");
                     setCreateForm({
@@ -625,7 +605,6 @@ const Credits = () => {
                       category: "SUBSCRIPTION",
                       description: "",
                     });
-
                     closeModal();
                     fetchPlans();
                   } catch (err) {
@@ -633,9 +612,9 @@ const Credits = () => {
                     toast.error("Failed to create plan!");
                   }
                 }}
-                className="px-4 py-2 bg-[#090E1A] text-white rounded-lg"
+                className="bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98] text-white px-7 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 shadow-sm"
               >
-                Create
+                Create Now
               </button>
             </div>
           </div>

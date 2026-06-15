@@ -285,11 +285,13 @@ const Credits = () => {
 
       {modalConfig.isOpen && modalConfig.type === "edit" && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl">
+          <div className="bg-white/95 backdrop-blur-md w-full max-w-3xl rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.15)] overflow-hidden">
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b">
-              <h2 className="text-2xl font-bold text-slate-800">Edit Plan</h2>
-
+            <div className="flex items-center justify-between p-6 bg-gradient-to-r from-[#090E1A] to-slate-700 text-white">
+              {" "}
+              <h2 className="text-2xl font-bold tracking-wide">
+                Edit Plan
+              </h2>{" "}
               <button
                 onClick={closeModal}
                 className="p-2 rounded-lg hover:bg-gray-100"
@@ -314,7 +316,7 @@ const Credits = () => {
                       name: e.target.value,
                     })
                   }
-                  className="w-full border rounded-xl px-4 py-3"
+                  className="w-full border border-gray-200 bg-gray-50 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#090E1A] focus:border-[#090E1A] outline-none transition-all"
                 />
               </div>
 
@@ -333,12 +335,12 @@ const Credits = () => {
                         price: e.target.value,
                       })
                     }
-                    className="w-full border rounded-xl px-4 py-3"
+                    className="w-full border border-gray-200 bg-gray-50 rounded-xl px-4 py-3 resize-none focus:ring-2 focus:ring-[#090E1A] focus:border-[#090E1A] outline-none transition-all"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">
                     Credits
                   </label>
 
@@ -404,7 +406,7 @@ const Credits = () => {
                     console.log(err);
                   }
                 }}
-                className="px-6 py-3 rounded-xl bg-[#090E1A] text-white"
+                className="px-6 py-3 rounded-xl bg-gradient-to-r from-[#090E1A] to-slate-700 text-white hover:scale-105 transition-all"
               >
                 Update Plan
               </button>
@@ -414,7 +416,7 @@ const Credits = () => {
       )}
 
       {modalConfig.isOpen && modalConfig.type === "view" && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-lg p-4">
           <div className="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl">
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b">
@@ -521,7 +523,7 @@ const Credits = () => {
         </div>
       )}
       {modalConfig.isOpen && modalConfig.type === "create" && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md p-4">
           <div className="bg-white w-full max-w-lg rounded-2xl p-6">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold">Create Plan</h2>

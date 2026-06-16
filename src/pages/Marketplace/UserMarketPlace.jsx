@@ -10,9 +10,18 @@ import {
   AlertTriangle,
   CheckCircle,
   MapPin,
+  ShoppingBag,
+  Coins,
+  ChevronLeft,
+  ChevronRight,
+  Sparkles,
+  Layers,
+  Search,
+  Filter
 } from "lucide-react";
 import { getAllUserItems, deleteUserItem } from "../../auth/adminLogin";
 import { useNavigate, useLocation } from "react-router-dom";
+
 const UserMarketPlace = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -24,6 +33,7 @@ const UserMarketPlace = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [stats, setStats] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const [toast, setToast] = useState({
     visible: false,
     message: "",
@@ -34,7 +44,7 @@ const UserMarketPlace = () => {
     setToast({ visible: true, message, type });
     setTimeout(
       () => setToast({ visible: false, message: "", type: "success" }),
-      3000,
+      4000
     );
   };
 
@@ -44,7 +54,7 @@ const UserMarketPlace = () => {
       const data = await getAllUserItems(page);
       setItems(data.data || []);
       setPagination(data.pagination || null);
-      setStats(data); 
+      setStats(data);
     } catch (err) {
       showToast(err.message || "Failed to fetch items", "error");
     } finally {
@@ -77,36 +87,60 @@ const UserMarketPlace = () => {
     }
   };
 
+  const filteredItems = items.filter((item) =>
+    item.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.category?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
-    <div className="p-4 md:p-8 bg-[#f8fafc] min-h-screen font-sans text-slate-900 relative">
+    <div className="p-6 md:p-10 bg-slate-50/50 min-h-screen font-sans text-slate-800 relative antialiased selection:bg-indigo-500 selection:text-white">
       {toast.visible && (
-        <div className="fixed top-5 right-5 z-[1100] animate-in fade-in slide-in-from-top-4 duration-300">
+        <div className="fixed top-6 right-6 z-[1100] animate-bounce-short">
           <div
-            className={`flex items-center gap-3 px-5 py-3 rounded-xl shadow-2xl border text-white font-bold ${toast.type === "success" ? "bg-emerald-600 border-emerald-400" : "bg-red-600 border-red-400"}`}
+            className={`flex items-center gap-3.5 px-6 py-4 rounded-2xl shadow-xl backdrop-blur-md border text-white font-medium text-xs tracking-wide transition-all duration-300 ${
+              toast.type === "success"
+                ? "bg-slate-900/95 border-emerald-500/30 shadow-emerald-950/10"
+                : "bg-slate-900/95 border-rose-500/30 shadow-rose-950/10"
+            }`}
           >
-            {toast.type === "success" ? (
-              <CheckCircle size={20} />
-            ) : (
-              <AlertCircle size={20} />
-            )}
-            <p className="text-sm tracking-wide">{toast.message}</p>
+            <div
+              className={`p-1.5 rounded-lg ${
+                toast.type === "success"
+                  ? "bg-emerald-500/20 text-emerald-400"
+                  : "bg-rose-500/20 text-rose-400"
+              }`}
+            >
+              {toast.type === "success" ? (
+                <CheckCircle size={15} />
+              ) : (
+                <AlertCircle size={15} />
+              )}
+            </div>
+            <p className="pr-4">{toast.message}</p>
             <button
               onClick={() => setToast({ ...toast, visible: false })}
-              className="ml-2 hover:opacity-70"
+              className="ml-auto p-1 rounded-lg hover:bg-slate-800 transition-colors"
             >
-              <X size={16} />
+              <X size={14} className="text-slate-400" />
             </button>
           </div>
         </div>
       )}
 
-      <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-        <div className="flex-1">
-          <h1 className="text-2xl font-extrabold tracking-tight text-slate-800">
-            MarketPlace Dashboard
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
+        <div>
+          <span className="bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border border-indigo-100/50 inline-flex items-center gap-1.5 mb-2">
+            <Sparkles size={10} className="fill-indigo-100" /> Administrative Panel
+          </span>
+          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight sm:text-4xl">
+            User Listings
           </h1>
+          <p className="text-slate-500 text-xs mt-1.5 font-medium">
+            Monitor, filter, and configure peer-to-peer marketplace items.
+          </p>
         </div>
-        <div className="flex justify-end flex-1">
+
+        <div className="flex items-center gap-3 w-full md:w-auto bg-white p-1.5 rounded-2xl border border-slate-200/60 shadow-sm">
           <select
             value={location.pathname === "/user-marketplace" ? "User" : "Admin"}
             onChange={(e) => {
@@ -116,138 +150,198 @@ const UserMarketPlace = () => {
                 navigate("/user-marketplace");
               }
             }}
-            className="border-2 border-indigo-500 px-5 py-2 rounded-xl text-sm font-bold text-indigo-700 bg-indigo-50 outline-none focus:ring-2 focus:ring-indigo-400 shadow-md cursor-pointer hover:bg-indigo-100 transition-all"
+            className="w-full md:w-40 bg-transparent text-slate-700 rounded-xl px-4 py-2 text-xs font-bold focus:outline-none transition-all duration-200 cursor-pointer"
           >
-            <option value="Admin">Admin View</option>
-            <option value="User"> User View</option>
+            <option value="Admin">Admin Products</option>
+            <option value="User">User Listings</option>
           </select>
         </div>
       </div>
-<div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
 
-  <div className="bg-gradient-to-r from-indigo-500 to-indigo-600 text-white p-5 rounded-2xl shadow-lg hover:scale-[1.02] transition">
-    <p className="text-xs font-semibold opacity-80">TOTAL ITEMS</p>
-    <p className="text-3xl font-extrabold mt-2">{stats?.totalItems || 0}</p>
-  </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
+        <div className="bg-white border border-slate-200/60 p-6 rounded-3xl shadow-sm hover:shadow-md transition-shadow duration-300 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full -mr-6 -mt-6 transition-transform group-hover:scale-125 duration-300" />
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Listings</p>
+              <p className="text-3xl font-extrabold text-slate-900 mt-2 tracking-tight">{stats?.totalItems || 0}</p>
+            </div>
+            <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center border border-indigo-100">
+              <ShoppingBag size={20} />
+            </div>
+          </div>
+        </div>
 
-  <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white p-5 rounded-2xl shadow-lg hover:scale-[1.02] transition">
-    <p className="text-xs font-semibold opacity-80">ACTIVE ITEMS</p>
-    <p className="text-3xl font-extrabold mt-2">{stats?.activeItems || 0}</p>
-  </div>
+        <div className="bg-white border border-slate-200/60 p-6 rounded-3xl shadow-sm hover:shadow-md transition-shadow duration-300 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full -mr-6 -mt-6 transition-transform group-hover:scale-125 duration-300" />
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Active Listings</p>
+              <p className="text-3xl font-extrabold text-emerald-600 mt-2 tracking-tight">{stats?.activeItems || 0}</p>
+            </div>
+            <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center border border-emerald-100">
+              <CheckCircle size={20} />
+            </div>
+          </div>
+        </div>
 
-  <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white p-5 rounded-2xl shadow-lg hover:scale-[1.02] transition">
-    <p className="text-xs font-semibold opacity-80">FEATURED</p>
-    <p className="text-3xl font-extrabold mt-2">{stats?.isFeatured || 0}</p>
-  </div>
+        <div className="bg-white border border-slate-200/60 p-6 rounded-3xl shadow-sm hover:shadow-md transition-shadow duration-300 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full -mr-6 -mt-6 transition-transform group-hover:scale-125 duration-300" />
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Featured Ads</p>
+              <p className="text-3xl font-extrabold text-amber-500 mt-2 tracking-tight">{stats?.isFeatured || 0}</p>
+            </div>
+            <div className="w-12 h-12 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center border border-amber-100">
+              <Star size={18} className="fill-amber-500 text-amber-500" />
+            </div>
+          </div>
+        </div>
 
-  <div className="bg-gradient-to-r from-pink-500 to-rose-500 text-white p-5 rounded-2xl shadow-lg hover:scale-[1.02] transition">
-    <p className="text-xs font-semibold opacity-80">TOTAL SUM</p>
-    <p className="text-3xl font-extrabold mt-2">
-      ₹{(stats?.totalPriceSum || 0).toLocaleString()}
-    </p>
-  </div>
+        <div className="bg-white border border-slate-200/60 p-6 rounded-3xl shadow-sm hover:shadow-md transition-shadow duration-300 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-slate-500/5 rounded-full -mr-6 -mt-6 transition-transform group-hover:scale-125 duration-300" />
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Estimated Value</p>
+              <p className="text-3xl font-extrabold text-slate-900 mt-2 tracking-tight">₹{(stats?.totalPriceSum || 0).toLocaleString()}</p>
+            </div>
+            <div className="w-12 h-12 bg-slate-50 text-slate-600 rounded-2xl flex items-center justify-center border border-slate-100">
+              <Coins size={20} />
+            </div>
+          </div>
+        </div>
+      </div>
 
-</div>
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mt-15">
+      <div className="bg-white rounded-3xl shadow-sm border border-slate-200/60 overflow-hidden">
+        <div className="p-6 border-b border-slate-100 flex flex-col md:flex-row items-center justify-between gap-4 bg-slate-50/20">
+          <div className="relative w-full md:max-w-md">
+            <Search className="absolute left-4 top-3.5 text-slate-400" size={16} />
+            <input
+              type="text"
+              placeholder="Search user listings by name, tags or category..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-xs font-medium placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all duration-200"
+            />
+          </div>
+          <div className="flex items-center gap-2 self-stretch md:self-auto justify-end">
+            <button className="flex items-center gap-2 px-4 py-3 text-xs font-bold text-slate-600 bg-white border border-slate-200/80 hover:bg-slate-50 transition-all duration-200 rounded-2xl shadow-sm">
+              <Filter size={14} /> Refine List
+            </button>
+          </div>
+        </div>
+
         <div className="overflow-x-auto">
           {loading ? (
-            <div className="p-10 text-center text-slate-400 flex items-center justify-center gap-2 mt-13">
-              <Loader2 size={20} className="animate-spin" /> Loading items...
+            <div className="p-24 text-center text-slate-400 flex flex-col items-center justify-center gap-4">
+              <div className="relative">
+                <div className="absolute -inset-1 rounded-full bg-indigo-500/10 animate-ping" />
+                <Loader2 size={28} className="animate-spin text-indigo-600 relative" />
+              </div>
+              <p className="text-xs font-semibold text-slate-500 mt-2">Fetching listed entries...</p>
             </div>
           ) : (
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-slate-50/50 border-b border-slate-200 text-slate-400">
-                  <th className="p-4 text-xs font-bold uppercase tracking-wider">
-                    S.No.
+                <tr className="bg-slate-50/70 border-b border-slate-100">
+                  <th className="p-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest w-16 text-center">
+                    #
                   </th>
-                  <th className="p-4 text-xs font-bold uppercase tracking-wider">
-                    Product Info
+                  <th className="p-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                    Listing Item Detail
                   </th>
-                  <th className="p-4 text-xs font-bold uppercase tracking-wider">
-                    Category
+                  <th className="p-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                    Category Tag
                   </th>
-                  <th className="p-4 text-xs font-bold uppercase tracking-wider">
-                    Price
+                  <th className="p-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                    Asking Price
                   </th>
-                  <th className="p-4 text-xs font-bold uppercase tracking-wider text-center">
-                    Featured
+                  <th className="p-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">
+                    Promoted
                   </th>
-                  <th className="p-4 text-xs font-bold uppercase tracking-wider text-center">
-                    Status
+                  <th className="p-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">
+                    Listing Status
                   </th>
-                  <th className="p-4 text-xs font-bold uppercase tracking-wider text-center">
-                    Actions
+                  <th className="p-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center">
+                    Operations
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {items.map((item, index) => (
+                {filteredItems.map((item, index) => (
                   <tr
                     key={item._id}
-                    className="hover:bg-slate-50/50 transition-colors"
+                    className="hover:bg-indigo-50/10 transition-colors duration-150 group"
                   >
-                    <td className="p-4 text-sm font-bold text-slate-500 w-12">
+                    <td className="p-5 text-xs font-bold text-slate-400 text-center">
                       {(page - 1) * (pagination?.pageSize || 10) + index + 1}
                     </td>
-                    <td className="p-4 max-w-xs">
-                      <div className="flex gap-3">
+                    <td className="p-5 max-w-sm">
+                      <div className="flex gap-4 items-center">
                         {item.images && item.images.length > 0 ? (
-                          <img
-                            src={item.images[0]}
-                            className="w-12 h-12 rounded-lg object-cover border"
-                            alt=""
-                          />
+                          <div className="relative w-14 h-14 rounded-2xl overflow-hidden border border-slate-200/80 bg-slate-100 flex-shrink-0">
+                            <img
+                              src={item.images[0]}
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                              alt=""
+                            />
+                          </div>
                         ) : (
-                          <div className="w-12 h-12 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400 border">
+                          <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 border border-slate-100 flex-shrink-0">
                             <ImageOff size={16} />
                           </div>
                         )}
-                        <div>
-                          <p className="font-bold text-sm text-slate-800 line-clamp-1">
+                        <div className="truncate">
+                          <p className="font-bold text-slate-800 text-sm leading-snug tracking-tight hover:text-indigo-600 transition-colors cursor-pointer">
                             {item.title}
                           </p>
-                          <p className="text-[10px] text-slate-500 flex items-center gap-1 mt-0.5">
-                            <MapPin size={10} /> {item.location?.address}
+                          <p className="text-[10px] text-slate-400 flex items-center gap-1.5 mt-1.5 font-semibold">
+                            <MapPin size={11} className="text-indigo-400" /> {item.location?.address || "No Address Provided"}
                           </p>
                         </div>
                       </div>
                     </td>
-                    <td className="p-4">
-                      <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded text-[10px] font-bold uppercase border border-indigo-100">
+                    <td className="p-5">
+                      <span className="bg-indigo-50/70 text-indigo-600 px-3 py-1.5 rounded-xl text-[10px] font-extrabold tracking-wider uppercase border border-indigo-100/50">
                         {item.category}
                       </span>
                     </td>
-                    <td className="p-4 font-bold text-sm text-slate-700">
-                      ₹{item.price?.toLocaleString()}
+                    <td className="p-5 text-xs font-extrabold text-slate-800">
+                      ₹{item.price?.toLocaleString() || "0"}
                     </td>
-                    <td className="p-4 text-center">
-                      <Star
-                        size={18}
-                        className={
-                          item.isFeatured
-                            ? "text-amber-400 fill-amber-400 mx-auto"
-                            : "text-slate-200 mx-auto"
-                        }
-                      />
+                    <td className="p-5 text-center">
+                      <div className="inline-flex items-center justify-center">
+                        <Star
+                          size={18}
+                          className={
+                            item.isFeatured
+                              ? "text-amber-400 fill-amber-400 drop-shadow-[0_2px_4px_rgba(245,158,11,0.2)]"
+                              : "text-slate-200"
+                          }
+                        />
+                      </div>
                     </td>
-                    <td className="p-4 text-center">
+                    <td className="p-5 text-center">
                       <span
-                        className={`px-2.5 py-1 text-[10px] font-bold rounded-full uppercase ${item.isActive ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}
+                        className={`text-[9px] font-bold px-3 py-1.5 rounded-xl tracking-widest inline-block uppercase ${
+                          item.isActive
+                            ? "bg-emerald-50 text-emerald-600 border border-emerald-100"
+                            : "bg-rose-50 text-rose-600 border border-rose-100"
+                        }`}
                       >
                         {item.isActive ? "Active" : "Inactive"}
                       </span>
                     </td>
-                    <td className="p-4 text-center">
-                      <div className="flex justify-center gap-2">
-                        <button className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors">
-                          <Edit size={16} />
+                    <td className="p-5">
+                      <div className="flex justify-center items-center gap-2">
+                        <button className="flex items-center gap-1.5 px-3.5 py-2 text-[10px] font-bold rounded-xl border border-slate-200/80 bg-white text-slate-600 hover:bg-indigo-600 hover:text-white hover:border-transparent transition-all duration-200 shadow-sm">
+                          <Edit size={12} /> Edit
                         </button>
                         <button
                           onClick={() => openDeleteModal(item)}
-                          className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
+                          className="flex items-center gap-1.5 px-3.5 py-2 text-[10px] font-bold rounded-xl border border-rose-100/80 bg-rose-50/50 text-rose-600 hover:bg-rose-600 hover:text-white hover:border-transparent transition-all duration-200 shadow-sm"
                         >
-                          <Trash2 size={16} />
+                          <Trash2 size={12} /> Remove
                         </button>
                       </div>
                     </td>
@@ -256,73 +350,68 @@ const UserMarketPlace = () => {
               </tbody>
             </table>
           )}
-          {!loading && items.length === 0 && (
-            <div className="p-10 text-center text-slate-400 font-medium">
-              No items available in the list.
+          {!loading && filteredItems.length === 0 && (
+            <div className="p-24 text-center text-slate-400 flex flex-col items-center justify-center gap-2">
+              <Layers size={36} className="text-slate-300 stroke-[1.5]" />
+              <p className="text-xs font-bold text-slate-500 mt-2">Empty Records Available</p>
+              <p className="text-[10px] text-slate-400 max-w-xs">No user marketplace items were matches under the current filter query.</p>
             </div>
           )}
         </div>
 
         {pagination && pagination.totalPages > 1 && (
-          <div className="flex justify-center gap-2 py-4 border-t border-slate-100">
+          <div className="px-6 py-5 bg-slate-50/40 border-t border-slate-100 flex items-center justify-between">
             <button
               onClick={() => setPage((p) => Math.max(p - 1, 1))}
               disabled={page === 1}
-              className="px-3 py-1 text-sm rounded border disabled:opacity-40 hover:bg-slate-100"
+              className="px-4 py-2 text-xs font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:hover:bg-white rounded-xl shadow-sm transition-all duration-150 inline-flex items-center gap-1.5"
             >
-              Prev
+              <ChevronLeft size={14} /> Previous
             </button>
-            <span className="px-3 py-1 text-sm font-semibold">
-              {page} / {pagination.totalPages}
+            <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">
+              Page {page} of {pagination.totalPages}
             </span>
             <button
               onClick={() =>
                 setPage((p) => Math.min(p + 1, pagination.totalPages))
               }
               disabled={page === pagination.totalPages}
-              className="px-3 py-1 text-sm rounded border disabled:opacity-40 hover:bg-slate-100"
+              className="px-4 py-2 text-xs font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:hover:bg-white rounded-xl shadow-sm transition-all duration-150 inline-flex items-center gap-1.5"
             >
-              Next
+              Next <ChevronRight size={14} />
             </button>
           </div>
         )}
       </div>
 
       {isDeleteModalOpen && currentItem && (
-        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in duration-200">
-            <div className="p-6 text-center">
-              <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <AlertTriangle size={32} />
-              </div>
-              <h2 className="text-xl font-bold text-slate-800">
-                Confirm Delete
-              </h2>
-              <p className="text-slate-500 mt-2 text-sm">
-                Delete{" "}
-                <span className="font-bold text-slate-700">
-                  "{currentItem.title}"
-                </span>
-                ?
-              </p>
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-md transition-all duration-300">
+          <div className="bg-white rounded-[32px] shadow-2xl w-full max-w-md p-8 text-center border border-slate-100 transform scale-100 transition-all duration-300">
+            <div className="w-16 h-16 bg-rose-50 text-rose-500 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-rose-100">
+              <AlertTriangle size={28} />
             </div>
-            <div className="px-6 py-4 bg-slate-50 flex flex-col gap-2">
-              <button
-                onClick={handleDeleteConfirm}
-                className="w-full bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2"
-              >
-                {actionLoading ? (
-                  <Loader2 size={16} className="animate-spin" />
-                ) : (
-                  <Trash2 size={16} />
-                )}
-                Confirm Delete
-              </button>
+            <h3 className="text-lg font-extrabold text-slate-900 mb-2">Delete This Listing?</h3>
+            <p className="text-slate-500 text-xs px-4 leading-relaxed mb-8">
+              This action cannot be undone. Are you sure you want to permanently delete <strong>"{currentItem.title}"</strong> from active listings?
+            </p>
+            <div className="flex gap-3">
               <button
                 onClick={() => setIsDeleteModalOpen(false)}
-                className="w-full bg-white border border-slate-200 text-slate-600 py-2.5 rounded-xl font-bold text-sm"
+                className="flex-1 px-5 py-3.5 border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-2xl font-bold text-xs transition-colors duration-150 bg-white"
               >
-                Cancel
+                Keep Listing
+              </button>
+              <button
+                onClick={handleDeleteConfirm}
+                disabled={actionLoading}
+                className="flex-1 px-5 py-3.5 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl font-bold text-xs shadow-lg shadow-rose-500/25 transition-all duration-150 flex items-center justify-center gap-2"
+              >
+                {actionLoading ? (
+                  <Loader2 size={14} className="animate-spin" />
+                ) : (
+                  <Trash2 size={14} />
+                )}
+                Confirm Delete
               </button>
             </div>
           </div>

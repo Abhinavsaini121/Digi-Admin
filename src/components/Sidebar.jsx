@@ -91,15 +91,12 @@ const menuItems = [
     label: "Categories",
     icon: Layers,
     children: [
-      { label: "All Category", route: "/category" },
-      { label: "Subcategory", route: "/subcategory" },
+      { label: "Shop", route: "/cat-shop" },
+      { label: "Items", route: "/cat-item" },
+      { label: "Jobs", route: "/cat-jobs" },
     ],
   },
-  // {
-  //   label: "Content Moderation",
-  //   icon: AlertTriangle,
-  //   route: "/moderationblocking",
-  // },
+
   {
     label: "Notifications",
     icon: Bell,

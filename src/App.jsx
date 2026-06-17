@@ -16,8 +16,8 @@ import BloodRequest from "./pages/Blood_Request/Blood-request";
 import Marketplace from "./pages/Marketplace/Marketplace";
 import Credit from "./pages/Credits-Management/Credits";
 // import SosAlert from "./pages/Safety/SOS Alert";
-import Category from "./pages/Categories/Categories";
-import SubCategory from "./pages/Categories/SubCategories";
+import CategoryShop from "./pages/Categories/Shop_category";
+import Item_Category from "./pages/Categories/Item_category";
 import Notification from "./pages/Notifications/Notification";
 import ShopManage from "./pages/ShopManagement/shopmanage";
 import Moderation from "./pages/ModerationBlocking/Moderationblocking";
@@ -29,7 +29,7 @@ import UserFullJobs from "./pages/Jobs/UserFullTime";
 import UserLocalNeed from "./pages/LocalNeeds/UserLocalNeed";
 import UserMarketPlace from "./pages/Marketplace/UserMarketPlace";
 import Coupon from "./pages/Credits-Management/CouponModule";
-
+import JobCategoryModule from "./pages/Categories/Job_category";
 function App() {
   return (
     <>
@@ -62,8 +62,9 @@ function App() {
           <Route path="/shop-management" element={<ShopManage />} />
           {/* <Route path="/sosAlert" element={< SosAlert />} /> */}
           <Route path="/credit" element={<Credit />} />
-          <Route path="/category" element={<Category />} />
-          <Route path="/subcategory" element={<SubCategory />} />
+          <Route path="/cat-shop" element={<CategoryShop />} />
+          <Route path="/cat-item" element={<Item_Category />} />
+          <Route path="/cat-jobs" element={<JobCategoryModule />} />
           <Route path="/notifications" element={<Notification />} />
           <Route path="/moderationblocking" element={<Moderation />} />
           <Route path="/systemsetting" element={<Setting />} />

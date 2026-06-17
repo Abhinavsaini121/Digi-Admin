@@ -538,7 +538,8 @@ const BloodRequests = () => {
     fontSize: "12px",
   };
   return (
-    <div className="p-6 bg-white rounded-lg shadow-sm max-w-7xl mx-auto mb-8 mt-2">
+    <div className="p-6 bg-white rounded-lg shadow-sm max-w-7xl mx-auto mb-8 mt-2 overflow-x-hidden">
+      {" "}
       <div className="flex justify-between items-start mb-6">
         <div className="flex flex-col gap-4">
           <h1 className="text-2xl font-bold text-gray-800">Blood Requests</h1>
@@ -572,7 +573,6 @@ const BloodRequests = () => {
           Add Blood Request
         </Button>
       </div>
-
       <div className="mb-6">
         <Input
           placeholder="Search by Patient Name, Hospital or Blood Group..."
@@ -583,16 +583,15 @@ const BloodRequests = () => {
           onChange={(e) => setSearchText(e.target.value)}
         />
       </div>
-
       <Table
         columns={columns}
         dataSource={filteredData}
         loading={loading}
         rowKey={(record) => record._id || Math.random()}
         pagination={{ pageSize: 8 }}
+        scroll={{ x: 1400 }}
         className="ant-table-striped"
       />
-
       {/* ADD MODAL (POST) */}
       <Modal
         title={
@@ -795,7 +794,6 @@ const BloodRequests = () => {
           </Row>
         </div>
       </Modal>
-
       {/* EDIT MODAL (PUT) */}
       <Modal
         title={
@@ -955,7 +953,6 @@ const BloodRequests = () => {
           </div>
         )}
       </Modal>
-
       {/* VIEW MODAL */}
       <Modal
         title={

@@ -1,21 +1,31 @@
-import React, { useState, useEffect } from 'react';
-import { Search, UserPlus, Edit2, Lock, Unlock, Trash2, X } from 'lucide-react';
-import { getAllAdminData, registerAdmin, searchAdminAPI, deleteAdminAPI, updateAdminAPI } from "../../auth/adminLogin";
+import React, { useState, useEffect } from "react";
+import { Search, UserPlus, Edit2, Lock, Unlock, Trash2, X } from "lucide-react";
+import {
+  getAllAdminData,
+  registerAdmin,
+  searchAdminAPI,
+  deleteAdminAPI,
+  updateAdminAPI,
+} from "../../auth/adminLogin";
 
 const UserTable = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formData, setFormData] = useState({ name: '', email: '', password: '' });
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+  });
   const [regLoading, setRegLoading] = useState(false);
   const [toast, setToast] = useState({ visible: false, message: "" });
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [adminToDelete, setAdminToDelete] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
-  const [updateFormData, setUpdateFormData] = useState({ name: '', email: '' });
+  const [updateFormData, setUpdateFormData] = useState({ name: "", email: "" });
   const [adminToUpdateId, setAdminToUpdateId] = useState(null);
   const [updateLoading, setUpdateLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -29,7 +39,7 @@ const UserTable = () => {
       setError(null);
       const response = await getAllAdminData(page);
       if (response && response.admins) {
-        setUsers(response.admins);   // ✅ सही
+        setUsers(response.admins); // ✅ सही
         setTotalPages(Math.ceil(response.totalAdmins / itemsPerPage)); // ✅ pagination fix
         setTotalItems(response.totalAdmins);
       } else {
@@ -51,11 +61,15 @@ const UserTable = () => {
     e.preventDefault();
     setRegLoading(true);
     try {
-      const result = await registerAdmin(formData.name, formData.email, formData.password);
+      const result = await registerAdmin(
+        formData.name,
+        formData.email,
+        formData.password,
+      );
       if (result) {
         setToast({ visible: true, message: "Admin added successfully!" });
         setIsModalOpen(false);
-        setFormData({ name: '', email: '', password: '' });
+        setFormData({ name: "", email: "", password: "" });
         setCurrentPage(1);
         fetchUsers(1);
         setTimeout(() => setToast({ visible: false, message: "" }), 5000);
@@ -70,7 +84,7 @@ const UserTable = () => {
   const handleSearch = async (val) => {
     setSearchQuery(val);
     try {
-      if (val.trim() === '') {
+      if (val.trim() === "") {
         await fetchUsers(1);
         setCurrentPage(1);
       } else {
@@ -89,7 +103,9 @@ const UserTable = () => {
       const result = await deleteAdminAPI(adminToDelete);
       if (result) {
         setToast({ visible: true, message: "Admin deleted successfully!" });
-        setUsers(users.filter((user) => (user.id || user._id) !== adminToDelete));
+        setUsers(
+          users.filter((user) => (user.id || user._id) !== adminToDelete),
+        );
         setIsDeleteModalOpen(false);
         setAdminToDelete(null);
         setTimeout(() => setToast({ visible: false, message: "" }), 3000);
@@ -114,7 +130,13 @@ const UserTable = () => {
       const result = await updateAdminAPI(adminToUpdateId, updateFormData);
       if (result) {
         setToast({ visible: true, message: "Admin updated successfully!" });
-        setUsers(users.map(u => (u.id || u._id) === adminToUpdateId ? { ...u, ...updateFormData } : u));
+        setUsers(
+          users.map((u) =>
+            (u.id || u._id) === adminToUpdateId
+              ? { ...u, ...updateFormData }
+              : u,
+          ),
+        );
         setIsUpdateModalOpen(false);
         setTimeout(() => setToast({ visible: false, message: "" }), 3000);
       }
@@ -136,11 +158,15 @@ const UserTable = () => {
       )}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-800">All Admin</h1>
-        <p className="text-gray-500">Manage all registered admin on the platform.</p>
+        <p className="text-gray-500">
+          Manage all registered admin on the platform.
+        </p>
       </div>
 
       <div className="flex gap-4 mb-6">
-        <button className="px-6 py-2 bg-indigo-600 text-white rounded-full font-medium">All Admin</button>
+        <button className="px-6 py-2 bg-indigo-600 text-white rounded-full font-medium">
+          All Admin
+        </button>
       </div>
 
       <div className="flex justify-between items-center mb-6">
@@ -164,14 +190,19 @@ const UserTable = () => {
         </button>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
-        {loading && <div className="p-6 text-center text-indigo-600">Loading Admin...</div>}
-        {error && <div className="p-6 text-center text-red-600 bg-red-50">{error}</div>}
-
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
+        {" "}
+        {loading && (
+          <div className="p-6 text-center text-indigo-600">
+            Loading Admin...
+          </div>
+        )}
+        {error && (
+          <div className="p-6 text-center text-red-600 bg-red-50">{error}</div>
+        )}
         {!loading && !error && users.length === 0 && (
           <div className="p-6 text-center text-gray-500">No Admin found.</div>
         )}
-
         {!loading && users.length > 0 && (
           <table className="w-full text-left border-collapse">
             <thead>
@@ -188,27 +219,47 @@ const UserTable = () => {
               {users.map((user, index) => {
                 const serialNumber = indexOfFirstItem + index + 1;
                 return (
-                  <tr key={user.id || user._id} className="hover:bg-gray-50 transition">
-                    <td className="px-6 py-4 text-sm text-gray-600">{serialNumber}</td>
+                  <tr
+                    key={user.id || user._id}
+                    className="hover:bg-gray-50 transition"
+                  >
+                    <td className="px-6 py-4 text-sm text-gray-600">
+                      {serialNumber}
+                    </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
-                          <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`} alt="avatar" className="w-8 h-8" />
+                          <img
+                            src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`}
+                            alt="avatar"
+                            className="w-8 h-8"
+                          />
                         </div>
                         <div>
-                          <p className="text-sm font-semibold text-gray-800">{user.name}</p>
-                          <p className="text-xs text-gray-400">{user.phone || 'N/A'}</p>
+                          <p className="text-sm font-semibold text-gray-800">
+                            {user.name}
+                          </p>
+                          <p className="text-xs text-gray-400">
+                            {user.phone || "N/A"}
+                          </p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{user.email || 'N/A'}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600 font-medium">{user.type || 'UNKNOWN'}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">
+                      {user.email || "N/A"}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-600 font-medium">
+                      {user.type || "UNKNOWN"}
+                    </td>
                     <td className="px-6 py-4">
-                      <span className={`px-3 py-1 rounded text-xs font-bold ${user.status === 'BLOCKED'
-                        ? 'bg-red-50 text-red-400 border border-red-100'
-                        : 'bg-green-50 text-green-500 border border-green-100'
-                        }`}>
-                        {user.status || 'INACTIVE'}
+                      <span
+                        className={`px-3 py-1 rounded text-xs font-bold ${
+                          user.status === "BLOCKED"
+                            ? "bg-red-50 text-red-400 border border-red-100"
+                            : "bg-green-50 text-green-500 border border-green-100"
+                        }`}
+                      >
+                        {user.status || "INACTIVE"}
                       </span>
                     </td>
                     <td className="px-6 py-4">
@@ -218,10 +269,16 @@ const UserTable = () => {
                           className="cursor-pointer hover:text-blue-500"
                           onClick={() => openUpdateModal(user)}
                         />
-                        {user.status === 'BLOCKED' ? (
-                          <Unlock size={18} className="cursor-pointer text-green-500" />
+                        {user.status === "BLOCKED" ? (
+                          <Unlock
+                            size={18}
+                            className="cursor-pointer text-green-500"
+                          />
                         ) : (
-                          <Lock size={18} className="cursor-pointer text-yellow-500" />
+                          <Lock
+                            size={18}
+                            className="cursor-pointer text-yellow-500"
+                          />
                         )}
                         <Trash2
                           size={18}
@@ -243,12 +300,21 @@ const UserTable = () => {
 
       <div className="mt-6 flex items-center justify-between bg-white px-6 py-4 rounded-xl border border-gray-100 shadow-sm">
         <div className="text-sm text-gray-500 font-medium">
-          Showing <span className="text-indigo-600 font-bold">{indexOfFirstItem + 1}</span> to <span className="text-indigo-600 font-bold">{Math.min(indexOfFirstItem + users.length, totalItems)}</span> of <span className="text-indigo-600 font-bold">{totalItems}</span> entries
+          Showing{" "}
+          <span className="text-indigo-600 font-bold">
+            {indexOfFirstItem + 1}
+          </span>{" "}
+          to{" "}
+          <span className="text-indigo-600 font-bold">
+            {Math.min(indexOfFirstItem + users.length, totalItems)}
+          </span>{" "}
+          of <span className="text-indigo-600 font-bold">{totalItems}</span>{" "}
+          entries
         </div>
         <div className="flex gap-2">
           <button
             disabled={currentPage === 1 || loading}
-            onClick={() => setCurrentPage(prev => prev - 1)}
+            onClick={() => setCurrentPage((prev) => prev - 1)}
             className="px-4 py-2 border border-gray-200 rounded-lg text-sm font-bold text-gray-600 hover:bg-gray-50 disabled:opacity-50 transition"
           >
             Previous
@@ -266,7 +332,7 @@ const UserTable = () => {
           </div>
           <button
             disabled={currentPage === totalPages || loading}
-            onClick={() => setCurrentPage(prev => prev + 1)}
+            onClick={() => setCurrentPage((prev) => prev + 1)}
             className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-bold hover:bg-indigo-700 disabled:opacity-50 transition"
           >
             Next
@@ -278,43 +344,72 @@ const UserTable = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
             <div className="flex justify-between items-center p-6 border-b">
-              <h2 className="text-xl font-bold text-gray-800">Register New Admin</h2>
-              <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
+              <h2 className="text-xl font-bold text-gray-800">
+                Register New Admin
+              </h2>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X size={20} />
+              </button>
             </div>
             <form onSubmit={handleAddAdmin} className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Full Name
+                </label>
                 <input
                   required
                   type="text"
                   className="w-full p-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email Address
+                </label>
                 <input
                   required
                   type="email"
                   className="w-full p-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
                   value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Password
+                </label>
                 <input
                   required
                   type="password"
                   className="w-full p-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
                   value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, password: e.target.value })
+                  }
                 />
               </div>
               <div className="flex gap-3 mt-6">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 px-4 py-2.5 border rounded-lg font-bold text-gray-500 hover:bg-gray-50">Cancel</button>
-                <button type="submit" disabled={regLoading} className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 disabled:opacity-50">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="flex-1 px-4 py-2.5 border rounded-lg font-bold text-gray-500 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={regLoading}
+                  className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 disabled:opacity-50"
+                >
                   {regLoading ? "Registering..." : "Register Admin"}
                 </button>
               </div>
@@ -331,9 +426,12 @@ const UserTable = () => {
                 <Trash2 size={30} className="text-red-600" />
               </div>
             </div>
-            <h2 className="text-xl font-bold text-gray-800 mb-2">Are you sure?</h2>
+            <h2 className="text-xl font-bold text-gray-800 mb-2">
+              Are you sure?
+            </h2>
             <p className="text-gray-500 mb-6">
-              Do you really want to delete this admin? This action cannot be undone.
+              Do you really want to delete this admin? This action cannot be
+              undone.
             </p>
             <div className="flex gap-3">
               <button
@@ -358,33 +456,64 @@ const UserTable = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
             <div className="flex justify-between items-center p-6 border-b">
-              <h2 className="text-xl font-bold text-gray-800">Edit Admin Details</h2>
-              <button onClick={() => setIsUpdateModalOpen(false)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
+              <h2 className="text-xl font-bold text-gray-800">
+                Edit Admin Details
+              </h2>
+              <button
+                onClick={() => setIsUpdateModalOpen(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X size={20} />
+              </button>
             </div>
             <form onSubmit={handleUpdateAdmin} className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Full Name
+                </label>
                 <input
                   required
                   type="text"
                   className="w-full p-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
                   value={updateFormData.name}
-                  onChange={(e) => setUpdateFormData({ ...updateFormData, name: e.target.value })}
+                  onChange={(e) =>
+                    setUpdateFormData({
+                      ...updateFormData,
+                      name: e.target.value,
+                    })
+                  }
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email Address
+                </label>
                 <input
                   required
                   type="email"
                   className="w-full p-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
                   value={updateFormData.email}
-                  onChange={(e) => setUpdateFormData({ ...updateFormData, email: e.target.value })}
+                  onChange={(e) =>
+                    setUpdateFormData({
+                      ...updateFormData,
+                      email: e.target.value,
+                    })
+                  }
                 />
               </div>
               <div className="flex gap-3 mt-6">
-                <button type="button" onClick={() => setIsUpdateModalOpen(false)} className="flex-1 px-4 py-2.5 border rounded-lg font-bold text-gray-500 hover:bg-gray-50">Cancel</button>
-                <button type="submit" disabled={updateLoading} className="flex-1 px-4 py-2.5 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 disabled:opacity-50">
+                <button
+                  type="button"
+                  onClick={() => setIsUpdateModalOpen(false)}
+                  className="flex-1 px-4 py-2.5 border rounded-lg font-bold text-gray-500 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={updateLoading}
+                  className="flex-1 px-4 py-2.5 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 disabled:opacity-50"
+                >
                   {updateLoading ? "Updating..." : "Save Changes"}
                 </button>
               </div>

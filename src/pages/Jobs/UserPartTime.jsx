@@ -1,58 +1,67 @@
 import React, { useState, useEffect } from "react";
-import { Trash2, Eye, MapPin, Clock, Star, Search, Zap, Loader2 } from "lucide-react";
+import {
+  Trash2,
+  Eye,
+  MapPin,
+  Clock,
+  Star,
+  Search,
+  Zap,
+  Loader2,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 // Import your controller
 import { getAllRegularJobs, deleteJob } from "../../auth/adminLogin";
-
+import DeleteConfirmModal from "../../components/common/DeleteConfirm";
 const UserPartTimeJobs = () => {
-    const [jobs, setJobs] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-    const [jobIdToDelete, setJobIdToDelete] = useState(null);
-    const [searchTerm, setSearchTerm] = useState("");
-    const [jobType, setJobType] = useState("USER");
-    const [currentPage, setCurrentPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(1);
-    const navigate = useNavigate();
+  const [jobs, setJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [jobIdToDelete, setJobIdToDelete] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [jobType, setJobType] = useState("USER");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const navigate = useNavigate();
 
-    const fetchJobs = async (page = 1, search = searchTerm) => {
-        try {
-            setLoading(true);
-            const response = await getAllRegularJobs(page, search);
-            if (response && response.data) {
-                setJobs(response.data);
-                setTotalPages(response.totalPages);
-            }
-        } catch (error) {
-            console.error("Failed to fetch jobs:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
-    useEffect(() => {
-        if (searchTerm !== "") {
-            setCurrentPage(1);
-        }
-        fetchJobs(currentPage);
-    }, [currentPage, searchTerm]);
-    // Delete Logic (API Call)
-    const confirmDelete = async () => {
-        try {
-            await deleteJob(jobIdToDelete);
-            setJobs(jobs.filter(job => job._id !== jobIdToDelete));
-            setIsDeleteModalOpen(false);
-            setJobIdToDelete(null);
-        } catch (error) {
-            alert("Failed to delete job");
-        }
-    };
+  const fetchJobs = async (page = 1, search = searchTerm) => {
+    try {
+      setLoading(true);
+      const response = await getAllRegularJobs(page, search);
+      if (response && response.data) {
+        setJobs(response.data);
+        setTotalPages(response.totalPages);
+      }
+    } catch (error) {
+      console.error("Failed to fetch jobs:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    if (searchTerm !== "") {
+      setCurrentPage(1);
+    }
+    fetchJobs(currentPage);
+  }, [currentPage, searchTerm]);
+  const confirmDelete = async () => {
+    try {
+      await deleteJob(jobIdToDelete);
 
+      setJobs((prev) => prev.filter((job) => job._id !== jobIdToDelete));
 
+      setIsDeleteModalOpen(false);
+      setJobIdToDelete(null);
+    } catch (error) {
+      console.error(error);
+      alert("Failed to delete job");
+    }
+  };
 
-    return (
-        <div className="pt-admin-wrapper">
-            <style>{`
-                .pt-admin-wrapper { padding: 2rem; background-color: #f0f9ff; min-height: 100vh; font-family: 'Plus Jakarta Sans', sans-serif; color: #1e293b; }
+  return (
+    <div className="pt-admin-wrapper">
+      <style>{`
+                .pt-admin-wrapper { padding: 2rem; background-color: #ffffff; min-height: 100vh; font-family: 'Plus Jakarta Sans', sans-serif; color: #1e293b; }
                 .pt-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; gap: 1rem; }
                 .pt-title h1 { font-size: 1.5rem; font-weight: 800; color: #0c4a6e; margin: 0; }
                 .pt-title p { font-size: 0.85rem; color: #64748b; margin-top: 2px; }
@@ -89,93 +98,148 @@ const UserPartTimeJobs = () => {
                 .btn-yes { background: #e11d48; color: white; }
             `}</style>
 
-            <div className="pt-header">
-                <div className="pt-title">
-                    <h1>Part-time Gigs Management</h1>
-                    <p>Managing {jobs.length} user-created flexible opportunities</p>
-                </div>
-
-                <select value={jobType} onChange={(e) => e.target.value === "ADMIN" ? navigate("/PartTimeJobs") : null} className="pt-dropdown">
-                    <option value="USER">User Jobs</option>
-                    <option value="ADMIN">Admin Jobs</option>
-                </select>
-
-                <div className="pt-search-input">
-                    <Search size={16} className="search-ico" />
-                    <input type="text" placeholder="Search by title..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
-                </div>
-            </div>
-
-            <div className="pt-table-card">
-                {loading ? (
-                    <div style={{ textAlign: "center", padding: "3rem" }}><Loader2 className="animate-spin" /></div>
-                ) : (
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>S.No</th>
-                                <th>Gig Details</th>
-                                <th>User Info</th>
-                                <th>Salary Range</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {jobs.map((job, index) => (
-                                <tr key={job._id}>
-                                    <td>{(currentPage - 1) * 10 + (index + 1)}</td>
-                                    <td>
-                                        <div className="gig-cell">
-                                            <div className="gig-icon"><img src={job.images[0]} alt="gig" /></div>
-                                            <div>
-                                                <div className="gig-name">{job.title}</div>
-                                                <span className="gig-cat">{job.companyName}</span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div style={{ fontWeight: "600", fontSize: "0.85rem" }}>{job.userId?.fullName || "N/A"}</div>
-                                        <div style={{ fontSize: "0.7rem", color: "#64748b", textTransform: "uppercase" }}>{job.userId?.role || "USER"}</div>
-                                    </td>
-                                    <td><span className="pay-text">₹{job.salaryRange?.min ?? "N/A"} - ₹{job.salaryRange?.max ?? "N/A"}</span></td>
-                                    <td>
-                                        <button className="pt-btn pt-delete" onClick={() => { setJobIdToDelete(job._id); setIsDeleteModalOpen(true); }}>
-                                            <Trash2 size={12} /> Delete
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                )}
-            </div>
-            <div className="pagination" style={{ display: 'flex', gap: '10px', marginTop: '20px', justifyContent: 'center' }}>
-                <button
-                    disabled={currentPage === 1}
-                    onClick={() => setCurrentPage(prev => prev - 1)}
-                >Previous</button>
-
-                <span>Page {currentPage} of {totalPages}</span>
-
-                <button
-                    disabled={currentPage === totalPages}
-                    onClick={() => setCurrentPage(prev => prev + 1)}
-                >Next</button>
-            </div>
-
-            {isDeleteModalOpen && (
-                <div className="modal-bg">
-                    <div className="modal-box">
-                        <h2 style={{ fontSize: "1.2rem" }}>Delete this gig?</h2>
-                        <div className="modal-foot">
-                            <button onClick={() => setIsDeleteModalOpen(false)}>Cancel</button>
-                            <button className="btn-yes" onClick={confirmDelete}>Confirm</button>
-                        </div>
-                    </div>
-                </div>
-            )}
+      <div className="pt-header">
+        <div className="pt-title">
+          <h1>Part-time Gigs Management</h1>
+          <p>Managing {jobs.length} user-created flexible opportunities</p>
         </div>
-    );
+
+        <select
+          value={jobType}
+          onChange={(e) =>
+            e.target.value === "ADMIN" ? navigate("/PartTimeJobs") : null
+          }
+          className="pt-dropdown"
+        >
+          <option value="USER">User Jobs</option>
+          <option value="ADMIN">Admin Jobs</option>
+        </select>
+
+        <div className="pt-search-input">
+          <Search size={16} className="search-ico" />
+          <input
+            type="text"
+            placeholder="Search by title..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div className="pt-table-card">
+        {loading ? (
+          <div style={{ textAlign: "center", padding: "3rem" }}>
+            <Loader2 className="animate-spin" />
+          </div>
+        ) : (
+          <table>
+            <thead>
+              <tr>
+                <th>S.No</th>
+                <th>Gig Details</th>
+                <th>User Info</th>
+                <th>Salary Range</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {jobs.map((job, index) => (
+                <tr key={job._id}>
+                  <td>{(currentPage - 1) * 10 + (index + 1)}</td>
+                  <td>
+                    <div className="gig-cell">
+                      <div className="gig-icon">
+                        <img src={job.images[0]} alt="gig" />
+                      </div>
+                      <div>
+                        <div className="gig-name">{job.title}</div>
+                        <span className="gig-cat">{job.companyName}</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <div style={{ fontWeight: "600", fontSize: "0.85rem" }}>
+                      {job.userId?.fullName || "N/A"}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "0.7rem",
+                        color: "#64748b",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      {job.userId?.role || "USER"}
+                    </div>
+                  </td>
+                  <td>
+                    <span className="pay-text">
+                      ₹{job.salaryRange?.min ?? "N/A"} - ₹
+                      {job.salaryRange?.max ?? "N/A"}
+                    </span>
+                  </td>
+                  <td>
+                    <button
+                      className="pt-btn pt-delete"
+                      onClick={() => {
+                        setJobIdToDelete(job._id);
+                        setIsDeleteModalOpen(true);
+                      }}
+                    >
+                      <Trash2 size={12} />
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+      <div
+        className="pagination"
+        style={{
+          display: "flex",
+          gap: "10px",
+          marginTop: "20px",
+          justifyContent: "center",
+        }}
+      >
+        <button
+          disabled={currentPage === 1}
+          onClick={() => setCurrentPage((prev) => prev - 1)}
+        >
+          Previous
+        </button>
+
+        <span>
+          Page {currentPage} of {totalPages}
+        </span>
+
+        <button
+          disabled={currentPage === totalPages}
+          onClick={() => setCurrentPage((prev) => prev + 1)}
+        >
+          Next
+        </button>
+      </div>
+
+      {isDeleteModalOpen && (
+        <div className="modal-bg">
+          <div className="modal-box">
+            <h2 style={{ fontSize: "1.2rem" }}>Delete this gig?</h2>
+            <div className="modal-foot">
+              <button onClick={() => setIsDeleteModalOpen(false)}>
+                Cancel
+              </button>
+              <button className="btn-yes" onClick={confirmDelete}>
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default UserPartTimeJobs;

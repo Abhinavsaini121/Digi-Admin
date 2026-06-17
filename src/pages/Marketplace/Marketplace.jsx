@@ -20,7 +20,7 @@ import {
   ChevronLeft,
   ChevronRight,
   PhoneCall,
-  MessageSquare
+  MessageSquare,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
@@ -39,7 +39,7 @@ const MarketplaceManager = () => {
     sum: 0,
   });
   const [loading, setLoading] = useState(true);
-
+  const [errors, setErrors] = useState({});
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [currentItem, setCurrentItem] = useState(null);
@@ -70,11 +70,11 @@ const MarketplaceManager = () => {
           );
           const data = await res.json();
 
-          setNewItem((prev) => ({
+          setCurrentItem((prev) => ({
             ...prev,
             location: {
               address: data.display_name || "",
-              coordinates: [lat, lng],
+              coordinates: [Number(lat.toFixed(6)), Number(lng.toFixed(6))],
             },
           }));
         } catch (err) {
@@ -144,7 +144,25 @@ const MarketplaceManager = () => {
 
   const handleUpdateConfirm = async () => {
     if (!currentItem) return;
+
+    if (
+      !currentItem.title ||
+      !currentItem.price ||
+      !currentItem.location?.address ||
+      !currentItem.location?.coordinates?.[0] ||
+      !currentItem.location?.coordinates?.[1]
+    ) {
+      showToast("Please fill all required fields", "error");
+      return;
+    }
+    if (currentItem.preferredCommunication?.call) {
+      if (!currentItem.phone || currentItem.phone.length !== 10) {
+        showToast("Phone number must be exactly 10 digits", "error");
+        return;
+      }
+    }
     setActionLoading(true);
+
     try {
       const result = await updateMarketplaceItemAPI(currentItem._id, {
         title: currentItem.title,
@@ -291,14 +309,17 @@ const MarketplaceManager = () => {
             Marketplace Manager
           </h1>
           <p className="text-slate-500 text-xs mt-1.5 font-medium">
-            Perform administrative listing tasks, monitor telemetry, and assign item parameters.
+            Perform administrative listing tasks, monitor telemetry, and assign
+            item parameters.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
           <div className="bg-white p-1.5 rounded-2xl border border-slate-200/60 shadow-sm flex-1 sm:flex-initial">
             <select
-              value={location.pathname === "/user-marketplace" ? "User" : "Admin"}
+              value={
+                location.pathname === "/user-marketplace" ? "User" : "Admin"
+              }
               onChange={(e) => {
                 if (e.target.value === "Admin") {
                   navigate("/Marketplace");
@@ -317,7 +338,12 @@ const MarketplaceManager = () => {
             onClick={() => fetchMarketplaceData(currentPage)}
             className="flex items-center justify-center gap-2 px-5 py-3 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs rounded-2xl shadow-sm transition-all duration-200 active:scale-95 flex-1 sm:flex-initial"
           >
-            <RefreshCw size={14} className={loading ? "animate-spin text-indigo-600" : "text-slate-500"} />
+            <RefreshCw
+              size={14}
+              className={
+                loading ? "animate-spin text-indigo-600" : "text-slate-500"
+              }
+            />
             Refresh
           </button>
 
@@ -364,9 +390,14 @@ const MarketplaceManager = () => {
         <div className="flex flex-col items-center justify-center p-24 bg-white rounded-3xl border border-slate-200/60 shadow-sm mb-10">
           <div className="relative mb-4">
             <div className="absolute -inset-1 rounded-full bg-indigo-500/10 animate-ping" />
-            <Loader2 size={32} className="animate-spin text-indigo-600 relative" />
+            <Loader2
+              size={32}
+              className="animate-spin text-indigo-600 relative"
+            />
           </div>
-          <p className="text-slate-500 text-xs font-semibold">Syncing records database...</p>
+          <p className="text-slate-500 text-xs font-semibold">
+            Syncing records database...
+          </p>
         </div>
       )}
 
@@ -429,7 +460,8 @@ const MarketplaceManager = () => {
                           </p>
                           <p className="text-[10px] text-slate-400 flex items-center gap-1.5 mt-1.5 font-semibold">
                             <MapPin size={11} className="text-indigo-400" />{" "}
-                            {item.location?.address || "No Coordinates Assigned"}
+                            {item.location?.address ||
+                              "No Coordinates Assigned"}
                           </p>
                         </div>
                       </div>
@@ -488,8 +520,13 @@ const MarketplaceManager = () => {
             {items.length === 0 && (
               <div className="p-24 text-center text-slate-400 flex flex-col items-center justify-center gap-2">
                 <Layers size={36} className="text-slate-300 stroke-[1.5]" />
-                <p className="text-xs font-bold text-slate-500 mt-2">Zero Listings Found</p>
-                <p className="text-[10px] text-slate-400 max-w-xs">There are currently no items available inside the marketplace storehouse.</p>
+                <p className="text-xs font-bold text-slate-500 mt-2">
+                  Zero Listings Found
+                </p>
+                <p className="text-[10px] text-slate-400 max-w-xs">
+                  There are currently no items available inside the marketplace
+                  storehouse.
+                </p>
               </div>
             )}
           </div>
@@ -545,7 +582,9 @@ const MarketplaceManager = () => {
                 <h2 className="text-base font-extrabold text-slate-900">
                   Update Marketplace Listing
                 </h2>
-                <p className="text-[10px] text-slate-400 font-medium mt-0.5">Adjust credentials, status, and tracking info</p>
+                <p className="text-[10px] text-slate-400 font-medium mt-0.5">
+                  Adjust credentials, status, and tracking info
+                </p>
               </div>
               <button
                 onClick={() => setIsEditModalOpen(false)}
@@ -554,7 +593,7 @@ const MarketplaceManager = () => {
                 <X size={18} />
               </button>
             </div>
-            
+
             <div className="p-8 space-y-5 max-h-[60vh] overflow-y-auto">
               <div>
                 <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
@@ -572,7 +611,9 @@ const MarketplaceManager = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Price (₹)</label>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+                    Price (₹)
+                  </label>
                   <input
                     type="number"
                     value={currentItem.price || ""}
@@ -587,7 +628,9 @@ const MarketplaceManager = () => {
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Status</label>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+                    Status
+                  </label>
                   <select
                     value={currentItem.isActive ? "true" : "false"}
                     onChange={(e) =>
@@ -606,7 +649,9 @@ const MarketplaceManager = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Promote Listing</label>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+                    Promote Listing
+                  </label>
                   <select
                     value={currentItem.isFeatured ? "true" : "false"}
                     onChange={(e) =>
@@ -640,9 +685,19 @@ const MarketplaceManager = () => {
                   />
                 </div>
               </div>
-
+              <div className="mb-4">
+                <button
+                  type="button"
+                  onClick={getCurrentLocation}
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 transition"
+                >
+                  📍 Fetch Current Location
+                </button>
+              </div>
               <div>
-                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Listing Location Address</label>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+                  Listing Location Address
+                </label>
                 <input
                   type="text"
                   value={currentItem.location?.address || ""}
@@ -661,7 +716,9 @@ const MarketplaceManager = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Latitude</label>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+                    Latitude
+                  </label>
                   <input
                     type="text"
                     placeholder="Latitude"
@@ -682,7 +739,9 @@ const MarketplaceManager = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Longitude</label>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+                    Longitude
+                  </label>
                   <input
                     type="text"
                     placeholder="Longitude"
@@ -730,7 +789,9 @@ const MarketplaceManager = () => {
                         />
                       </label>
                     </div>
-                    <p className="text-[10px] text-slate-400 font-medium">JPEG, PNG, GIF up to 10MB</p>
+                    <p className="text-[10px] text-slate-400 font-medium">
+                      JPEG, PNG, GIF up to 10MB
+                    </p>
                   </div>
                 </div>
               </div>
@@ -766,7 +827,9 @@ const MarketplaceManager = () => {
                 <h2 className="text-base font-extrabold text-slate-900">
                   Register New Marketplace Entry
                 </h2>
-                <p className="text-[10px] text-slate-400 font-medium mt-0.5">Configure details, upload files, and allocate location</p>
+                <p className="text-[10px] text-slate-400 font-medium mt-0.5">
+                  Configure details, upload files, and allocate location
+                </p>
               </div>
               <button
                 onClick={() => setIsAddModalOpen(false)}
@@ -778,7 +841,9 @@ const MarketplaceManager = () => {
 
             <div className="p-8 space-y-5 max-h-[60vh] overflow-y-auto">
               <div>
-                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Item Title</label>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+                  Item Title
+                </label>
                 <input
                   placeholder="e.g. Wireless Noise-Cancelling Headphones"
                   onChange={(e) =>
@@ -789,7 +854,9 @@ const MarketplaceManager = () => {
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Item Description Details</label>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+                  Item Description Details
+                </label>
                 <textarea
                   placeholder="e.g. Gently used audio headsets with original boxing and charge brick..."
                   rows={2}
@@ -802,7 +869,9 @@ const MarketplaceManager = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Category</label>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+                    Category
+                  </label>
                   <input
                     placeholder="e.g. Electronics"
                     onChange={(e) =>
@@ -813,7 +882,9 @@ const MarketplaceManager = () => {
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Sub-category</label>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+                    Sub-category
+                  </label>
                   <input
                     placeholder="e.g. Audio Gadgets"
                     onChange={(e) =>
@@ -825,7 +896,9 @@ const MarketplaceManager = () => {
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Geographic Address Info</label>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+                  Geographic Address Info
+                </label>
                 <div className="flex gap-2">
                   <input
                     placeholder="Provide a valid marketplace address"
@@ -853,7 +926,9 @@ const MarketplaceManager = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Latitude Coordinates</label>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+                    Latitude Coordinates
+                  </label>
                   <input
                     placeholder="e.g. 28.6139"
                     value={newItem.location?.coordinates?.[0] || ""}
@@ -863,7 +938,9 @@ const MarketplaceManager = () => {
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Longitude Coordinates</label>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+                    Longitude Coordinates
+                  </label>
                   <input
                     placeholder="e.g. 77.2090"
                     value={newItem.location?.coordinates?.[1] || ""}
@@ -875,26 +952,50 @@ const MarketplaceManager = () => {
 
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Preference</label>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+                    Preference
+                  </label>
                   <select
-                    className="w-full px-4 py-3 bg-white border border-slate-200 rounded-2xl text-xs font-medium focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all duration-200 cursor-pointer"
+                    value={
+                      currentItem.preferredCommunication?.call
+                        ? "call"
+                        : currentItem.preferredCommunication?.chat
+                          ? "chat"
+                          : ""
+                    }
                     onChange={(e) =>
-                      setNewItem({
-                        ...newItem,
-                        preferredCommunication: JSON.stringify({
+                      setCurrentItem({
+                        ...currentItem,
+                        preferredCommunication: {
                           call: e.target.value === "call",
                           chat: e.target.value === "chat",
-                        }),
+                        },
                       })
                     }
+                    className="w-full px-4 py-3 bg-white border border-slate-200 rounded-2xl text-xs font-medium"
                   >
-                    <option value="call">Call Channel</option>
-                    <option value="chat">Chat Channel</option>
+                    <option value="">Select Mode</option>
+                    <option value="call">Call (Phone Required)</option>
+                    <option value="chat">Chat Only</option>
                   </select>
+                  <input
+                    type="text"
+                    placeholder="Enter 10-digit phone number"
+                    value={currentItem.phone || ""}
+                    onChange={(e) =>
+                      setCurrentItem({
+                        ...currentItem,
+                        phone: e.target.value,
+                      })
+                    }
+                    className="w-full mt-2 px-4 py-3 bg-white border border-slate-200 rounded-2xl text-xs font-medium"
+                  />
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Status Flag</label>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+                    Status Flag
+                  </label>
                   <select
                     onChange={(e) =>
                       setNewItem({
@@ -910,7 +1011,9 @@ const MarketplaceManager = () => {
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Placement</label>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+                    Placement
+                  </label>
                   <select
                     onChange={(e) =>
                       setNewItem({
@@ -938,13 +1041,18 @@ const MarketplaceManager = () => {
                         <input
                           type="file"
                           onChange={(e) =>
-                            setNewItem({ ...newItem, images: [e.target.files[0]] })
+                            setNewItem({
+                              ...newItem,
+                              images: [e.target.files[0]],
+                            })
                           }
                           className="sr-only"
                         />
                       </label>
                     </div>
-                    <p className="text-[10px] text-slate-400 font-medium">JPEG, PNG, GIF up to 10MB</p>
+                    <p className="text-[10px] text-slate-400 font-medium">
+                      JPEG, PNG, GIF up to 10MB
+                    </p>
                   </div>
                 </div>
               </div>
@@ -1017,13 +1125,21 @@ const MarketplaceManager = () => {
 const StatCard = ({ title, value, icon, gradient }) => {
   return (
     <div className="bg-white border border-slate-200/60 p-6 rounded-3xl shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden group">
-      <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${gradient} opacity-5 rounded-full -mr-6 -mt-6 transition-transform group-hover:scale-125 duration-300`} />
+      <div
+        className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${gradient} opacity-5 rounded-full -mr-6 -mt-6 transition-transform group-hover:scale-125 duration-300`}
+      />
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{title}</p>
-          <p className="text-3xl font-extrabold text-slate-900 mt-2 tracking-tight">{value}</p>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+            {title}
+          </p>
+          <p className="text-3xl font-extrabold text-slate-900 mt-2 tracking-tight">
+            {value}
+          </p>
         </div>
-        <div className={`w-12 h-12 bg-gradient-to-br ${gradient} text-white rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/10`}>
+        <div
+          className={`w-12 h-12 bg-gradient-to-br ${gradient} text-white rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/10`}
+        >
           {icon}
         </div>
       </div>

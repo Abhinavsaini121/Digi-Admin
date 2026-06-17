@@ -16,7 +16,7 @@ import {
   AlertCircle,
   CheckCircle2,
   Coins,
-  DollarSign
+  DollarSign,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import {
@@ -126,7 +126,9 @@ const Credits = () => {
     <div className="min-h-screen bg-[#fafbfe] p-4 md:p-8 text-slate-800 font-sans">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Admin Credits Dashboard</h1>
+          <h1 className="text-2xl font-bold text-slate-800 tracking-tight">
+            Admin Credits Dashboard
+          </h1>
           <p className="text-slate-400 text-xs mt-1">
             Manage your listing parameters, credit plans, and pricing structures
           </p>
@@ -137,7 +139,10 @@ const Credits = () => {
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
           <div className="p-5 flex flex-col sm:flex-row gap-4 justify-between items-stretch sm:items-center bg-white">
             <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+              <Search
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                size={16}
+              />
               <input
                 type="text"
                 value={searchTerm}
@@ -159,14 +164,30 @@ const Credits = () => {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50/75 border-b border-slate-100">
-                  <th className="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider w-14 text-center">S.No.</th>
-                  <th className="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Plan ID</th>
-                  <th className="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Plan Title</th>
-                  <th className="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Category</th>
-                  <th className="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Pricing</th>
-                  <th className="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Allocated Credits</th>
-                  <th className="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Brief Description</th>
-                  <th className="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">Actions</th>
+                  <th className="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider w-14 text-center">
+                    S.No.
+                  </th>
+                  <th className="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    Plan ID
+                  </th>
+                  <th className="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    Plan Title
+                  </th>
+                  <th className="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    Category
+                  </th>
+                  <th className="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    Pricing
+                  </th>
+                  <th className="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    Allocated Credits
+                  </th>
+                  <th className="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    Brief Description
+                  </th>
+                  <th className="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">
+                    Actions
+                  </th>
                 </tr>
               </thead>
 
@@ -174,36 +195,51 @@ const Credits = () => {
                 {loading ? (
                   <tr>
                     <td colSpan="8" className="p-16 text-center">
-                      <Loader2 className="animate-spin mx-auto text-indigo-600" size={24} />
+                      <Loader2
+                        className="animate-spin mx-auto text-indigo-600"
+                        size={24}
+                      />
                     </td>
                   </tr>
                 ) : plans.length === 0 ? (
                   <tr>
-                    <td colSpan="8" className="p-16 text-center text-slate-400 text-xs">
+                    <td
+                      colSpan="8"
+                      className="p-16 text-center text-slate-400 text-xs"
+                    >
                       No plans configured currently
                     </td>
                   </tr>
                 ) : (
                   plans.map((plan, index) => (
-                    <tr key={plan._id} className="hover:bg-slate-50/50 transition-colors duration-150">
+                    <tr
+                      key={plan._id}
+                      className="hover:bg-slate-50/50 transition-colors duration-150"
+                    >
                       <td className="p-4 text-xs font-semibold text-slate-400 text-center">
                         {(currentPage - 1) * limit + index + 1}
                       </td>
                       <td className="p-4 text-xs font-semibold text-slate-500 font-mono tracking-tight">
                         {plan.planId}
                       </td>
-                      <td className="p-4 text-xs font-bold text-slate-700">{plan.name}</td>
+                      <td className="p-4 text-xs font-bold text-slate-700">
+                        {plan.name}
+                      </td>
                       <td className="p-4">
                         <StatusBadge status={plan.category} />
                       </td>
-                      <td className="p-4 text-xs font-bold text-emerald-600">₹{plan.price}</td>
+                      <td className="p-4 text-xs font-bold text-emerald-600">
+                        ₹{plan.price}
+                      </td>
                       <td className="p-4 text-xs font-bold text-slate-700">
                         <div className="flex items-center gap-1.5">
                           <Coins size={12} className="text-amber-500" />
                           <span>{plan.credits}</span>
                         </div>
                       </td>
-                      <td className="p-4 text-xs text-slate-400 max-w-xs truncate">{plan.description}</td>
+                      <td className="p-4 text-xs text-slate-400 max-w-xs truncate">
+                        {plan.description}
+                      </td>
                       <td className="p-4">
                         <div className="flex justify-center items-center gap-1.5">
                           <button
@@ -275,9 +311,12 @@ const Credits = () => {
             <div className="w-14 h-14 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <AlertCircle size={24} />
             </div>
-            <h3 className="text-base font-bold text-slate-800 mb-1">Confirm Plan Deletion</h3>
+            <h3 className="text-base font-bold text-slate-800 mb-1">
+              Confirm Plan Deletion
+            </h3>
             <p className="text-slate-400 text-xs mb-6">
-              Are you sure you want to remove plan <strong>{modalConfig.data?.name}</strong>?
+              Are you sure you want to remove plan{" "}
+              <strong>{modalConfig.data?.name}</strong>?
             </p>
 
             <div className="flex gap-2">
@@ -293,7 +332,7 @@ const Credits = () => {
                   try {
                     await deletePlanAPI(modalConfig.data?.planId);
                     setPlans((prev) =>
-                      prev.filter((p) => p.planId !== modalConfig.data?.planId)
+                      prev.filter((p) => p.planId !== modalConfig.data?.planId),
                     );
                     closeModal();
                   } catch (err) {
@@ -313,7 +352,9 @@ const Credits = () => {
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-md transition-all duration-300 animate-fadeIn">
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto transform transition-all duration-300 scale-100 animate-scaleUp border border-slate-100">
             <div className="sticky top-0 bg-white/95 backdrop-blur z-10 flex items-center justify-between px-6 py-4 border-b border-slate-100">
-              <h2 className="text-lg font-bold text-slate-800">Edit Credit Plan</h2>
+              <h2 className="text-lg font-bold text-slate-800">
+                Edit Credit Plan
+              </h2>
               <button
                 onClick={closeModal}
                 className="p-2 hover:bg-slate-100 text-slate-400 hover:text-slate-600 rounded-full transition-all duration-200"
@@ -324,7 +365,9 @@ const Credits = () => {
 
             <div className="p-6 space-y-4">
               <div>
-                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2.5 ml-1">Plan Name</label>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2.5 ml-1">
+                  Plan Name
+                </label>
                 <input
                   type="text"
                   value={editForm.name}
@@ -340,7 +383,9 @@ const Credits = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2.5 ml-1">Price (₹)</label>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2.5 ml-1">
+                    Price (₹)
+                  </label>
                   <input
                     type="number"
                     value={editForm.price}
@@ -355,7 +400,9 @@ const Credits = () => {
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2.5 ml-1">Credits</label>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2.5 ml-1">
+                    Credits
+                  </label>
                   <input
                     type="number"
                     value={editForm.credits}
@@ -371,7 +418,9 @@ const Credits = () => {
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2.5 ml-1">Description</label>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2.5 ml-1">
+                  Description
+                </label>
                 <textarea
                   rows="4"
                   value={editForm.description}
@@ -423,7 +472,9 @@ const Credits = () => {
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-md transition-all duration-300 animate-fadeIn">
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto transform transition-all duration-300 scale-100 animate-scaleUp border border-slate-100">
             <div className="sticky top-0 bg-white/95 backdrop-blur z-10 flex items-center justify-between px-6 py-4 border-b border-slate-100">
-              <h2 className="text-lg font-bold text-slate-800">Plan Overview</h2>
+              <h2 className="text-lg font-bold text-slate-800">
+                Plan Overview
+              </h2>
               <button
                 onClick={closeModal}
                 className="p-2 hover:bg-slate-100 text-slate-400 hover:text-slate-600 rounded-full transition-all duration-200"
@@ -434,7 +485,9 @@ const Credits = () => {
 
             <div className="p-6 space-y-5">
               <div className="bg-gradient-to-br from-indigo-900 to-slate-800 rounded-2xl p-6 text-white shadow-md">
-                <p className="text-[10px] opacity-75 font-bold uppercase tracking-wider mb-1">Plan Identifier ID</p>
+                <p className="text-[10px] opacity-75 font-bold uppercase tracking-wider mb-1">
+                  Plan Identifier ID
+                </p>
                 <h3 className="text-2xl font-mono font-semibold tracking-tight">
                   {modalConfig.data?.planId}
                 </h3>
@@ -451,31 +504,47 @@ const Credits = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Plan Title</p>
-                  <p className="font-semibold text-xs text-slate-700">{modalConfig.data?.name}</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                    Plan Title
+                  </p>
+                  <p className="font-semibold text-xs text-slate-700">
+                    {modalConfig.data?.name}
+                  </p>
                 </div>
 
                 <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Cost Structure</p>
-                  <p className="font-bold text-sm text-emerald-600">₹{modalConfig.data?.price}</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                    Cost Structure
+                  </p>
+                  <p className="font-bold text-sm text-emerald-600">
+                    ₹{modalConfig.data?.price}
+                  </p>
                 </div>
               </div>
 
               <div className="bg-indigo-50/40 border border-indigo-100/50 rounded-xl p-4">
-                <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider mb-1.5">Description details</p>
-                <p className="text-xs text-slate-600 leading-relaxed">{modalConfig.data?.description}</p>
+                <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider mb-1.5">
+                  Description details
+                </p>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  {modalConfig.data?.description}
+                </p>
               </div>
 
               <div className="grid grid-cols-2 gap-4 pt-2 border-t border-slate-100">
                 <div>
-                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Created At</p>
+                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                    Created At
+                  </p>
                   <p className="text-[11px] font-semibold text-slate-500">
                     {new Date(modalConfig.data?.createdAt).toLocaleString()}
                   </p>
                 </div>
 
                 <div>
-                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Updated At</p>
+                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                    Updated At
+                  </p>
                   <p className="text-[11px] font-semibold text-slate-500">
                     {new Date(modalConfig.data?.updatedAt).toLocaleString()}
                   </p>
@@ -499,7 +568,9 @@ const Credits = () => {
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-md transition-all duration-300 animate-fadeIn">
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all duration-300 scale-100 animate-scaleUp border border-slate-100">
             <div className="sticky top-0 bg-white/95 backdrop-blur z-10 flex items-center justify-between px-6 py-4 border-b border-slate-100">
-              <h2 className="text-lg font-bold text-slate-800">Create Premium Plan</h2>
+              <h2 className="text-lg font-bold text-slate-800">
+                Create Premium Plan
+              </h2>
               <button
                 onClick={closeModal}
                 className="p-2 hover:bg-slate-100 text-slate-400 hover:text-slate-600 rounded-full transition-all duration-200"

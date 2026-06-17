@@ -11,7 +11,9 @@ import {
   getAllCategoriesAPI,
   createCategoryAPI,
   deleteCategoryAPI,
+  updateCategoryAPI,
 } from "../../auth/category";
+import { toast } from "react-toastify";
 import DeleteConfirmModal from "../../components/common/DeleteConfirm";
 const CategoryShop = () => {
   const [categories, setCategories] = useState([]);
@@ -20,9 +22,18 @@ const CategoryShop = () => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [editData, setEditData] = useState({
+    _id: "",
+    name: "",
+    status: true,
+  });
+
+  const [editImage, setEditImage] = useState(null);
   const [formData, setFormData] = useState({
     name: "",
-    type: "",
     image: "",
     subCategory: "",
     status: true,
@@ -31,6 +42,10 @@ const CategoryShop = () => {
   useEffect(() => {
     fetchCategories();
   }, []);
+  const handleView = (item) => {
+    setSelectedCategory(item);
+    setIsViewModalOpen(true);
+  };
   const handleDelete = (id) => {
     setSelectedCategoryId(id);
     setIsDeleteModalOpen(true);
@@ -47,14 +62,21 @@ const CategoryShop = () => {
       setIsDeleteModalOpen(false);
       setSelectedCategoryId(null);
 
-      alert("Category Deleted Successfully");
+      toast.success("Category Deleted Successfully");
     } catch (error) {
       console.log(error);
-      alert(error.message || "Failed to Delete Category");
+      toast.error(error.message || "Failed to Delete Category");
     }
   };
   const handleEdit = (item) => {
-    console.log(item);
+    setEditData({
+      _id: item._id,
+      name: item.name,
+      status: item.status,
+    });
+
+    setEditImage(null);
+    setIsEditModalOpen(true);
   };
   const fetchCategories = async () => {
     try {
@@ -75,7 +97,40 @@ const CategoryShop = () => {
       [name]: type === "checkbox" ? checked : value,
     }));
   };
+  const handleEditChange = (e) => {
+    const { name, value, type, checked } = e.target;
 
+    setEditData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
+  const handleUpdateCategory = async () => {
+    try {
+      const data = new FormData();
+
+      data.append("name", editData.name);
+      data.append("status", editData.status);
+
+      if (editImage) {
+        data.append("image", editImage);
+      }
+
+      const response = await updateCategoryAPI(editData._id, data);
+
+      setCategories((prev) =>
+        prev.map((item) => (item._id === editData._id ? response.data : item)),
+      );
+
+      setIsEditModalOpen(false);
+      setEditImage(null);
+
+      toast.success("Category Updated Successfully");
+    } catch (error) {
+      console.log(error);
+      toast.error(error.message || "Failed to Update Category");
+    }
+  };
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -85,7 +140,7 @@ const CategoryShop = () => {
       const data = new FormData();
 
       data.append("name", formData.name);
-      data.append("type", formData.type);
+      data.append("type", "Business");
       data.append("image", selectedImage);
       data.append("status", formData.status);
 
@@ -97,7 +152,6 @@ const CategoryShop = () => {
 
       setFormData({
         name: "",
-        type: "",
         image: "",
         subCategory: "",
         status: true,
@@ -105,10 +159,10 @@ const CategoryShop = () => {
 
       setSelectedImage(null);
 
-      alert("Category Added Successfully");
+      toast.success("Category Added Successfully");
     } catch (error) {
       console.log(error);
-      alert(error.message || "Failed to Add Category");
+      toast.error(error.message || "Failed to Add Category");
     }
   };
 
@@ -201,7 +255,10 @@ const CategoryShop = () => {
               </div>
 
               <div className="flex gap-2">
-                <button className="flex-1 bg-slate-800 hover:bg-slate-700 active:scale-[0.98] text-white py-2.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center justify-center gap-2 shadow-sm">
+                <button
+                  onClick={() => handleView(item)}
+                  className="flex-1 bg-slate-800 hover:bg-slate-700 active:scale-[0.98] text-white py-2.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center justify-center gap-2 shadow-sm"
+                >
                   <Eye size={13} />
                   View Details
                 </button>
@@ -226,22 +283,35 @@ const CategoryShop = () => {
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-xl border border-slate-100 relative animate-in fade-in zoom-in-95 duration-200">
-            <button
-              onClick={() => setIsModalOpen(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors"
-            >
-              <X size={18} />
-            </button>
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border border-slate-100 relative animate-in fade-in zoom-in-95 duration-200">
+            {/* Styled Gradient Header */}
+            <div className="bg-gradient-to-r from-indigo-600 to-violet-600 px-6 py-5 text-white relative">
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="absolute top-4 right-4 text-white/80 hover:text-white transition-colors bg-white/10 hover:bg-white/20 p-1.5 rounded-full"
+              >
+                <X size={16} />
+              </button>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-white/10 rounded-xl backdrop-blur-sm">
+                  <PlusCircle size={20} className="text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold tracking-wide">
+                    Add New Category
+                  </h3>
+                  <p className="text-xs text-indigo-100 mt-0.5">
+                    Create a new category for your shop services
+                  </p>
+                </div>
+              </div>
+            </div>
 
-            <h3 className="text-lg font-bold text-slate-800 mb-4">
-              Add New Category
-            </h3>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
+            <form onSubmit={handleSubmit} className="p-6 space-y-5">
+              {/* Category Name Field */}
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Category Name
                 </label>
                 <input
@@ -251,72 +321,244 @@ const CategoryShop = () => {
                   onChange={handleInputChange}
                   required
                   placeholder="e.g. Barber Shop"
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm transition-all"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all text-sm font-medium placeholder-slate-400"
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
-                  Type
+              {/* Upload Category Image Field */}
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Upload Category Image
                 </label>
-                <input
-                  type="text"
-                  name="type"
-                  value={formData.type}
-                  onChange={handleInputChange}
-                  required
-                  placeholder="e.g. Salon, Repair, Cleaning"
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm transition-all"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
-                  Upload Image
-                </label>
-
                 <input
                   type="file"
                   accept="image/*"
                   onChange={(e) => setSelectedImage(e.target.files[0])}
                   required
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200"
+                  className="block w-full text-xs text-slate-500
+              file:mr-4 file:py-2.5 file:px-4
+              file:rounded-xl file:border-0
+              file:text-xs file:font-bold
+              file:bg-indigo-50 file:text-indigo-700
+              hover:file:bg-indigo-100
+              border border-slate-200 rounded-xl p-1.5 cursor-pointer bg-white transition-all focus:outline-none focus:ring-4 focus:ring-indigo-500/10"
                 />
               </div>
 
-              <div className="flex items-center gap-2 py-2">
-                <input
-                  type="checkbox"
-                  id="status"
-                  name="status"
-                  checked={formData.status}
-                  onChange={handleInputChange}
-                  className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 h-4 w-4"
-                />
-                <label
-                  htmlFor="status"
-                  className="text-xs font-semibold text-slate-600 select-none cursor-pointer"
-                >
-                  Mark as Active
+              {/* Custom Status Toggle Switch */}
+              <div className="flex items-center justify-between bg-slate-50 border border-slate-100 p-4 rounded-xl transition-all duration-200 hover:bg-slate-100/50">
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-slate-700 uppercase tracking-wide">
+                    Category Status
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-medium">
+                    Toggle visibility of this category
+                  </span>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    id="status"
+                    name="status"
+                    checked={formData.status}
+                    onChange={handleInputChange}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
                 </label>
               </div>
 
+              {/* Footer Actions */}
               <div className="flex gap-3 pt-2">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-2.5 rounded-xl text-xs font-bold transition-all"
+                  className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-xl text-xs font-bold transition-all active:scale-[0.98]"
                 >
                   Cancel
                 </button>
+
                 <button
                   type="submit"
-                  className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm"
+                  className="flex-1 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 active:scale-[0.98] text-white py-3 rounded-xl text-xs font-bold shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/30 transition-all"
                 >
                   Save Category
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {isEditModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border border-slate-100 relative animate-in fade-in zoom-in-95 duration-200">
+            {/* Styled Gradient Header */}
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-5 text-white relative">
+              <button
+                onClick={() => setIsEditModalOpen(false)}
+                className="absolute top-4 right-4 text-white/80 hover:text-white transition-colors bg-white/10 hover:bg-white/20 p-1.5 rounded-full"
+              >
+                <X size={16} />
+              </button>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-white/10 rounded-xl backdrop-blur-sm">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth="2"
+                    stroke="currentColor"
+                    className="w-5 h-5 text-white"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold tracking-wide">
+                    Edit Category
+                  </h3>
+                  <p className="text-xs text-blue-100 mt-0.5">
+                    Update category details and status
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-5">
+              {/* Category Name Field */}
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Category Name
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  value={editData.name}
+                  onChange={handleEditChange}
+                  placeholder="Enter category name"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-sm font-medium placeholder-slate-400"
+                />
+              </div>
+
+              {/* Upload New Image Field */}
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Upload New Image
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setEditImage(e.target.files[0])}
+                  className="block w-full text-xs text-slate-500
+              file:mr-4 file:py-2.5 file:px-4
+              file:rounded-xl file:border-0
+              file:text-xs file:font-bold
+              file:bg-blue-50 file:text-blue-700
+              hover:file:bg-blue-100
+              border border-slate-200 rounded-xl p-1.5 cursor-pointer bg-white transition-all focus:outline-none focus:ring-4 focus:ring-blue-500/10"
+                />
+                <p className="text-[10px] text-slate-400 font-semibold pl-1">
+                  Leave blank to keep the current image
+                </p>
+              </div>
+
+              {/* Custom Status Toggle Switch */}
+              <div className="flex items-center justify-between bg-slate-50 border border-slate-100 p-4 rounded-xl transition-all duration-200 hover:bg-slate-100/50">
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-slate-700 uppercase tracking-wide">
+                    Category Status
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-medium">
+                    Toggle visibility of this category
+                  </span>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="status"
+                    checked={editData.status}
+                    onChange={handleEditChange}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+              </div>
+
+              {/* Footer Actions */}
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsEditModalOpen(false)}
+                  className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-xl text-xs font-bold transition-all active:scale-[0.98]"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  onClick={handleUpdateCategory}
+                  className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:scale-[0.98] text-white py-3 rounded-xl text-xs font-bold shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 transition-all"
+                >
+                  Update Category
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {isViewModalOpen && selectedCategory && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 relative">
+            <button
+              onClick={() => setIsViewModalOpen(false)}
+              className="absolute top-4 right-4"
+            >
+              <X size={18} />
+            </button>
+
+            <h2 className="text-xl font-bold mb-4">Category Details</h2>
+
+            <img
+              src={selectedCategory.image}
+              alt={selectedCategory.name}
+              className="w-full h-48 object-cover rounded-lg mb-4"
+            />
+
+            <div className="space-y-3">
+              <p>
+                <strong>Name:</strong> {selectedCategory.name}
+              </p>
+
+              <p>
+                <strong>Type:</strong> {selectedCategory.type}
+              </p>
+
+              <p>
+                <strong>Status:</strong>{" "}
+                {selectedCategory.status ? "Active" : "Inactive"}
+              </p>
+
+              <div>
+                <strong>Sub Categories:</strong>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {selectedCategory.subCategory?.length > 0 ? (
+                    selectedCategory.subCategory.map((sub, index) => (
+                      <span
+                        key={index}
+                        className="bg-indigo-100 px-2 py-1 rounded text-xs"
+                      >
+                        {sub}
+                      </span>
+                    ))
+                  ) : (
+                    <span>No Sub Categories</span>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}

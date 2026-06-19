@@ -133,6 +133,10 @@ const Credits = () => {
             Manage your listing parameters, credit plans, and pricing structures
           </p>
         </div>
+        <select className="w-40 bg-white border border-slate-200 text-slate-600 rounded-xl px-3 py-2.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-200">
+          <option value="CATEGORY">Category</option>
+          <option value="SUBCATEGORY">SubCategory</option>
+        </select>
       </div>
 
       {activeTab === "plans" && (

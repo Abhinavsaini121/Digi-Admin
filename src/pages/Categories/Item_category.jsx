@@ -129,7 +129,7 @@ const SubCategories = () => {
                 setIsEditModalOpen(false);
                 loadSubCategories(editData.category);
             }
-        } catch (error) {
+        } catch  {
             toast.error("Update failed");
         } finally {
             setLoading(false);

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Table, Tag, Space, Button, message, Avatar, Modal, Input } from "antd";
+import { Table, Tag, Space, Button, message, Avatar, Modal, Input, Descriptions } from "antd";
 import {
   UserOutlined,
   EditOutlined,
@@ -8,8 +8,8 @@ import {
   DeleteOutlined,
   SearchOutlined,
   PlusOutlined,
+  EyeOutlined,
 } from "@ant-design/icons";
-// deleteUserAPI को import करें
 import {
   getAllUsersAPI,
   updateUserStatusAPI,
@@ -28,12 +28,13 @@ const AllUsersContent = () => {
     action: null,
   });
   const [pagination, setPagination] = useState({ current: 1, pageSize: 10 });
-
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [isViewModalVisible, setIsViewModalVisible] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [viewingUser, setViewingUser] = useState(null);
   const [searchText, setSearchText] = useState("");
-  const [roleFilter, setRoleFilter] = useState(null); // null = All, 'SERVICE_PROVIDER' = Providers, 'GENERAL_USER' = Customers
+  const [roleFilter, setRoleFilter] = useState(null);
 
   const handleSearch = async (value) => {
     setSearchText(value);
@@ -57,28 +58,24 @@ const AllUsersContent = () => {
       setLoading(false);
     }
   };
+
   useEffect(() => {
-    fetchData(1); // Page 1 load karega
+    fetchData(1);
   }, []);
 
-  // Purana fetchData replace karein isse:
   const fetchData = async (page = 1) => {
     setLoading(true);
     try {
-      // API ko page number bhej rahe hain
       const result = await getAllUsersAPI(page);
 
       if (result && result.success && Array.isArray(result.data)) {
         setData(result.data);
-        // Agar backend se total count aa raha hai (e.g. result.total),
-        // to yahan set karein (Optional but recommended)
       } else if (Array.isArray(result)) {
         setData(result);
       } else {
         setData([]);
       }
 
-      // Pagination state ko update karein taaki UI pe sahi page dikhe
       setPagination((prev) => ({ ...prev, current: page }));
     } catch (error) {
       message.error(error.message || "Failed to load user data");
@@ -94,12 +91,12 @@ const AllUsersContent = () => {
       const response = await updateUserStatusAPI(id, newStatus);
       if (response.success) {
         message.success(
-          `User ${actionType === "block" ? "Blocked" : "Unblocked"} Successfully!`,
+          `User ${actionType === "block" ? "Blocked" : "Unblocked"} Successfully!`
         );
         setData((prevData) =>
           prevData.map((user) =>
-            user._id === id ? { ...user, status: newStatus } : user,
-          ),
+            user._id === id ? { ...user, status: newStatus } : user
+          )
         );
       } else {
         message.error(response.message || `Failed to ${actionType}`);
@@ -111,20 +108,18 @@ const AllUsersContent = () => {
     }
   };
 
-  // --- नया Delete Handler ---
   const handleDeleteUser = async (userId) => {
     try {
       const response = await deleteUserAPI(userId);
       if (response && response.success) {
         message.success("User deleted successfully!");
-
         fetchData();
       } else {
         message.error(response.message || "Failed to delete user.");
       }
     } catch (error) {
       message.error(
-        error.message || "An error occurred while deleting the user.",
+        error.message || "An error occurred while deleting the user."
       );
     }
   };
@@ -134,9 +129,24 @@ const AllUsersContent = () => {
     setIsEditModalVisible(true);
   };
 
+  const handleView = (record) => {
+    setViewingUser(record);
+    setIsViewModalVisible(true);
+  };
+
   const handleAddNew = () => {
     setSelectedUser(null);
     setIsAddModalVisible(true);
+  };
+
+  const renderLocation = (user) => {
+    if (!user) return "N/A";
+    if (typeof user.location === "string") return user.location;
+    if (user.address) return user.address;
+    if (user.location && user.location.coordinates) {
+      return `Coordinates: ${user.location.coordinates.join(", ")}`;
+    }
+    return "N/A";
   };
 
   const columns = [
@@ -154,13 +164,13 @@ const AllUsersContent = () => {
         <Space>
           <Avatar
             size="large"
-            src={record.profilePhoto || defaultUserImage}
+            src={record.profilePhoto || record.profilePic || defaultUserImage}
             icon={<UserOutlined />}
           />
           <div className="flex flex-col">
-            <span className="font-semibold">{record.fullName}</span>
+            <span className="font-semibold">{record.fullName || "N/A"}</span>
             <span className="text-xs text-gray-500">
-              {record.email || record.mobile}
+              {record.email || record.mobile || "N/A"}
             </span>
           </div>
         </Space>
@@ -169,7 +179,7 @@ const AllUsersContent = () => {
     {
       title: "EMAIL/MOBILE",
       key: "contact",
-      render: (_, record) => record.email || record.mobile,
+      render: (_, record) => record.email || record.mobile || "N/A",
     },
     {
       title: "USER TYPE",
@@ -189,7 +199,7 @@ const AllUsersContent = () => {
     {
       title: "ACTIONS",
       key: "action",
-      width: 150,
+      width: 180,
       render: (_, record) => {
         const isBlocked = record.status === "Blocked";
         const isLoading = actionLoading.id === record._id;
@@ -199,6 +209,12 @@ const AllUsersContent = () => {
 
         return (
           <Space size="middle">
+            <Button
+              type="text"
+              size="small"
+              icon={<EyeOutlined />}
+              onClick={() => handleView(record)}
+            />
             <Button
               type="text"
               size="small"
@@ -226,7 +242,6 @@ const AllUsersContent = () => {
                 });
               }}
             />
-            {/* --- अपडेट किया गया Delete Button --- */}
             <Button
               type="text"
               size="small"
@@ -239,7 +254,7 @@ const AllUsersContent = () => {
                   okText: "Delete",
                   okType: "danger",
                   cancelText: "Cancel",
-                  onOk: () => handleDeleteUser(record._id), // यहाँ नया handler कॉल करें
+                  onOk: () => handleDeleteUser(record._id),
                 });
               }}
             />
@@ -250,7 +265,7 @@ const AllUsersContent = () => {
   ];
 
   return (
-    <div className="p-6 bg-white rounded-lg shadow-md max-w-7xl mx-auto mb-8 mt-1.5">
+    <div className="p-6 bg-white rounded-lg shadow-md w-full mx-auto mb-8 mt-1.5 min-h-screen">
       <h1 className="text-2xl font-bold mb-1">All Users</h1>
       <p className="text-gray-500 mb-4">
         Manage all registered users on the platform.
@@ -266,7 +281,7 @@ const AllUsersContent = () => {
           }}
         >
           All Users
-        </Button>{" "}
+        </Button>
         <Button
           type={roleFilter === "SERVICE_PROVIDER" ? "primary" : "default"}
           onClick={() => setRoleFilter("SERVICE_PROVIDER")}
@@ -286,7 +301,7 @@ const AllUsersContent = () => {
           }}
         >
           Customers
-        </Button>{" "}
+        </Button>
       </Space>
 
       <div className="flex justify-between items-center mb-4 pb-3 border-b border-gray-200">
@@ -317,10 +332,11 @@ const AllUsersContent = () => {
           current: pagination.current,
           pageSize: pagination.pageSize,
           onChange: (page) => {
-            fetchData(page); // Naya page fetch karega
+            fetchData(page);
           },
         }}
       />
+
       <AddUserFormModal
         visible={isAddModalVisible}
         onClose={() => setIsAddModalVisible(false)}
@@ -336,6 +352,89 @@ const AllUsersContent = () => {
         onSuccess={fetchData}
         user={selectedUser}
       />
+
+      <Modal
+        title="User Details"
+        visible={isViewModalVisible}
+        onCancel={() => {
+          setIsViewModalVisible(false);
+          setViewingUser(null);
+        }}
+        footer={[
+          <Button
+            key="close"
+            type="primary"
+            onClick={() => {
+              setIsViewModalVisible(false);
+              setViewingUser(null);
+            }}
+          >
+            Close
+          </Button>,
+        ]}
+        width={700}
+        centered
+      >
+        {viewingUser && (
+          <div className="flex flex-col items-center gap-6 mt-4">
+            <Avatar
+              size={100}
+              src={viewingUser.profilePhoto || viewingUser.profilePic || defaultUserImage}
+              icon={<UserOutlined />}
+            />
+            <Descriptions bordered column={2} className="w-full" size="small">
+              <Descriptions.Item label="Full Name" span={2}>
+                {viewingUser.fullName || "N/A"}
+              </Descriptions.Item>
+              <Descriptions.Item label="Email">
+                {viewingUser.email || "N/A"}
+              </Descriptions.Item>
+              <Descriptions.Item label="Mobile">
+                {viewingUser.mobile || "N/A"}
+              </Descriptions.Item>
+              <Descriptions.Item label="Role">
+                {viewingUser.role || "N/A"}
+              </Descriptions.Item>
+              <Descriptions.Item label="Gender">
+                {viewingUser.gender || "N/A"}
+              </Descriptions.Item>
+              <Descriptions.Item label="Blood Group">
+                {viewingUser.bloodGroup || "N/A"}
+              </Descriptions.Item>
+              <Descriptions.Item label="Credits">
+                {viewingUser.credits !== undefined ? viewingUser.credits : "0"}
+              </Descriptions.Item>
+              <Descriptions.Item label="Status">
+                <Tag color={viewingUser.status === "Blocked" ? "red" : "green"}>
+                  {(viewingUser.status || "UNKNOWN").toUpperCase()}
+                </Tag>
+              </Descriptions.Item>
+              <Descriptions.Item label="Verified">
+                <Tag color={viewingUser.isVerified ? "blue" : "orange"}>
+                  {viewingUser.isVerified ? "YES" : "NO"}
+                </Tag>
+              </Descriptions.Item>
+              <Descriptions.Item label="City">
+                {viewingUser.city || "N/A"}
+              </Descriptions.Item>
+              <Descriptions.Item label="State">
+                {viewingUser.state || "N/A"}
+              </Descriptions.Item>
+              <Descriptions.Item label="Country">
+                {viewingUser.country || "N/A"}
+              </Descriptions.Item>
+              <Descriptions.Item label="Registered On">
+                {viewingUser.createdAt
+                  ? new Date(viewingUser.createdAt).toLocaleDateString()
+                  : "N/A"}
+              </Descriptions.Item>
+              <Descriptions.Item label="Location / Address" span={2}>
+                {renderLocation(viewingUser)}
+              </Descriptions.Item>
+            </Descriptions>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };

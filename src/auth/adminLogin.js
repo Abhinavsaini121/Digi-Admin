@@ -19,6 +19,9 @@ export const adminLogin = async (email, password) => {
   }
 };
 
+
+
+
 // --- Dashboard Stats ---
 export const getDashboardStats = async () => {
   try {
@@ -1303,3 +1306,35 @@ export const getUsersForNotificationAPI = async () => {
   }
 };
 
+export const updateFullTimeJobStatus = async (id, status) => {
+  try {
+    const token = localStorage.getItem("token");
+    const response = await apiClient.patch(
+      `/admin/full-time/status/${id}`,
+      { status },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
+};
+
+
+export const getFullTimeJobStats = async () => {
+  try {
+    const token = localStorage.getItem("token");
+    const response = await apiClient.get("/admin/full-time/stats", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
+};

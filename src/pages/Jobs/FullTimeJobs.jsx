@@ -11,7 +11,9 @@ import {
   createNewFullTimeJob,
   getAllUsersAPI,
   deleteFullTimeJob,
-  updateFullTimeJob
+  updateFullTimeJob,
+  updateFullTimeJobStatus,
+  getFullTimeJobStats
 } from "../../auth/adminLogin";
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
@@ -31,6 +33,7 @@ const normalizeJobData = (job) => {
       max: salary.max || 0
     },
     isFeatured: !!job.isFeatured,
+    status: job.status || 'active',
     isActive: job.status === 'active',
     description: job.description || "No description provided.",
     details: job.details || "No details provided.",
@@ -75,6 +78,11 @@ const FullTimeJobManagement = () => {
   const [jobType, setJobType] = useState("FULL");
   const navigate = useNavigate();
 
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+  const [statusToUpdate, setStatusToUpdate] = useState("active");
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [stats, setStats] = useState(null);
+
   const initialNewJobForm = {
     userId: "",
     title: "",
@@ -113,10 +121,18 @@ const FullTimeJobManagement = () => {
   const fetchJobs = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await getAllFullTimeJobs(currentPage);
-      const jobsArray = Array.isArray(response?.data) ? response.data : [];
+      const [jobsResponse, statsResponse] = await Promise.all([
+        getAllFullTimeJobs(currentPage),
+        getFullTimeJobStats()
+      ]);
+
+      const jobsArray = Array.isArray(jobsResponse?.data) ? jobsResponse.data : [];
       setAllJobs(jobsArray.map(normalizeJobData).filter(Boolean));
-      setTotalPages(response?.pagination?.totalPages || 1);
+      setTotalPages(jobsResponse?.pagination?.totalPages || 1);
+
+      if (statsResponse?.success && statsResponse?.data) {
+        setStats(statsResponse.data);
+      }
     } catch (err) {
       setError(err.message || "Something went wrong");
     } finally {
@@ -234,6 +250,27 @@ const FullTimeJobManagement = () => {
     setIsDeleteModalOpen(true);
   };
 
+  const openStatusModal = (job) => {
+    setSelectedJob(job);
+    setStatusToUpdate(job.status);
+    setIsStatusModalOpen(true);
+  };
+
+  const handleStatusUpdateConfirm = async () => {
+    if (!selectedJob) return;
+    setIsUpdatingStatus(true);
+    try {
+      await updateFullTimeJobStatus(selectedJob._id, statusToUpdate);
+      await fetchJobs();
+      setIsStatusModalOpen(false);
+      setSelectedJob(null);
+    } catch (err) {
+      alert(err.message || "Failed to update status");
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
+
   const handleDeleteConfirm = async () => {
     if (!selectedJob) return;
     setIsDeleting(true);
@@ -256,7 +293,7 @@ const FullTimeJobManagement = () => {
       id: job._id,
       title: job.title,
       details: job.details,
-      status: job.isActive ? 'active' : 'inactive',
+      status: job.status,
       workType: job.jobRole || "",
       salaryMin: job.budget?.min || 0,
       salaryMax: job.budget?.max || 0,
@@ -293,6 +330,19 @@ const FullTimeJobManagement = () => {
     }
   };
 
+  const getStatusBadgeStyle = (status) => {
+    switch (status) {
+      case "active":
+        return "text-emerald-600 bg-emerald-50 border border-emerald-100 hover:bg-emerald-100/50";
+      case "closed":
+        return "text-rose-600 bg-rose-50 border border-rose-100 hover:bg-rose-100/50";
+      case "expired":
+        return "text-amber-600 bg-amber-50 border border-amber-100 hover:bg-amber-100/50";
+      default:
+        return "text-slate-600 bg-slate-50 border border-slate-100 hover:bg-slate-100/50";
+    }
+  };
+
   return (
     <div className="p-4 md:p-8 bg-[#fafbfe] min-h-screen font-sans relative">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
@@ -326,6 +376,47 @@ const FullTimeJobManagement = () => {
           </button>
         </div>
       </div>
+
+      {stats && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+            <div>
+              <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Total Jobs</p>
+              <h3 className="text-2xl font-bold text-slate-800 mt-1">{stats.totalJobs}</h3>
+            </div>
+            <div className="bg-indigo-50 text-indigo-600 p-3 rounded-xl">
+              <Briefcase size={20} />
+            </div>
+          </div>
+          <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+            <div>
+              <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Admin Jobs</p>
+              <h3 className="text-2xl font-bold text-slate-800 mt-1">{stats.adminJobsCount}</h3>
+            </div>
+            <div className="bg-emerald-50 text-emerald-600 p-3 rounded-xl">
+              <Users size={20} />
+            </div>
+          </div>
+          <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+            <div>
+              <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">User Jobs</p>
+              <h3 className="text-2xl font-bold text-slate-800 mt-1">{stats.userJobsCount}</h3>
+            </div>
+            <div className="bg-amber-50 text-amber-600 p-3 rounded-xl">
+              <GraduationCap size={20} />
+            </div>
+          </div>
+          <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+            <div>
+              <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Expired Jobs</p>
+              <h3 className="text-2xl font-bold text-slate-800 mt-1">{stats.expiredJobsCount}</h3>
+            </div>
+            <div className="bg-rose-50 text-rose-600 p-3 rounded-xl">
+              <AlertCircle size={20} />
+            </div>
+          </div>
+        </div>
+      )}
 
       {loading ? (
         <div className="flex flex-col items-center justify-center p-20">
@@ -383,9 +474,12 @@ const FullTimeJobManagement = () => {
                           />
                         </td>
                         <td className="p-4 text-center">
-                          <span className={`text-[9px] font-bold px-2 py-1 rounded-lg tracking-wider ${job.isActive ? 'text-emerald-600 bg-emerald-50' : 'text-rose-600 bg-rose-50'}`}>
-                            {job.isActive ? 'ACTIVE' : 'INACTIVE'}
-                          </span>
+                          <button
+                            onClick={() => openStatusModal(job)}
+                            className={`text-[9px] font-bold px-2.5 py-1 rounded-lg tracking-wider uppercase transition-all duration-200 ${getStatusBadgeStyle(job.status)}`}
+                          >
+                            {job.status}
+                          </button>
                         </td>
                         <td className="p-4">
                           <div className="flex justify-center items-center gap-1.5">
@@ -742,8 +836,8 @@ const FullTimeJobManagement = () => {
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Listing Status</p>
-                  <span className={`inline-flex text-[9px] font-bold px-2 py-0.5 rounded-md mt-1 tracking-wider ${selectedJob.isActive ? 'text-emerald-600 bg-emerald-50' : 'text-rose-600 bg-rose-50'}`}>
-                    {selectedJob.isActive ? 'ACTIVE' : 'INACTIVE'}
+                  <span className={`inline-flex text-[9px] font-bold px-2 py-0.5 rounded-md mt-1 tracking-wider uppercase ${getStatusBadgeStyle(selectedJob.status)}`}>
+                    {selectedJob.status}
                   </span>
                 </div>
               </div>
@@ -765,6 +859,62 @@ const FullTimeJobManagement = () => {
                 className="bg-slate-800 text-white px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-slate-700 transition-all duration-200"
               >
                 Close View
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isStatusModalOpen && selectedJob && (
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-md transition-all duration-300 animate-fadeIn">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col transform transition-all duration-300 scale-100 animate-scaleUp border border-slate-100">
+            <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+              <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                <Edit className="text-indigo-600" size={16} /> Update Status
+              </h2>
+              <button
+                onClick={() => setIsStatusModalOpen(false)}
+                className="p-1.5 hover:bg-slate-100 text-slate-400 hover:text-slate-600 rounded-full transition-all"
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <p className="text-xs text-slate-500">
+                Select the current status for <strong>{selectedJob.title}</strong>:
+              </p>
+              <div className="grid grid-cols-3 gap-2.5">
+                {["active", "closed", "expired"].map((st) => (
+                  <button
+                    key={st}
+                    type="button"
+                    onClick={() => setStatusToUpdate(st)}
+                    className={`px-3 py-3 rounded-xl border text-[11px] font-bold uppercase tracking-wider transition-all duration-150 ${
+                      statusToUpdate === st
+                        ? "border-indigo-600 bg-indigo-50/60 text-indigo-700 shadow-sm"
+                        : "border-slate-200 bg-slate-50 text-slate-500 hover:bg-slate-100/70"
+                    }`}
+                  >
+                    {st}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-2">
+              <button
+                onClick={() => setIsStatusModalOpen(false)}
+                disabled={isUpdatingStatus}
+                className="px-4 py-2 text-xs font-bold text-slate-500 hover:text-slate-700"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleStatusUpdateConfirm}
+                disabled={isUpdatingStatus}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
+              >
+                {isUpdatingStatus ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle size={12} />}
+                Update Status
               </button>
             </div>
           </div>
@@ -857,7 +1007,8 @@ const FullTimeJobManagement = () => {
                     onChange={(e) => setEditJobForm({ ...editJobForm, status: e.target.value })}
                   >
                     <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
+                    <option value="closed">Closed</option>
+                    <option value="expired">Expired</option>
                   </select>
                 </div>
               </div>

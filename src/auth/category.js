@@ -78,3 +78,14 @@ export const updateCategoryAPI = async (categoryId, formData) => {
     throw error.response?.data || new Error("Network Error");
   }
 };
+export const getAllSubCategoriesAPI = async (categoryId) => {
+  try {
+    const response = await apiClient.get(
+      `/admin/category/get-allSubCategories/${categoryId}`
+    );
+
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || new Error("Network Error");
+  }
+};

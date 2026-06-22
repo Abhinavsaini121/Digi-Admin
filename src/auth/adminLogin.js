@@ -539,20 +539,18 @@ export const deleteCategory = async (categoryId) => {
   return response.data;
 };
 
-export const createSubCategory = async (categoryName, subCategoryName) => {
+export const createSubCategory = async (categoryId, subCategoryName) => {
   try {
-    // Payload as per your requirement
-    const payload = {
-      category: categoryName,
-      subCategory: subCategoryName,
-    };
+   const payload = {
+    categoryId,
+    subCategory: subCategoryName,
+  };
 
     const response = await apiClient.post(
       "/admin/category/create-subCategory",
       payload,
     );
-
-    return response.data;
+return response.data;
   } catch (error) {
     console.error("Error creating sub-category:", error);
     throw error.response ? error.response.data : new Error("Network Error");
@@ -578,50 +576,8 @@ export const deleteSubCategoryAPI = async (categoryName, subCategoryName) => {
   }
 };
 
-// // --- UPDATE CATEGORY ---
-// export const updateCategoryAPI = async (id, categoryName, subCategoryName) => {
-//     try {
-//         const adminId = localStorage.getItem("id") || localStorage.getItem("userId");
 
-//         // Payload जैसा आपने बताया: category और name
-//         const payload = {
-//             category: categoryName, // e.g. Electronics
-//             name: subCategoryName,   // e.g. MUSICS
-//             updatedBy: adminId
-//         };
 
-//         // URL: /admin/category/update/:id
-//         const response = await apiClient.put(`/admin/category/update/${id}`, payload);
-
-//         return response.data;
-//     } catch (error) {
-//         console.error("Error updating category:", error);
-//         throw error.response ? error.response.data : new Error("Network Error");
-//     }
-// };
-
-// --- Add Sub Category ---
-export const addSubCategory = async (categoryName, subCategoryName) => {
-  try {
-    // Payload as per your requirement
-    const payload = {
-      category: categoryName, // e.g., "electronics"
-      subCategory: subCategoryName, // e.g., "Laptops"
-    };
-
-    const response = await apiClient.post(
-      "/admin/category/create-subCategory",
-      payload,
-    );
-
-    // Success response logic
-    return response.data;
-  } catch (error) {
-    // Error handling consistency check
-    console.error("Error adding sub-category:", error);
-    throw error.response ? error.response.data : new Error("Network Error");
-  }
-};
 
 export const getSubCategoriesByCategory = async (categoryName) => {
   try {

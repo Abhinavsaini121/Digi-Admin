@@ -124,7 +124,7 @@ const Credits = () => {
 
   return (
     <div className="min-h-screen bg-[#fafbfe] p-4 md:p-8 text-slate-800 font-sans">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-17 gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-800 tracking-tight">
             Admin Credits Dashboard
@@ -133,10 +133,6 @@ const Credits = () => {
             Manage your listing parameters, credit plans, and pricing structures
           </p>
         </div>
-        <select className="w-40 bg-white border border-slate-200 text-slate-600 rounded-xl px-3 py-2.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-200">
-          <option value="CATEGORY">Category</option>
-          <option value="SUBCATEGORY">SubCategory</option>
-        </select>
       </div>
 
       {activeTab === "plans" && (

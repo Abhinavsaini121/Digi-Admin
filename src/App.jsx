@@ -30,6 +30,7 @@ import UserLocalNeed from "./pages/LocalNeeds/UserLocalNeed";
 import UserMarketPlace from "./pages/Marketplace/UserMarketPlace";
 import Coupon from "./pages/Credits-Management/CouponModule";
 import JobCategoryModule from "./pages/Categories/Job_category";
+import SubCategoryShop from "./pages/Categories/Shop_subcategory";
 function App() {
   return (
     <>
@@ -75,6 +76,7 @@ function App() {
           <Route path="/user-local" element={<UserLocalNeed />} />
           <Route path="/user-marketplace" element={<UserMarketPlace />} />
           <Route path="/coupon" element={<Coupon />} />
+          <Route path="/subcategoryshop" element={<SubCategoryShop />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/login" replace />} />

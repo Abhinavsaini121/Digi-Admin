@@ -8,15 +8,10 @@ import {
   ShoppingBag,
   Store,
   Coins,
-  CreditCard,
-  Shield,
   BarChart,
   Layers,
-  AlertTriangle,
   Bell,
   Image,
-  HelpCircle,
-  Activity,
   Settings,
   ChevronDown,
   HeartPulse,
@@ -56,7 +51,6 @@ const menuItems = [
     icon: Users,
     route: "/all-users",
   },
-
   {
     label: "Blood Request",
     icon: HeartPulse,
@@ -80,13 +74,11 @@ const menuItems = [
       { label: " Coupon", route: "/coupon" },
     ],
   },
-
   {
     label: "Business verifies",
     icon: BarChart,
     route: "/business",
   },
-
   {
     label: "Categories",
     icon: Layers,
@@ -96,13 +88,16 @@ const menuItems = [
       { label: "Jobs", route: "/cat-jobs" },
     ],
   },
-
   {
     label: "Notifications",
     icon: Bell,
     route: "/notifications",
   },
-
+  {
+    label: "Banner Management",
+    icon: Image,
+    route: "/banner-management",
+  },
   {
     label: "Settings",
     icon: Settings,
@@ -119,7 +114,6 @@ export default function Sidebar({ sidebarOpen, closeSidebar }) {
     document.body.style.overflow = sidebarOpen ? "hidden" : "auto";
   }, [sidebarOpen]);
 
-  // Auto-open parent menu if child route is active
   useEffect(() => {
     menuItems.forEach((item, index) => {
       if (item.children) {

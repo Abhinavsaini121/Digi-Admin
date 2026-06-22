@@ -78,10 +78,24 @@ export const updateCategoryAPI = async (categoryId, formData) => {
     throw error.response?.data || new Error("Network Error");
   }
 };
+// --- GET ALL SUB-CATEGORIES BY CATEGORY ID ---
 export const getAllSubCategoriesAPI = async (categoryId) => {
   try {
     const response = await apiClient.get(
       `/admin/category/get-allSubCategories/${categoryId}`
+    );
+
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || new Error("Network Error");
+  }
+};
+// --- CREATE SUB CATEGORY ---
+export const createSubCategory = async (payload) => {
+  try {
+    const response = await apiClient.post(
+      "/admin/category/create-subCategory",
+      payload
     );
 
     return response.data;

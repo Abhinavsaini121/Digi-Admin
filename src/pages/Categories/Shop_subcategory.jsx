@@ -12,8 +12,11 @@ import {
 } from "lucide-react";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
-import { getAllCategoriesAPI,  getAllSubCategoriesAPI,
-, createSubCategory } from "../../auth/category";
+import {
+  getAllCategoriesAPI,
+  getAllSubCategoriesAPI,
+  createSubCategory,
+} from "../../auth/category";
 const mockDb = [
   {
     _id: "sub-1",
@@ -43,14 +46,6 @@ const mockDb = [
     status: false,
   },
 ];
-
-const getAllSubCategoriesAPI = async () => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({ data: [...mockDb] });
-    }, 800);
-  });
-};
 
 const updateSubCategoryAPI = async (id, formData) => {
   return new Promise((resolve) => {
@@ -155,14 +150,27 @@ const SubCategoryShop = () => {
     fetchSubCategories();
     fetchCategories();
   }, []);
-
+  useEffect(() => {
+    if (formData.categoryId) {
+      fetchSubCategories();
+    }
+  }, [formData.categoryId]);
   const fetchSubCategories = async () => {
     try {
       setLoading(true);
-     if (!formData.categoryId) return;
 
-const response = await getAllSubCategoriesAPI(formData.categoryId);
-setSubCategories(response.data || []);
+      const response = await getAllSubCategoriesAPI(formData.categoryId);
+
+      setSubCategories([
+        {
+          _id: formData.categoryId,
+          name: response.categoryName,
+          type: "Business",
+          image: "https://via.placeholder.com/600x400",
+          subCategory: response.subCategories || [],
+          status: true,
+        },
+      ]);
     } catch (error) {
       console.error(error);
       toast.error("Failed to load sub-categories");

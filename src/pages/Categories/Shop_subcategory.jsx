@@ -16,71 +16,10 @@ import {
   getAllCategoriesAPI,
   getAllSubCategoriesAPI,
   createSubCategory,
+  updateSubCategoryAPI,
+  deleteSubCategory,
 } from "../../auth/category";
-const mockDb = [
-  {
-    _id: "sub-1",
-    name: "Home Deep Clean",
-    type: "Residential Services",
-    image:
-      "https://images.unsplash.com/photo-1581578731548-c64695cc6952?q=80&w=600&auto=format&fit=crop",
-    subCategory: ["Cleaning", "Disinfection", "Vacuuming"],
-    status: true,
-  },
-  {
-    _id: "sub-2",
-    name: "Salon & Styling",
-    type: "Personal Care",
-    image:
-      "https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=600&auto=format&fit=crop",
-    subCategory: ["Hair Cut", "Facials", "Pedicure"],
-    status: true,
-  },
-  {
-    _id: "sub-3",
-    name: "AC Repair & Install",
-    type: "Maintenance",
-    image:
-      "https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?q=80&w=600&auto=format&fit=crop",
-    subCategory: ["Repairing", "Filter Change", "Installation"],
-    status: false,
-  },
-];
 
-const updateSubCategoryAPI = async (id, formData) => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      let updatedImage = formData.get("image");
-      if (updatedImage && typeof updatedImage !== "string") {
-        updatedImage = URL.createObjectURL(updatedImage);
-      }
-
-      const updatedData = {
-        _id: id,
-        name: formData.get("name"),
-        type: formData.get("type") || "General",
-        status: formData.get("status") === "true",
-        subCategory: [formData.get("subCategory")],
-      };
-      if (updatedImage) {
-        updatedData.image = updatedImage;
-      }
-      resolve({ data: updatedData });
-    }, 500);
-  });
-};
-
-const deleteSubCategoryAPI = async (id) => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({ success: true });
-    }, 500);
-  });
-};
-
-// =========================================================================
-// INLINE DELETE CONFIRM MODAL COMPONENT
-// =========================================================================
 const InlineDeleteConfirmModal = ({ isOpen, onClose, onConfirm }) => {
   if (!isOpen) return null;
   return (
@@ -121,13 +60,14 @@ const SubCategoryShop = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [selectedSubCategoryId, setSelectedSubCategoryId] = useState(null);
+  const [selectedSubCategoryItem, setSelectedSubCategoryItem] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [selectedSubCategory, setSelectedSubCategory] = useState(null);
   const [categories, setCategories] = useState([]);
   const navigate = useNavigate();
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState("");
   const [formData, setFormData] = useState({
     categoryId: "",
     subCategory: "",
@@ -135,12 +75,10 @@ const SubCategoryShop = () => {
   const [formSubCategoryTags, setFormSubCategoryTags] = useState(["Cleaning"]);
   const [currentTagInput, setCurrentTagInput] = useState("");
 
-  // Edit Inputs
   const [editData, setEditData] = useState({
-    _id: "",
-    name: "",
-    type: "",
-    status: true,
+    categoryId: "",
+    oldSubCategory: "",
+    newSubCategory: "",
   });
   const [editSubCategoryTags, setEditSubCategoryTags] = useState([]);
   const [editTagInput, setEditTagInput] = useState("");
@@ -192,14 +130,17 @@ const SubCategoryShop = () => {
     setIsViewModalOpen(true);
   };
 
-  const handleDelete = (id) => {
-    setSelectedSubCategoryId(id);
+  const handleDelete = (item) => {
+    setSelectedSubCategoryItem(item);
     setIsDeleteModalOpen(true);
   };
 
   const confirmDelete = async () => {
     try {
-      await deleteSubCategoryAPI(selectedSubCategoryId);
+      await deleteSubCategory(
+        selectedSubCategoryItem._id,
+        selectedSubCategoryItem.subCategory[0], // OR selected name (see note below)
+      );
       setSubCategories((prev) =>
         prev.filter((item) => item._id !== selectedSubCategoryId),
       );
@@ -213,11 +154,13 @@ const SubCategoryShop = () => {
   };
 
   const handleEdit = (item) => {
+    console.log("Item =>", item);
+    console.log("SubCategories =>", item.subCategory);
+
     setEditData({
-      _id: item._id,
-      name: item.name,
-      type: item.type,
-      status: item.status,
+      categoryId: item._id,
+      oldSubCategory: item.subCategory[0],
+      newSubCategory: item.subCategory[0],
     });
     setEditSubCategoryTags(item.subCategory || []);
     setEditImage(null);
@@ -274,35 +217,6 @@ const SubCategoryShop = () => {
     );
   };
 
-  const handleUpdateSubCategory = async () => {
-    try {
-      const data = new FormData();
-      data.append("name", editData.name);
-      data.append("type", editData.type);
-      data.append("status", editData.status);
-      data.append("subCategory", JSON.stringify(editSubCategoryTags));
-
-      if (editImage) {
-        data.append("image", editImage);
-      }
-
-      const response = await updateSubCategoryAPI(editData._id, data);
-
-      setSubCategories((prev) =>
-        prev.map((item) =>
-          item._id === editData._id ? { ...item, ...response.data } : item,
-        ),
-      );
-
-      setIsEditModalOpen(false);
-      setEditImage(null);
-      toast.success("Sub-Category Updated Successfully");
-    } catch (error) {
-      console.log(error);
-      toast.error(error.message || "Failed to Update Sub-Category");
-    }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -336,7 +250,26 @@ const SubCategoryShop = () => {
       </div>
     );
   }
+  const handleUpdate = async () => {
+    try {
+      const payload = {
+        categoryId: editData.categoryId,
+        oldSubCategory: editData.oldSubCategory,
+        newSubCategory: editData.newSubCategory,
+      };
 
+      const response = await updateSubCategoryAPI(payload);
+
+      fetchSubCategories();
+
+      setIsEditModalOpen(false);
+
+      toast.success(response.message || "Sub-Category Updated Successfully");
+    } catch (error) {
+      console.log(error);
+      toast.error(error.message || "Failed to Update Sub-Category");
+    }
+  };
   return (
     <div className="p-4 md:p-8 bg-[#fafbfe] min-h-screen font-sans">
       {/* CSS Animation Overrides */}
@@ -359,6 +292,31 @@ const SubCategoryShop = () => {
           <p className="text-slate-400 text-xs mt-1">
             Browse and construct subcategories mapped with specialized services
           </p>
+          <div className="mt-4 w-72">
+            <label className="block text-xs font-bold text-slate-500 mb-2">
+              Choose Category Name
+            </label>
+
+            <select
+              value={selectedCategory}
+              onChange={(e) => {
+                setSelectedCategory(e.target.value);
+                setFormData((prev) => ({
+                  ...prev,
+                  categoryId: e.target.value,
+                }));
+              }}
+              className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 max-h-48 overflow-y-auto"
+            >
+              <option value="">Select Category</option>
+
+              {categories.map((cat) => (
+                <option key={cat._id} value={cat._id}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
         <div className="flex gap-3 items-center w-full md:w-auto">
           <select
@@ -465,7 +423,7 @@ const SubCategoryShop = () => {
 
                 <button
                   className="bg-red-500 hover:bg-red-600 active:scale-[0.98] text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 shadow-sm flex items-center gap-1"
-                  onClick={() => handleDelete(item._id)}
+                  onClick={() => handleDelete(item)}
                 >
                   <Trash2 size={12} /> Delete
                 </button>
@@ -508,21 +466,6 @@ const SubCategoryShop = () => {
             >
               <div className="space-y-1.5">
                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">
-                  Sub-Category Name
-                </label>
-                <input
-                  type="text"
-                  name="subCategory"
-                  value={formData.subCategory}
-                  onChange={handleInputChange}
-                  required
-                  placeholder="e.g. Home Deep Clean"
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all text-sm font-medium placeholder-slate-400"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">
                   Category
                 </label>
 
@@ -540,6 +483,20 @@ const SubCategoryShop = () => {
                     </option>
                   ))}
                 </select>
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">
+                    Sub-Category Name
+                  </label>
+
+                  <input
+                    type="text"
+                    name="subCategory"
+                    value={formData.subCategory}
+                    onChange={handleInputChange}
+                    className="w-full border border-slate-200 rounded-xl px-4 py-3"
+                    placeholder="Enter sub-category name"
+                  />
+                </div>
               </div>
 
               <div className="flex gap-3 pt-2">
@@ -593,110 +550,36 @@ const SubCategoryShop = () => {
             <div className="p-6 space-y-5 overflow-y-auto">
               <div className="space-y-1.5">
                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">
-                  Sub-Category Name
+                  Old Sub-Category
                 </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={editData.name}
-                  onChange={handleEditChange}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-sm font-medium placeholder-slate-400"
-                />
-              </div>
 
-              <div className="space-y-1.5">
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">
-                  Type / Class
-                </label>
-                <input
-                  type="text"
-                  name="type"
-                  value={editData.type}
+                <select
+                  name="oldSubCategory"
+                  value={editData.oldSubCategory}
                   onChange={handleEditChange}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-sm font-medium placeholder-slate-400"
-                />
-              </div>
-
-              {/* Dynamic Tag Editing Array */}
-              <div className="space-y-1.5">
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">
-                  Sub-Category Tags / Services
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={editTagInput}
-                    onChange={(e) => setEditTagInput(e.target.value)}
-                    placeholder="Add tag"
-                    className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-indigo-500 transition-all text-sm font-medium"
-                  />
-                  <button
-                    type="button"
-                    onClick={addEditTag}
-                    className="bg-blue-50 hover:bg-blue-100 text-blue-600 px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center border border-blue-100"
-                  >
-                    <Plus size={16} />
-                  </button>
-                </div>
-                <div className="flex flex-wrap gap-1.5 mt-2">
-                  {editSubCategoryTags.map((tag, idx) => (
-                    <span
-                      key={idx}
-                      className="bg-blue-50/50 text-blue-600 text-[10px] font-bold px-2 py-1 rounded-lg border border-blue-100/30 flex items-center gap-1"
-                    >
-                      {tag}
-                      <button
-                        type="button"
-                        onClick={() => removeEditTag(idx)}
-                        className="hover:text-red-500 transition-colors"
-                      >
-                        <X size={10} />
-                      </button>
-                    </span>
+                  className="w-full border border-slate-200 rounded-xl px-4 py-3"
+                >
+                  {editSubCategoryTags.map((sub, index) => (
+                    <option key={index} value={sub}>
+                      {sub}
+                    </option>
                   ))}
-                </div>
+                </select>
               </div>
 
               <div className="space-y-1.5">
                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">
-                  Update Image Banner
+                  New Sub-Category
                 </label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setEditImage(e.target.files[0])}
-                  className="block w-full text-xs text-slate-500
-                    file:mr-4 file:py-2.5 file:px-4
-                    file:rounded-xl file:border-0
-                    file:text-xs file:font-bold
-                    file:bg-blue-50 file:text-blue-700
-                    hover:file:bg-blue-100
-                    border border-slate-200 rounded-xl p-1.5 cursor-pointer bg-white transition-all focus:outline-none focus:ring-4"
-                />
-                <p className="text-[10px] text-slate-400 font-semibold pl-1">
-                  Keep empty to maintain original image
-                </p>
-              </div>
 
-              <div className="flex items-center justify-between bg-slate-50 border border-slate-100 p-4 rounded-xl">
-                <div className="flex flex-col">
-                  <span className="text-xs font-bold text-slate-700 uppercase tracking-wide">
-                    Status Toggle
-                  </span>
-                  <span className="text-[10px] text-slate-400 font-medium">
-                    Adjust current system visibility
-                  </span>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    name="status"
-                    checked={editData.status}
-                    onChange={handleEditChange}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                </label>
+                <input
+                  type="text"
+                  name="newSubCategory"
+                  value={editData.newSubCategory}
+                  onChange={handleEditChange}
+                  className="w-full border border-slate-200 rounded-xl px-4 py-3"
+                  placeholder="Enter new sub-category name"
+                />
               </div>
 
               <div className="flex gap-3 pt-2">
@@ -710,7 +593,7 @@ const SubCategoryShop = () => {
 
                 <button
                   type="button"
-                  onClick={handleUpdateSubCategory}
+                  onClick={handleUpdate}
                   className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:scale-[0.98] text-white py-3 rounded-xl text-xs font-bold shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 transition-all"
                 >
                   Update

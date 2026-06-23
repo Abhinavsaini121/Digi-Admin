@@ -90,16 +90,57 @@ export const getAllSubCategoriesAPI = async (categoryId) => {
     throw error.response?.data || new Error("Network Error");
   }
 };
-// --- CREATE SUB CATEGORY ---
-export const createSubCategory = async (payload) => {
+
+
+
+export const createSubCategory = async (categoryId, subCategoryName) => {
   try {
+   const payload = {
+    categoryId,
+    subCategory: subCategoryName,
+  };
+
     const response = await apiClient.post(
       "/admin/category/create-subCategory",
+      payload,
+    );
+return response.data;
+  } catch (error) {
+    console.error("Error creating sub-category:", error);
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
+};
+// --- UPDATE SUB CATEGORY ---
+export const updateSubCategoryAPI = async (payload) => {
+  try {
+    const response = await apiClient.put(
+      "/admin/category/update-subCategory",
       payload
     );
 
     return response.data;
   } catch (error) {
     throw error.response?.data || new Error("Network Error");
+  }
+};
+
+export const deleteSubCategory = async (categoryId, subCategoryName) => {
+  try {
+    const response = await apiClient.delete(
+      "/admin/category/delete-subcategory",
+      {
+        data: {
+          categoryId,
+          subCategoryName,
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    throw (
+      error.response?.data?.message ||
+      "Failed to delete sub-category"
+    );
   }
 };

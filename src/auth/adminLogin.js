@@ -539,23 +539,7 @@ export const deleteCategory = async (categoryId) => {
   return response.data;
 };
 
-export const createSubCategory = async (categoryId, subCategoryName) => {
-  try {
-   const payload = {
-    categoryId,
-    subCategory: subCategoryName,
-  };
 
-    const response = await apiClient.post(
-      "/admin/category/create-subCategory",
-      payload,
-    );
-return response.data;
-  } catch (error) {
-    console.error("Error creating sub-category:", error);
-    throw error.response ? error.response.data : new Error("Network Error");
-  }
-};
 
 // --- DELETE SUB-CATEGORY ---
 export const deleteSubCategoryAPI = async (categoryName, subCategoryName) => {

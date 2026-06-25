@@ -32,25 +32,54 @@ import {
   CameraOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
-import { getCategoriesByType, createJobCategory, deleteJobCategory, updateJobCategory, searchJobCategories } from "../../auth/jobCategoryService";
+import {
+  getCategoriesByType,
+  createJobCategory,
+  deleteJobCategory,
+  updateJobCategory,
+  searchJobCategories,
+} from "../../auth/jobCategoryService";
 
 const { Option } = Select;
 
 const jobTypes = [
-  { value: "FULL_TIME_JOB", label: "Full-Time Job", icon: <SolutionOutlined />, color: "#3b82f6", bg: "#eff6ff", border: "#bfdbfe" },
-  { value: "PART_TIME_JOB", label: "Part-Time Job", icon: <ClockCircleOutlined />, color: "#8b5cf6", bg: "#f5f3ff", border: "#ddd6fe" },
-  { value: "LOCAL_JOB", label: "Local Job", icon: <EnvironmentOutlined />, color: "#10b981", bg: "#ecfdf5", border: "#a7f3d0" },
+  {
+    value: "FULL_TIME_JOB",
+    label: "Full-Time Job",
+    icon: <SolutionOutlined />,
+    color: "#3b82f6",
+    bg: "#eff6ff",
+    border: "#bfdbfe",
+  },
+  {
+    value: "PART_TIME_JOB",
+    label: "Part-Time Job",
+    icon: <ClockCircleOutlined />,
+    color: "#8b5cf6",
+    bg: "#f5f3ff",
+    border: "#ddd6fe",
+  },
+  {
+    value: "LOCAL_JOB",
+    label: "Local Job",
+    icon: <EnvironmentOutlined />,
+    color: "#10b981",
+    bg: "#ecfdf5",
+    border: "#a7f3d0",
+  },
 ];
 
 const getJobTypeDetails = (type) => {
-  return jobTypes.find((t) => t.value === type) || {
-    value: type,
-    label: type,
-    icon: <FolderOutlined />,
-    color: "#6b7280",
-    bg: "#f3f4f6",
-    border: "#e5e7eb"
-  };
+  return (
+    jobTypes.find((t) => t.value === type) || {
+      value: type,
+      label: type,
+      icon: <FolderOutlined />,
+      color: "#6b7280",
+      bg: "#f3f4f6",
+      border: "#e5e7eb",
+    }
+  );
 };
 
 const getInitialFormData = () => ({
@@ -165,7 +194,9 @@ function Job_category() {
       name: record.name,
       type: record.type,
       image: record.image,
-      subCategory: Array.isArray(record.subCategory) ? record.subCategory.join(", ") : "",
+      subCategory: Array.isArray(record.subCategory)
+        ? record.subCategory.join(", ")
+        : "",
       status: record.status,
     });
   };
@@ -252,7 +283,9 @@ function Job_category() {
             className="shadow-sm border border-gray-100 rounded-lg flex-shrink-0"
           />
           <div className="flex flex-col">
-            <span className="font-semibold text-gray-800 text-sm tracking-wide">{record.name}</span>
+            <span className="font-semibold text-gray-800 text-sm tracking-wide">
+              {record.name}
+            </span>
           </div>
         </Space>
       ),
@@ -273,7 +306,7 @@ function Job_category() {
               borderColor: details.border,
               fontWeight: "600",
               borderRadius: "6px",
-              padding: "4px 10px"
+              padding: "4px 10px",
             }}
           >
             {details.label}
@@ -293,7 +326,11 @@ function Job_category() {
         return (
           <div className="flex flex-wrap gap-1 max-w-[200px]">
             {subCategory.map((sub, index) => (
-              <Tag key={index} color="purple" className="m-0 text-xs rounded border-purple-100 font-medium">
+              <Tag
+                key={index}
+                color="purple"
+                className="m-0 text-xs rounded border-purple-100 font-medium"
+              >
                 {sub}
               </Tag>
             ))}
@@ -366,12 +403,16 @@ function Job_category() {
 
     return (
       <div className="space-y-3">
-        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Category Image</label>
-        
+        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">
+          Category Image
+        </label>
+
         {hasImage ? (
           <div className="relative w-full max-w-sm h-48 rounded-xl overflow-hidden border border-slate-100 shadow-sm group bg-slate-50">
             <img
-              src={typeof formData.image === "string" ? formData.image : tempUrl}
+              src={
+                typeof formData.image === "string" ? formData.image : tempUrl
+              }
               alt="Category Preview"
               className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
             />
@@ -404,8 +445,12 @@ function Job_category() {
             <div className="p-4 bg-white rounded-full shadow-sm border border-slate-100 text-slate-400 group-hover:text-blue-500 group-hover:scale-110 transition-all duration-300">
               <PictureOutlined className="text-2xl" />
             </div>
-            <span className="text-xs font-bold text-slate-500 mt-3 group-hover:text-blue-600">Add Category Image</span>
-            <span className="text-[10px] text-slate-400 mt-1">Click to select an image file</span>
+            <span className="text-xs font-bold text-slate-500 mt-3 group-hover:text-blue-600">
+              Add Category Image
+            </span>
+            <span className="text-[10px] text-slate-400 mt-1">
+              Click to select an image file
+            </span>
             <input
               type="file"
               accept="image/*"
@@ -421,17 +466,32 @@ function Job_category() {
   return (
     <div className="p-8 bg-slate-50 min-h-screen">
       <div className="max-w-[1400px] mx-auto space-y-6">
-        
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-100 transition-all duration-300">
           <div>
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl">
-                <AppstoreOutlined className="text-xl" />
+            <div>
+              <div className="flex items-center gap-2">
+                <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl">
+                  <AppstoreOutlined className="text-xl" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-extrabold text-slate-800 m-0 tracking-tight">
+                    Job Categories
+                  </h1>
+                  <p className="text-xs text-slate-400 mt-0.5 font-medium">
+                    Manage and organize classifications for recruitment listings
+                  </p>
+                </div>
               </div>
-              <div>
-                <h1 className="text-2xl font-extrabold text-slate-800 m-0 tracking-tight">Job Categories</h1>
-                <p className="text-xs text-slate-400 mt-0.5 font-medium">Manage and organize classifications for recruitment listings</p>
-              </div>
+            </div>
+            <div className="flex-end justify-center mt-4 mb-13">
+              <select
+                className="w-full md:w-40 bg-white border border-slate-200 text-slate-600 rounded-xl px-3 py-3 text-xs font-semibold"
+                value={selectedType}
+                onChange={(e) => setSelectedType(e.target.value)}
+              >
+                <option value="FULL_TIME_JOB">Full Time</option>
+                <option value="PART_TIME_JOB">Part Time</option>
+              </select>
             </div>
           </div>
           <Button
@@ -457,8 +517,12 @@ function Job_category() {
           <Card className="shadow-sm border-slate-100 rounded-2xl transition-all duration-300 hover:shadow-md">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider m-0">Total Items</p>
-                <h3 className="text-2xl font-black text-slate-800 mt-1 mb-0">{filteredData.length}</h3>
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider m-0">
+                  Total Items
+                </p>
+                <h3 className="text-2xl font-black text-slate-800 mt-1 mb-0">
+                  {filteredData.length}
+                </h3>
               </div>
               <div className="p-3 bg-blue-50 text-blue-600 rounded-xl font-bold">
                 {filteredData.length}
@@ -468,8 +532,12 @@ function Job_category() {
           <Card className="shadow-sm border-slate-100 rounded-2xl transition-all duration-300 hover:shadow-md">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider m-0">Active Items</p>
-                <h3 className="text-2xl font-black text-emerald-600 mt-1 mb-0">{activeCount}</h3>
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider m-0">
+                  Active Items
+                </p>
+                <h3 className="text-2xl font-black text-emerald-600 mt-1 mb-0">
+                  {activeCount}
+                </h3>
               </div>
               <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
                 <CheckCircleOutlined className="text-lg" />
@@ -479,8 +547,12 @@ function Job_category() {
           <Card className="shadow-sm border-slate-100 rounded-2xl transition-all duration-300 hover:shadow-md">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider m-0">Inactive Items</p>
-                <h3 className="text-2xl font-black text-red-500 mt-1 mb-0">{inactiveCount}</h3>
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider m-0">
+                  Inactive Items
+                </p>
+                <h3 className="text-2xl font-black text-red-500 mt-1 mb-0">
+                  {inactiveCount}
+                </h3>
               </div>
               <div className="p-3 bg-red-50 text-red-500 rounded-xl">
                 <CloseCircleOutlined className="text-lg" />
@@ -501,9 +573,11 @@ function Job_category() {
                 onChange={(e) => setSearchText(e.target.value)}
               />
             </div>
-            
+
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center whitespace-nowrap">Filter By Type:</span>
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center whitespace-nowrap">
+                Filter By Type:
+              </span>
               <Select
                 value={selectedType}
                 onChange={(value) => setSelectedType(value)}
@@ -514,8 +588,15 @@ function Job_category() {
                 {jobTypes.map((type) => (
                   <Option key={type.value} value={type.value}>
                     <div className="flex items-center gap-2">
-                      <span style={{ color: type.color }} className="flex items-center">{type.icon}</span>
-                      <span className="font-semibold text-slate-700">{type.label}</span>
+                      <span
+                        style={{ color: type.color }}
+                        className="flex items-center"
+                      >
+                        {type.icon}
+                      </span>
+                      <span className="font-semibold text-slate-700">
+                        {type.label}
+                      </span>
                     </div>
                   </Option>
                 ))}
@@ -529,10 +610,10 @@ function Job_category() {
               dataSource={filteredData}
               loading={loading}
               rowKey={(record) => record._id}
-              pagination={{ 
+              pagination={{
                 pageSize: 8,
                 showSizeChanger: false,
-                className: "px-6 py-4 border-t border-slate-50"
+                className: "px-6 py-4 border-t border-slate-50",
               }}
               rowClassName="hover:bg-slate-50/50 transition-colors"
             />
@@ -546,7 +627,9 @@ function Job_category() {
             <div className="p-1.5 bg-blue-50 text-blue-600 rounded-lg">
               <PlusOutlined className="text-base" />
             </div>
-            <span className="text-lg font-bold text-slate-800">Add New Category</span>
+            <span className="text-lg font-bold text-slate-800">
+              Add New Category
+            </span>
           </div>
         }
         open={isAddModalOpen}
@@ -576,7 +659,9 @@ function Job_category() {
         <div className="py-5 space-y-5">
           <Row gutter={16}>
             <Col span={12}>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Category Name</label>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                Category Name
+              </label>
               <Input
                 placeholder="e.g. Medicals"
                 name="name"
@@ -586,7 +671,9 @@ function Job_category() {
               />
             </Col>
             <Col span={12}>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Job Type</label>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                Job Type
+              </label>
               <Select
                 className="w-full h-10"
                 value={formData.type}
@@ -596,7 +683,12 @@ function Job_category() {
                 {jobTypes.map((type) => (
                   <Option key={type.value} value={type.value}>
                     <Space>
-                      <span style={{ color: type.color }} className="flex items-center">{type.icon}</span>
+                      <span
+                        style={{ color: type.color }}
+                        className="flex items-center"
+                      >
+                        {type.icon}
+                      </span>
                       <span>{type.label}</span>
                     </Space>
                   </Option>
@@ -615,7 +707,9 @@ function Job_category() {
             <div className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg">
               <EditOutlined className="text-base" />
             </div>
-            <span className="text-lg font-bold text-slate-800">Edit Category</span>
+            <span className="text-lg font-bold text-slate-800">
+              Edit Category
+            </span>
           </div>
         }
         open={isEditModalOpen}
@@ -646,7 +740,9 @@ function Job_category() {
           <div className="py-5 space-y-5">
             <Row gutter={16}>
               <Col span={12}>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Category Name</label>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                  Category Name
+                </label>
                 <Input
                   placeholder="Category Name"
                   name="name"
@@ -656,7 +752,9 @@ function Job_category() {
                 />
               </Col>
               <Col span={12}>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Job Type</label>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                  Job Type
+                </label>
                 <Select
                   className="w-full h-10"
                   value={formData.type}
@@ -666,7 +764,12 @@ function Job_category() {
                   {jobTypes.map((type) => (
                     <Option key={type.value} value={type.value}>
                       <Space>
-                        <span style={{ color: type.color }} className="flex items-center">{type.icon}</span>
+                        <span
+                          style={{ color: type.color }}
+                          className="flex items-center"
+                        >
+                          {type.icon}
+                        </span>
                         <span>{type.label}</span>
                       </Space>
                     </Option>
@@ -679,7 +782,9 @@ function Job_category() {
 
             <Row gutter={16}>
               <Col span={12}>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Status</label>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                  Status
+                </label>
                 <Select
                   className="w-full h-10"
                   value={formData.status}
@@ -691,7 +796,9 @@ function Job_category() {
                 </Select>
               </Col>
               <Col span={12}>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Sub Categories</label>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                  Sub Categories
+                </label>
                 <Input
                   placeholder="e.g. Fans, Medical store"
                   name="subCategory"
@@ -735,7 +842,9 @@ function Job_category() {
 
             <div className="px-6 pt-14 pb-6 space-y-6">
               <div>
-                <h3 className="text-xl font-bold text-slate-800 m-0">{viewingData.name}</h3>
+                <h3 className="text-xl font-bold text-slate-800 m-0">
+                  {viewingData.name}
+                </h3>
                 <div className="mt-2">
                   {(() => {
                     const details = getJobTypeDetails(viewingData.type);
@@ -748,7 +857,7 @@ function Job_category() {
                           borderColor: details.border,
                           fontWeight: "600",
                           borderRadius: "6px",
-                          padding: "3px 8px"
+                          padding: "3px 8px",
                         }}
                       >
                         {details.label}
@@ -766,12 +875,16 @@ function Job_category() {
                     <CheckCircleOutlined />
                   </div>
                   <div>
-                    <span className="block text-xs font-bold text-slate-400 uppercase tracking-wider">Status</span>
+                    <span className="block text-xs font-bold text-slate-400 uppercase tracking-wider">
+                      Status
+                    </span>
                     <Tag
                       color={viewingData.status ? "green" : "red"}
                       className="rounded-full px-3 py-0.5 font-semibold text-xs border-none mt-1"
                       style={{
-                        backgroundColor: viewingData.status ? "#f0fdf4" : "#fef2f2",
+                        backgroundColor: viewingData.status
+                          ? "#f0fdf4"
+                          : "#fef2f2",
                         color: viewingData.status ? "#15803d" : "#b91c1c",
                       }}
                     >
@@ -785,17 +898,26 @@ function Job_category() {
                     <AppstoreOutlined />
                   </div>
                   <div>
-                    <span className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Sub Categories</span>
-                    {viewingData.subCategory && viewingData.subCategory.length > 0 ? (
+                    <span className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                      Sub Categories
+                    </span>
+                    {viewingData.subCategory &&
+                    viewingData.subCategory.length > 0 ? (
                       <div className="flex flex-wrap gap-1 max-w-[320px]">
                         {viewingData.subCategory.map((sub, idx) => (
-                          <Tag key={idx} color="purple" className="m-0 text-xs rounded border-purple-100 font-medium">
+                          <Tag
+                            key={idx}
+                            color="purple"
+                            className="m-0 text-xs rounded border-purple-100 font-medium"
+                          >
                             {sub}
                           </Tag>
                         ))}
                       </div>
                     ) : (
-                      <span className="text-slate-400 text-xs italic">None</span>
+                      <span className="text-slate-400 text-xs italic">
+                        None
+                      </span>
                     )}
                   </div>
                 </div>
@@ -806,9 +928,13 @@ function Job_category() {
                       <ClockCircleOutlined />
                     </div>
                     <div>
-                      <span className="block text-xs font-bold text-slate-400 uppercase tracking-wider">Created On</span>
+                      <span className="block text-xs font-bold text-slate-400 uppercase tracking-wider">
+                        Created On
+                      </span>
                       <span className="text-sm font-medium text-slate-600 mt-1 block">
-                        {dayjs(viewingData.createdAt).format("DD MMM YYYY, hh:mm A")}
+                        {dayjs(viewingData.createdAt).format(
+                          "DD MMM YYYY, hh:mm A",
+                        )}
                       </span>
                     </div>
                   </div>
@@ -831,7 +957,6 @@ function Job_category() {
           </div>
         )}
       </Modal>
-
     </div>
   );
 }

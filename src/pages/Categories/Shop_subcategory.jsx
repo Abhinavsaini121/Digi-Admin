@@ -20,7 +20,15 @@ import {
   deleteSubCategory,
 } from "../../auth/category";
 
-const InlineDeleteConfirmModal = ({ isOpen, onClose, onConfirm }) => {
+const InlineDeleteConfirmModal = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  selectedItem,
+  subCategoryList,
+}) => {
+  const [targetSub, setTargetSub] = useState(""); // Isse state manage hogi
+
   if (!isOpen) return null;
   return (
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[100] flex items-center justify-center p-4 animate-custom-fade">
@@ -28,20 +36,42 @@ const InlineDeleteConfirmModal = ({ isOpen, onClose, onConfirm }) => {
         <h3 className="text-lg font-bold text-slate-800 mb-2">
           Confirm Delete
         </h3>
-        <p className="text-slate-500 text-sm mb-6">
-          Are you sure you want to delete this sub-category? This action cannot
-          be undone.
+
+        {/* Category Name (Static) */}
+        <p className="text-xs text-slate-500 mb-1">
+          Category: {selectedItem?.name}
         </p>
+
+        {/* Sub-Category Dropdown */}
+        <div className="mb-6">
+          <label className="text-xs font-bold text-slate-500 block mb-2">
+            Select Sub-Category to Delete
+          </label>
+          <select
+            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none"
+            value={targetSub}
+            onChange={(e) => setTargetSub(e.target.value)}
+          >
+            <option value="">Select Sub-category</option>
+            {subCategoryList.map((sub, idx) => (
+              <option key={idx} value={sub}>
+                {sub}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-2.5 rounded-xl text-xs font-bold transition-all"
+            className="flex-1 bg-slate-100 py-2.5 rounded-xl text-xs font-bold"
           >
             Cancel
           </button>
           <button
-            onClick={onConfirm}
-            className="flex-1 bg-rose-500 hover:bg-rose-600 text-white py-2.5 rounded-xl text-xs font-bold transition-all shadow-md shadow-rose-500/20"
+            onClick={() => onConfirm(targetSub)} // Yahan selected value pass hogi
+            disabled={!targetSub}
+            className="flex-1 bg-rose-500 text-white py-2.5 rounded-xl text-xs font-bold disabled:opacity-50"
           >
             Delete
           </button>
@@ -52,13 +82,10 @@ const InlineDeleteConfirmModal = ({ isOpen, onClose, onConfirm }) => {
 };
 
 // =========================================================================
-// MAIN SUB-CATEGORY COMPONENT
-// =========================================================================
 const SubCategoryShop = () => {
   const [subCategories, setSubCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedSubCategoryItem, setSelectedSubCategoryItem] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -66,7 +93,13 @@ const SubCategoryShop = () => {
   const [selectedSubCategory, setSelectedSubCategory] = useState(null);
   const [categories, setCategories] = useState([]);
   const navigate = useNavigate();
-  const [isCategoryOpen, setIsCategoryOpen] = useState(false);
+  const [deleteForm, setDeleteForm] = useState({
+    categoryId: "",
+    subCategory: "",
+  });
+
+  const [selectedDeleteSubCategory, setSelectedDeleteSubCategory] =
+    useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [formData, setFormData] = useState({
     categoryId: "",
@@ -85,8 +118,8 @@ const SubCategoryShop = () => {
   const [editImage, setEditImage] = useState(null);
 
   useEffect(() => {
-    fetchSubCategories();
     fetchCategories();
+    setLoading(false);
   }, []);
   useEffect(() => {
     if (formData.categoryId) {
@@ -129,30 +162,26 @@ const SubCategoryShop = () => {
     setSelectedSubCategory(item);
     setIsViewModalOpen(true);
   };
-
   const handleDelete = (item) => {
     setSelectedSubCategoryItem(item);
+
+    // Selected category ka data save hoga
     setIsDeleteModalOpen(true);
   };
-
-  const confirmDelete = async () => {
+  const confirmDelete = async (subCategoryName) => {
     try {
-      await deleteSubCategory(
-        selectedSubCategoryItem._id,
-        selectedSubCategoryItem.subCategory[0], // OR selected name (see note below)
-      );
-      setSubCategories((prev) =>
-        prev.filter((item) => item._id !== selectedSubCategoryId),
-      );
+      await deleteSubCategory(selectedSubCategoryItem._id, subCategoryName);
+
+      await fetchSubCategories();
+
       setIsDeleteModalOpen(false);
-      setSelectedSubCategoryId(null);
+      setSelectedSubCategoryItem(null);
       toast.success("Sub-Category Deleted Successfully");
     } catch (error) {
       console.log(error);
       toast.error(error.message || "Failed to Delete Sub-Category");
     }
   };
-
   const handleEdit = (item) => {
     console.log("Item =>", item);
     console.log("SubCategories =>", item.subCategory);
@@ -383,7 +412,7 @@ const SubCategoryShop = () => {
 
                 <div>
                   <span className="text-[10px] uppercase text-slate-400 font-bold tracking-wider block mb-2">
-                    Mapped Services / Subcategories
+                    Subcategories
                   </span>
 
                   <div className="flex flex-wrap gap-1.5 min-h-[32px]">
@@ -391,9 +420,9 @@ const SubCategoryShop = () => {
                       item.subCategory.map((sub, index) => (
                         <span
                           key={index}
-                          className="bg-indigo-50/50 text-indigo-600 text-[10px] font-bold px-2.5 py-1 rounded-lg border border-indigo-100/30"
+                          className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-xs font-semibold px-3 py-1.5 rounded-full shadow-md hover:scale-105 transition-all duration-300 cursor-pointer"
                         >
-                          {sub}
+                          #{sub}
                         </span>
                       ))
                     ) : (
@@ -685,12 +714,12 @@ const SubCategoryShop = () => {
           </div>
         </div>
       )}
-
-      {/* ================= DELETE CONFIRM MODAL ================= */}
       <InlineDeleteConfirmModal
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={confirmDelete}
+        selectedItem={selectedSubCategoryItem} // Yeh pehle se hai
+        subCategoryList={selectedSubCategoryItem?.subCategory || []}
       />
     </div>
   );

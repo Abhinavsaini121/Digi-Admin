@@ -39,6 +39,7 @@ import {
   updateJobCategory,
   searchJobCategories,
 } from "../../auth/jobCategoryService";
+import JobSubcategory from "./Job_subcategory";
 
 const { Option } = Select;
 
@@ -91,6 +92,7 @@ const getInitialFormData = () => ({
 });
 
 function Job_category() {
+  const [currentView, setCurrentView] = useState("CATEGORIES");
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState("");
@@ -129,12 +131,13 @@ function Job_category() {
   };
 
   useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      fetchCategories(selectedType, searchText);
-    }, 400);
-
-    return () => clearTimeout(delayDebounceFn);
-  }, [selectedType, searchText]);
+    if (currentView === "CATEGORIES") {
+      const delayDebounceFn = setTimeout(() => {
+        fetchCategories(selectedType, searchText);
+      }, 400);
+      return () => clearTimeout(delayDebounceFn);
+    }
+  }, [selectedType, searchText, currentView]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -467,158 +470,168 @@ function Job_category() {
     <div className="p-8 bg-slate-50 min-h-screen">
       <div className="max-w-[1400px] mx-auto space-y-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-100 transition-all duration-300">
-          <div>
-            <div>
-              <div className="flex items-center gap-2">
-                <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl">
-                  <AppstoreOutlined className="text-xl" />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-extrabold text-slate-800 m-0 tracking-tight">
-                    Job Categories
-                  </h1>
-                  <p className="text-xs text-slate-400 mt-0.5 font-medium">
-                    Manage and organize classifications for recruitment listings
-                  </p>
-                </div>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 w-full md:w-auto">
+            <div className="flex items-center gap-2">
+              <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl">
+                <AppstoreOutlined className="text-xl" />
               </div>
-            </div>
-            <div className="flex-end justify-center mt-4 mb-13">
-              <select
-                className="w-full md:w-40 bg-white border border-slate-200 text-slate-600 rounded-xl px-3 py-3 text-xs font-semibold"
-                value={selectedType}
-                onChange={(e) => setSelectedType(e.target.value)}
-              >
-                <option value="FULL_TIME_JOB">Full Time</option>
-                <option value="PART_TIME_JOB">Part Time</option>
-              </select>
-            </div>
-          </div>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            size="large"
-            className="bg-blue-600 hover:bg-blue-700 hover:scale-[1.02] active:scale-[0.98] transition-all border-none shadow-md shadow-blue-100 font-semibold text-sm px-6 h-11 rounded-xl flex items-center gap-2"
-            onClick={() => {
-              setEditingRecord(null);
-              setFormData({
-                ...getInitialFormData(),
-                type: selectedType,
-              });
-              setTempUrl("");
-              setIsAddModalOpen(true);
-            }}
-          >
-            Add Job Category
-          </Button>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <Card className="shadow-sm border-slate-100 rounded-2xl transition-all duration-300 hover:shadow-md">
-            <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider m-0">
-                  Total Items
+                <h1 className="text-2xl font-extrabold text-slate-800 m-0 tracking-tight">
+                  Job Classifications
+                </h1>
+                <p className="text-xs text-slate-400 mt-0.5 font-medium">
+                  Manage categories and sub-categories for listings
                 </p>
-                <h3 className="text-2xl font-black text-slate-800 mt-1 mb-0">
-                  {filteredData.length}
-                </h3>
               </div>
-              <div className="p-3 bg-blue-50 text-blue-600 rounded-xl font-bold">
-                {filteredData.length}
-              </div>
-            </div>
-          </Card>
-          <Card className="shadow-sm border-slate-100 rounded-2xl transition-all duration-300 hover:shadow-md">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider m-0">
-                  Active Items
-                </p>
-                <h3 className="text-2xl font-black text-emerald-600 mt-1 mb-0">
-                  {activeCount}
-                </h3>
-              </div>
-              <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
-                <CheckCircleOutlined className="text-lg" />
-              </div>
-            </div>
-          </Card>
-          <Card className="shadow-sm border-slate-100 rounded-2xl transition-all duration-300 hover:shadow-md">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider m-0">
-                  Inactive Items
-                </p>
-                <h3 className="text-2xl font-black text-red-500 mt-1 mb-0">
-                  {inactiveCount}
-                </h3>
-              </div>
-              <div className="p-3 bg-red-50 text-red-500 rounded-xl">
-                <CloseCircleOutlined className="text-lg" />
-              </div>
-            </div>
-          </Card>
-        </div>
-
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-6">
-          <div className="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-4">
-            <div className="w-full lg:max-w-md">
-              <Input
-                placeholder="Search categories..."
-                prefix={<SearchOutlined className="text-slate-400 mr-2" />}
-                size="large"
-                className="rounded-xl border-slate-200 hover:border-blue-400 focus:border-blue-500 focus:shadow-[0_0_0_2px_rgba(59,130,246,0.1)] transition-all h-11"
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-              />
             </div>
 
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center whitespace-nowrap">
-                Filter By Type:
-              </span>
+            <div className="sm:ml-4">
               <Select
-                value={selectedType}
-                onChange={(value) => setSelectedType(value)}
-                className="w-full sm:w-[240px]"
+                value={currentView}
+                onChange={(val) => setCurrentView(val)}
+                className="w-48"
                 size="large"
-                dropdownStyle={{ borderRadius: "12px", padding: "4px" }}
+                dropdownStyle={{ borderRadius: "12px" }}
               >
-                {jobTypes.map((type) => (
-                  <Option key={type.value} value={type.value}>
-                    <div className="flex items-center gap-2">
-                      <span
-                        style={{ color: type.color }}
-                        className="flex items-center"
-                      >
-                        {type.icon}
-                      </span>
-                      <span className="font-semibold text-slate-700">
-                        {type.label}
-                      </span>
-                    </div>
-                  </Option>
-                ))}
+                <Option value="CATEGORIES">Categories</Option>
+                <Option value="SUB_CATEGORIES">Sub-categories</Option>
               </Select>
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-xl border border-slate-100">
-            <Table
-              columns={columns}
-              dataSource={filteredData}
-              loading={loading}
-              rowKey={(record) => record._id}
-              pagination={{
-                pageSize: 8,
-                showSizeChanger: false,
-                className: "px-6 py-4 border-t border-slate-50",
+          {currentView === "CATEGORIES" && (
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              size="large"
+              className="bg-blue-600 hover:bg-blue-700 hover:scale-[1.02] active:scale-[0.98] transition-all border-none shadow-md shadow-blue-100 font-semibold text-sm px-6 h-11 rounded-xl flex items-center gap-2"
+              onClick={() => {
+                setEditingRecord(null);
+                setFormData({
+                  ...getInitialFormData(),
+                  type: selectedType,
+                });
+                setTempUrl("");
+                setIsAddModalOpen(true);
               }}
-              rowClassName="hover:bg-slate-50/50 transition-colors"
-            />
-          </div>
+            >
+              Add Job Category
+            </Button>
+          )}
         </div>
+
+        {currentView === "SUB_CATEGORIES" ? (
+          <JobSubcategory />
+        ) : (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <Card className="shadow-sm border-slate-100 rounded-2xl transition-all duration-300 hover:shadow-md">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider m-0">
+                      Total Items
+                    </p>
+                    <h3 className="text-2xl font-black text-slate-800 mt-1 mb-0">
+                      {filteredData.length}
+                    </h3>
+                  </div>
+                  <div className="p-3 bg-blue-50 text-blue-600 rounded-xl font-bold">
+                    {filteredData.length}
+                  </div>
+                </div>
+              </Card>
+              <Card className="shadow-sm border-slate-100 rounded-2xl transition-all duration-300 hover:shadow-md">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider m-0">
+                      Active Items
+                    </p>
+                    <h3 className="text-2xl font-black text-emerald-600 mt-1 mb-0">
+                      {activeCount}
+                    </h3>
+                  </div>
+                  <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
+                    <CheckCircleOutlined className="text-lg" />
+                  </div>
+                </div>
+              </Card>
+              <Card className="shadow-sm border-slate-100 rounded-2xl transition-all duration-300 hover:shadow-md">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider m-0">
+                      Inactive Items
+                    </p>
+                    <h3 className="text-2xl font-black text-red-500 mt-1 mb-0">
+                      {inactiveCount}
+                    </h3>
+                  </div>
+                  <div className="p-3 bg-red-50 text-red-500 rounded-xl">
+                    <CloseCircleOutlined className="text-lg" />
+                  </div>
+                </div>
+              </Card>
+            </div>
+
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-6">
+              <div className="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-4">
+                <div className="w-full lg:max-w-md">
+                  <Input
+                    placeholder="Search categories..."
+                    prefix={<SearchOutlined className="text-slate-400 mr-2" />}
+                    size="large"
+                    className="rounded-xl border-slate-200 hover:border-blue-400 focus:border-blue-500 focus:shadow-[0_0_0_2px_rgba(59,130,246,0.1)] transition-all h-11"
+                    value={searchText}
+                    onChange={(e) => setSearchText(e.target.value)}
+                  />
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center whitespace-nowrap">
+                    Filter By Type:
+                  </span>
+                  <Select
+                    value={selectedType}
+                    onChange={(value) => setSelectedType(value)}
+                    className="w-full sm:w-[240px]"
+                    size="large"
+                    dropdownStyle={{ borderRadius: "12px", padding: "4px" }}
+                  >
+                    {jobTypes.map((type) => (
+                      <Option key={type.value} value={type.value}>
+                        <div className="flex items-center gap-2">
+                          <span
+                            style={{ color: type.color }}
+                            className="flex items-center"
+                          >
+                            {type.icon}
+                          </span>
+                          <span className="font-semibold text-slate-700">
+                            {type.label}
+                          </span>
+                        </div>
+                      </Option>
+                    ))}
+                  </Select>
+                </div>
+              </div>
+
+              <div className="overflow-hidden rounded-xl border border-slate-100">
+                <Table
+                  columns={columns}
+                  dataSource={filteredData}
+                  loading={loading}
+                  rowKey={(record) => record._id}
+                  pagination={{
+                    pageSize: 8,
+                    showSizeChanger: false,
+                    className: "px-6 py-4 border-t border-slate-50",
+                  }}
+                  rowClassName="hover:bg-slate-50/50 transition-colors"
+                />
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       <Modal

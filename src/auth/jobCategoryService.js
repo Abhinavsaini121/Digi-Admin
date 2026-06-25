@@ -67,3 +67,15 @@ export const searchJobCategories = async (q, type) => {
     throw error.response ? error.response.data : new Error("Network Error");
   }
 };
+
+export const createSubCategory = async ({ categoryId, subCategoryName }) => {
+  try {
+    const response = await apiClient.post("/admin/jobsCategory/create-subCategory", {
+      categoryId,
+      subCategoryName,
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : new Error("Network Error");
+  }
+};

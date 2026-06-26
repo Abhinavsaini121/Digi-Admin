@@ -221,6 +221,10 @@ function JobSubcategory() {
 
   const handleDeleteClick = (record) => {
     Modal.confirm({
+      centered: true,
+      maskStyle: {
+        backdropFilter: "blur(8px)",
+      },
       title: "Confirm Deletion",
       content: `Are you sure you want to delete the sub-category "${record.name}"?`,
       okText: "Delete",
@@ -315,7 +319,7 @@ function JobSubcategory() {
               type="text"
               shape="circle"
               className="hover:bg-emerald-50 transition-colors"
-              icon={<PlusOutlined className="text-emerald-600" />}
+              icon={<PlusOutlined style={{ color: "#1d0331" }} />}
               onClick={() => handleAddSubCategoryInline(record)}
             />
           </Tooltip>
@@ -325,7 +329,7 @@ function JobSubcategory() {
               type="text"
               shape="circle"
               className="hover:bg-indigo-50 transition-colors"
-              icon={<EditOutlined className="text-indigo-500" />}
+              icon={<EditOutlined style={{ color: "#2563eb" }} />}
               onClick={() => handleEditClick(record)}
             />
           </Tooltip>
@@ -335,7 +339,7 @@ function JobSubcategory() {
               type="text"
               shape="circle"
               className="hover:bg-red-50 transition-colors"
-              icon={<DeleteOutlined className="text-red-500" />}
+              icon={<DeleteOutlined style={{ color: "#dc2626" }} />}
               onClick={() => handleDeleteClick(record)}
             />
           </Tooltip>
@@ -346,20 +350,7 @@ function JobSubcategory() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end">
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          size="large"
-          className="bg-blue-600 hover:bg-blue-700 hover:scale-[1.02] active:scale-[0.98] transition-all border-none shadow-md shadow-blue-100 font-semibold text-sm px-6 h-11 rounded-xl flex items-center gap-2"
-          onClick={() => {
-            setFormData(getInitialFormData());
-            setIsAddModalOpen(true);
-          }}
-        >
-          Add Sub-category
-        </Button>
-      </div>
+      <div className="flex justify-end"></div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="shadow-sm border-slate-100 rounded-2xl transition-all duration-300 hover:shadow-md">
@@ -483,14 +474,36 @@ function JobSubcategory() {
       </div>
 
       <Modal
+        maskStyle={{
+          backdropFilter: "blur(12px)",
+          background: "rgba(0,0,0,0.5)",
+        }}
+        styles={{
+          content: {
+            borderRadius: "24px",
+            padding: "0",
+            overflow: "hidden",
+          },
+          body: {
+            padding: "24px",
+          },
+        }}
         title={
-          <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
-            <div className="p-1.5 bg-blue-50 text-blue-600 rounded-lg">
-              <PlusOutlined className="text-base" />
+          <div className="bg-gradient-to-r from-purple-600 via-violet-600 to-fuchsia-600 px-6 py-5 -mx-6 -mt-5 mb-2 rounded-t-2xl">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center">
+                <PlusOutlined className="text-white text-xl" />
+              </div>
+
+              <div>
+                <h2 className="text-white text-xl font-bold m-0">
+                  Add New Sub-category
+                </h2>
+                <p className="text-purple-100 text-xs m-0">
+                  Create and manage your sub-categories
+                </p>
+              </div>
             </div>
-            <span className="text-lg font-bold text-slate-800">
-              Add New Sub-category
-            </span>
           </div>
         }
         open={isAddModalOpen}
@@ -541,6 +554,7 @@ function JobSubcategory() {
               value={formData.parentCategoryId || undefined}
               onChange={(val) => handleSelectChange("parentCategoryId", val)}
               dropdownStyle={{ borderRadius: "8px" }}
+              getPopupContainer={(trigger) => trigger.parentNode} // ← yeh add karo
             >
               {parentCategories.map((cat) => (
                 <Option key={cat._id} value={cat._id}>
@@ -553,14 +567,39 @@ function JobSubcategory() {
       </Modal>
 
       <Modal
+        centered
+        width={600}
+        destroyOnClose
+        maskStyle={{
+          backdropFilter: "blur(12px)",
+          background: "rgba(0,0,0,0.9)",
+        }}
+        styles={{
+          content: {
+            borderRadius: "24px",
+            padding: "0",
+            overflow: "hidden",
+          },
+          body: {
+            padding: "24px",
+          },
+        }}
         title={
-          <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
-            <div className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg">
-              <EditOutlined className="text-base" />
+          <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 px-6 py-5 -mx-6 -mt-5 mb-2">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center">
+                <PlusOutlined className="text-white text-xl" />
+              </div>
+
+              <div>
+                <h2 className="text-white text-xl font-bold m-0">
+                  Edit Sub-category
+                </h2>
+                <p className="text-blue-100 text-xs m-0">
+                  Create and manage your sub-categories
+                </p>
+              </div>
             </div>
-            <span className="text-lg font-bold text-slate-800">
-              Edit Sub-category
-            </span>
           </div>
         }
         open={isEditModalOpen}
@@ -584,8 +623,6 @@ function JobSubcategory() {
             Save Changes
           </Button>,
         ]}
-        width={550}
-        centered
       >
         <div className="py-5 space-y-4">
           <div>

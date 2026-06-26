@@ -376,7 +376,6 @@ function Job_category() {
               onClick={() => handleViewClick(record)}
             />
           </Tooltip>
-
           <Tooltip title="Edit Category">
             <Button
               type="text"
@@ -386,7 +385,6 @@ function Job_category() {
               onClick={() => handleEditClick(record)}
             />
           </Tooltip>
-
           <Tooltip title="Delete Category">
             <Button
               type="text"

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   CheckCircle2,
   XCircle,
@@ -37,7 +37,10 @@ const InlineDeleteConfirmModal = ({
         </h3>
 
         <p className="text-xs text-slate-500 mb-3">
-          Category: <span className="font-semibold text-slate-800">{selectedItem?.name}</span>
+          Category:{" "}
+          <span className="font-semibold text-slate-800">
+            {selectedItem?.name}
+          </span>
         </p>
 
         <div className="mb-6">
@@ -89,7 +92,21 @@ const SubCategoryShop = () => {
   const [selectedSubCategory, setSelectedSubCategory] = useState(null);
   const [categories, setCategories] = useState([]);
   const navigate = useNavigate();
-
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+  const [isNavDropdownOpen, setIsNavDropdownOpen] = useState(false);
+  const navDropdownRef = useRef(null);
+  const [isEditDropdownOpen, setIsEditDropdownOpen] = useState(false);
+  const [isModalDropdownOpen, setIsModalDropdownOpen] = useState(false);
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [formData, setFormData] = useState({
     categoryId: "",
@@ -169,12 +186,14 @@ const SubCategoryShop = () => {
   };
 
   const handleEdit = (item) => {
+    console.log("item.subCategory →", item.subCategory); // check this in browser console
+    const subs = item.subCategory || [];
+    setEditSubCategoryTags(subs);
     setEditData({
       categoryId: item._id,
-      oldSubCategory: item.subCategory[0],
-      newSubCategory: item.subCategory[0],
+      oldSubCategory: subs[0] || "",
+      newSubCategory: subs[0] || "",
     });
-    setEditSubCategoryTags(item.subCategory || []);
     setIsEditModalOpen(true);
   };
 
@@ -187,13 +206,13 @@ const SubCategoryShop = () => {
   };
 
   const handleEditChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value } = e.target;
     setEditData((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : value,
+      [name]: value,
+      ...(name === "oldSubCategory" ? { newSubCategory: value } : {}),
     }));
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -248,7 +267,7 @@ const SubCategoryShop = () => {
   }
 
   return (
-    <div className="p-4 md:p-8 bg-slate-50/50 min-h-screen w-full font-sans">
+    <div className="p-4 md:p-8 bg-slate-50/50 min-h-screen w-full font-sans overflow-x-hidden">
       <div className="w-full mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pb-6 border-b border-slate-200/60">
         <div className="flex flex-col sm:flex-row sm:items-center gap-6 w-full lg:w-auto justify-between lg:justify-start">
           <div>
@@ -256,48 +275,113 @@ const SubCategoryShop = () => {
               Sub-Categories Management
             </h1>
             <p className="text-slate-500 text-sm mt-1">
-              Browse and construct subcategories mapped with specialized services.
+              Browse and construct subcategories mapped with specialized
+              services.
             </p>
           </div>
 
-          <div className="w-full sm:w-64">
+          <div className="w-full sm:w-64 max-w-full relative" ref={dropdownRef}>
             <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-1.5">
               Choose Category Name
             </label>
-            <select
-              value={selectedCategory}
-              onChange={(e) => {
-                setSelectedCategory(e.target.value);
-                setFormData((prev) => ({
-                  ...prev,
-                  categoryId: e.target.value,
-                }));
-              }}
-              className="w-full bg-white border border-slate-200 text-slate-700 rounded-2xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-300 shadow-sm cursor-pointer"
+            <button
+              type="button"
+              onClick={() => setIsDropdownOpen((prev) => !prev)}
+              className="w-full bg-white border border-slate-200 text-slate-700 rounded-2xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-300 shadow-sm cursor-pointer flex items-center justify-between gap-2"
             >
-              <option value="">Select Category</option>
-              {categories.map((cat) => (
-                <option key={cat._id} value={cat._id}>
-                  {cat.name}
-                </option>
-              ))}
-            </select>
+              <span className="truncate">
+                {categories.find((c) => c._id === selectedCategory)?.name ||
+                  "Select Category"}
+              </span>
+              <svg
+                className={`w-4 h-4 flex-shrink-0 transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </button>
+
+            {isDropdownOpen && (
+              <div className="absolute top-full left-0 w-full mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 overflow-hidden max-h-48 overflow-y-auto">
+                <div
+                  onClick={() => {
+                    setSelectedCategory("");
+                    setFormData((prev) => ({ ...prev, categoryId: "" }));
+                    setIsDropdownOpen(false);
+                  }}
+                  className="px-4 py-3 text-sm text-slate-400 hover:bg-slate-50 cursor-pointer"
+                >
+                  Select Category
+                </div>
+                {categories.map((cat) => (
+                  <div
+                    key={cat._id}
+                    onClick={() => {
+                      setSelectedCategory(cat._id);
+                      setFormData((prev) => ({ ...prev, categoryId: cat._id }));
+                      setIsDropdownOpen(false);
+                    }}
+                    className={`px-4 py-3 text-sm font-semibold cursor-pointer hover:bg-indigo-50 hover:text-indigo-700 transition-colors ${
+                      selectedCategory === cat._id
+                        ? "bg-indigo-50 text-indigo-700"
+                        : "text-slate-700"
+                    }`}
+                  >
+                    {cat.name}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
-          <select
-            value="SUBCATEGORY"
-            className="w-full sm:w-40 bg-white border border-slate-200 text-slate-700 rounded-2xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-300 shadow-sm cursor-pointer"
-            onChange={(e) => {
-              if (e.target.value === "CATEGORY") {
-                navigate("/cat-shop");
-              }
-            }}
-          >
-            <option value="CATEGORY">Category</option>
-            <option value="SUBCATEGORY">Sub-Category</option>
-          </select>
+          <div className="relative w-full sm:w-40" ref={navDropdownRef}>
+            <button
+              type="button"
+              onClick={() => setIsNavDropdownOpen((prev) => !prev)}
+              className="w-full bg-white border border-slate-200 text-slate-700 rounded-2xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-300 shadow-sm cursor-pointer flex items-center justify-between gap-2"
+            >
+              <span>Sub-Category</span>
+              <svg
+                className={`w-4 h-4 flex-shrink-0 transition-transform duration-200 ${isNavDropdownOpen ? "rotate-180" : ""}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </button>
+
+            {isNavDropdownOpen && (
+              <div className="absolute top-full left-0 w-full mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 overflow-hidden">
+                <div
+                  onClick={() => {
+                    navigate("/cat-shop");
+                    setIsNavDropdownOpen(false);
+                  }}
+                  className="px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 cursor-pointer transition-colors"
+                >
+                  Category
+                </div>
+                <div className="px-4 py-3 text-sm font-semibold bg-indigo-50 text-indigo-700 cursor-pointer">
+                  Sub-Category
+                </div>
+              </div>
+            )}
+          </div>
           <button
             onClick={() => setIsModalOpen(true)}
             className="bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98] text-white px-5 py-3 rounded-2xl text-sm font-semibold shadow-md shadow-indigo-600/10 hover:shadow-indigo-600/20 transition-all duration-300 flex items-center justify-center gap-2 whitespace-nowrap"
@@ -421,7 +505,7 @@ const SubCategoryShop = () => {
                     New Sub-Category
                   </h3>
                   <p className="text-xs text-indigo-100 mt-0.5">
-                    Map customized sub-categories and tag structures
+                    Map customized sub-categories
                   </p>
                 </div>
               </div>
@@ -436,19 +520,67 @@ const SubCategoryShop = () => {
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">
                     Category
                   </label>
-                  <select
-                    name="categoryId"
-                    value={formData.categoryId}
-                    onChange={handleInputChange}
-                    className="w-full bg-white border border-slate-200 text-slate-700 rounded-2xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-300"
-                  >
-                    <option value="">Select Category</option>
-                    {categories.map((cat) => (
-                      <option key={cat._id} value={cat._id}>
-                        {cat.name}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setIsModalDropdownOpen((prev) => !prev)}
+                      className="w-full bg-white border border-slate-200 text-slate-700 rounded-2xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-300 flex items-center justify-between gap-2"
+                    >
+                      <span className="truncate">
+                        {categories.find((c) => c._id === formData.categoryId)
+                          ?.name || "Select Category"}
+                      </span>
+                      <svg
+                        className={`w-4 h-4 flex-shrink-0 transition-transform duration-200 ${isModalDropdownOpen ? "rotate-180" : ""}`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    </button>
+
+                    {isModalDropdownOpen && (
+                      <div className="absolute top-full left-0 w-full mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 overflow-hidden max-h-48 overflow-y-auto">
+                        <div
+                          onClick={() => {
+                            setFormData((prev) => ({
+                              ...prev,
+                              categoryId: "",
+                            }));
+                            setIsModalDropdownOpen(false);
+                          }}
+                          className="px-4 py-3 text-sm text-slate-400 hover:bg-slate-50 cursor-pointer"
+                        >
+                          Select Category
+                        </div>
+                        {categories.map((cat) => (
+                          <div
+                            key={cat._id}
+                            onClick={() => {
+                              setFormData((prev) => ({
+                                ...prev,
+                                categoryId: cat._id,
+                              }));
+                              setIsModalDropdownOpen(false);
+                            }}
+                            className={`px-4 py-3 text-sm font-semibold cursor-pointer hover:bg-indigo-50 hover:text-indigo-700 transition-colors ${
+                              formData.categoryId === cat._id
+                                ? "bg-indigo-50 text-indigo-700"
+                                : "text-slate-700"
+                            }`}
+                          >
+                            {cat.name}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="space-y-1.5">
@@ -518,18 +650,56 @@ const SubCategoryShop = () => {
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">
                     Old Sub-Category
                   </label>
-                  <select
-                    name="oldSubCategory"
-                    value={editData.oldSubCategory}
-                    onChange={handleEditChange}
-                    className="w-full bg-white border border-slate-200 text-slate-700 rounded-2xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all duration-300"
-                  >
-                    {editSubCategoryTags.map((sub, index) => (
-                      <option key={index} value={sub}>
-                        {sub}
-                      </option>
-                    ))}
-                  </select>
+                  // WITH THIS:
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setIsEditDropdownOpen((prev) => !prev)}
+                      className="w-full bg-white border border-slate-200 text-slate-700 rounded-2xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all duration-300 flex items-center justify-between gap-2"
+                    >
+                      <span className="truncate">
+                        {editData.oldSubCategory || "Select Sub-Category"}
+                      </span>
+                      <svg
+                        className={`w-4 h-4 flex-shrink-0 transition-transform duration-200 ${isEditDropdownOpen ? "rotate-180" : ""}`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    </button>
+
+                    {isEditDropdownOpen && (
+                      <div className="absolute top-full left-0 w-full mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 overflow-hidden max-h-48 overflow-y-auto">
+                        {editSubCategoryTags.map((sub, index) => (
+                          <div
+                            key={index}
+                            onClick={() => {
+                              setEditData((prev) => ({
+                                ...prev,
+                                oldSubCategory: sub,
+                                newSubCategory: sub,
+                              }));
+                              setIsEditDropdownOpen(false);
+                            }}
+                            className={`px-4 py-3 text-sm font-semibold cursor-pointer hover:bg-blue-50 hover:text-blue-700 transition-colors ${
+                              editData.oldSubCategory === sub
+                                ? "bg-blue-50 text-blue-700"
+                                : "text-slate-700"
+                            }`}
+                          >
+                            {sub}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="space-y-1.5">

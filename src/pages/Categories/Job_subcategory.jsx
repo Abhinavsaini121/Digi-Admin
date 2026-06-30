@@ -72,7 +72,7 @@ function JobSubcategory() {
 
       setParentCategories(combined);
       extractSubCategories(combined);
-    } catch (error) {
+    } catch {
       message.error("Failed to load category data");
     } finally {
       setLoading(false);
@@ -133,7 +133,7 @@ function JobSubcategory() {
       } else {
         message.error("Failed to add sub-category");
       }
-    } catch (error) {
+    } catch {
       message.error("Something went wrong");
     } finally {
       setSubmitLoading(false);
@@ -212,7 +212,7 @@ function JobSubcategory() {
           message.error("Failed to update sub-category");
         }
       }
-    } catch (error) {
+    } catch {
       message.error("Something went wrong while updating");
     } finally {
       setSubmitLoading(false);
@@ -244,7 +244,7 @@ function JobSubcategory() {
           } else {
             message.error("Failed to delete sub-category");
           }
-        } catch (error) {
+        } catch {
           message.error("Something went wrong while deleting");
         }
       },
@@ -482,7 +482,7 @@ function JobSubcategory() {
           content: {
             borderRadius: "24px",
             padding: "0",
-            overflow: "hidden",
+            overflow: "visible",
           },
           body: {
             padding: "24px",
@@ -549,12 +549,26 @@ function JobSubcategory() {
               Parent Category
             </label>
             <Select
-              className="w-full h-10"
-              placeholder="Select parent category"
+              className="w-full"
+              size="large"
+              placeholder="✨ Select Parent Category"
               value={formData.parentCategoryId || undefined}
               onChange={(val) => handleSelectChange("parentCategoryId", val)}
-              dropdownStyle={{ borderRadius: "8px" }}
-              getPopupContainer={(trigger) => trigger.parentNode} // ← yeh add karo
+              getPopupContainer={(triggerNode) => triggerNode.parentNode}
+              getPopupContainer={() => document.body}
+              listHeight={250}
+              showSearch
+              optionFilterProp="children"
+              dropdownStyle={{
+                borderRadius: "16px",
+                padding: "8px",
+                background: "#ffffff",
+                boxShadow: "0 12px 35px rgba(99,102,241,0.18)",
+                border: "1px solid #e2e8f0",
+              }}
+              style={{
+                height: "46px",
+              }}
             >
               {parentCategories.map((cat) => (
                 <Option key={cat._id} value={cat._id}>
@@ -578,7 +592,7 @@ function JobSubcategory() {
           content: {
             borderRadius: "24px",
             padding: "0",
-            overflow: "hidden",
+            overflow: "visible",
           },
           body: {
             padding: "24px",
@@ -643,11 +657,28 @@ function JobSubcategory() {
               Parent Category
             </label>
             <Select
-              className="w-full h-10"
-              placeholder="Select parent category"
+              className="w-full"
+              size="large"
+              placeholder="✨ Select Parent Category"
               value={formData.parentCategoryId || undefined}
               onChange={(val) => handleSelectChange("parentCategoryId", val)}
-              dropdownStyle={{ borderRadius: "8px" }}
+              getPopupContainer={(triggerNode) => triggerNode.parentNode}
+              listHeight={250}
+              showSearch
+              getPopupContainer={() => document.body}
+              optionFilterProp="children"
+              dropdownStyle={{
+                borderRadius: "16px",
+                padding: "8px",
+                background: "#ffffff",
+                boxShadow: "0 12px 35px rgba(59,130,246,0.18)",
+                border: "1px solid #e2e8f0",
+                maxHeight: "250px",
+                overflowY: "auto",
+              }}
+              style={{
+                height: "46px",
+              }}
             >
               {parentCategories.map((cat) => (
                 <Option key={cat._id} value={cat._id}>

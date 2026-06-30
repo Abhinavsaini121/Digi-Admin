@@ -18,6 +18,7 @@ import Credit from "./pages/Credits-Management/Credits";
 // import SosAlert from "./pages/Safety/SOS Alert";
 import CategoryShop from "./pages/Categories/Shop_category";
 import Item_Category from "./pages/Categories/Item_category";
+import ItemSubCategory from "./pages/Categories/Item_sub_category";
 import Notification from "./pages/Notifications/Notification";
 import ShopManage from "./pages/ShopManagement/shopmanage";
 import Moderation from "./pages/ModerationBlocking/Moderationblocking";
@@ -66,6 +67,7 @@ function App() {
           <Route path="/credit" element={<Credit />} />
           <Route path="/cat-shop" element={<CategoryShop />} />
           <Route path="/cat-item" element={<Item_Category />} />
+          <Route path="/subcat-item" element={<ItemSubCategory />} />
           <Route path="/cat-jobs" element={<JobCategoryModule />} />
           <Route path="/notifications" element={<Notification />} />
           <Route path="/moderationblocking" element={<Moderation />} />

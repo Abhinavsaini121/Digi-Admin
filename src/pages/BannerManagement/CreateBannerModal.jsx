@@ -4,18 +4,21 @@ import toast from "react-hot-toast";
 import { createBanner } from "../../auth/banner";
 
 const CreateBannerModal = ({ isOpen, onClose, onSave }) => {
-  if (!isOpen) return null;
-
   const fileInputRef = useRef(null);
   const [imageFile, setImageFile] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [openPosition, setOpenPosition] = useState(false);
+  const [openStatus, setOpenStatus] = useState(false);
+  const statusOptions = ["true", "false"];
+  const positions = ["TOP", "MIDDLE", "BOTTOM"];
+
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     isActive: "true",
     position: "TOP",
   });
-
+  if (!isOpen) return null;
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -67,7 +70,7 @@ const CreateBannerModal = ({ isOpen, onClose, onSave }) => {
   return (
     <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-md transition-all duration-300 animate-fadeIn">
       <div className="bg-white rounded-3xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto transform transition-all duration-300 scale-100 animate-scaleUp border border-slate-100">
-        <div className="sticky top-0 bg-white/95 backdrop-blur z-10 flex items-center justify-between px-6 py-4 border-b border-slate-100">
+        <div className="sticky top-0 bg-purple/95 backdrop-blur z-10 flex items-center justify-between px-6 py-4 border-b border-slate-100">
           <div className="flex items-center gap-2.5">
             <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
               <PlusCircleIcon size={16} />
@@ -160,37 +163,70 @@ const CreateBannerModal = ({ isOpen, onClose, onSave }) => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
+            <div className="relative">
               <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2.5">
                 Position (position)*
               </label>
-              <select
-                className="w-full bg-slate-50 border border-slate-200 text-slate-600 rounded-xl px-4 py-3 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-200"
-                value={formData.position}
-                onChange={(e) =>
-                  setFormData({ ...formData, position: e.target.value })
-                }
+
+              <button
+                type="button"
+                onClick={() => setOpenPosition(!openPosition)}
+                className="w-full bg-slate-50 border border-slate-200 text-slate-600 rounded-xl px-4 py-3 text-xs font-medium text-left flex justify-between items-center"
               >
-                <option value="TOP">TOP</option>
-                <option value="MIDDLE">MIDDLE</option>
-                <option value="BOTTOM">BOTTOM</option>
-              </select>
+                {formData.position}
+                <span>▾</span>
+              </button>
+
+              {openPosition && (
+                <div className="absolute z-50 mt-2 w-full bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden">
+                  {positions.map((item) => (
+                    <div
+                      key={item}
+                      onClick={() => {
+                        setFormData({ ...formData, position: item });
+                        setOpenPosition(false);
+                      }}
+                      className="px-4 py-2 text-xs hover:bg-indigo-50 cursor-pointer"
+                    >
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
-            <div>
+            <div className="relative">
               <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2.5">
-                Status (isActive)*
+                Status (is Active)
               </label>
-              <select
-                className="w-full bg-slate-50 border border-slate-200 text-slate-600 rounded-xl px-4 py-3 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-200"
-                value={formData.isActive}
-                onChange={(e) =>
-                  setFormData({ ...formData, isActive: e.target.value })
-                }
+
+              <button
+                type="button"
+                onClick={() => setOpenStatus(!openStatus)}
+                className="w-full bg-slate-50 border border-slate-200 text-slate-600 rounded-xl px-4 py-3 text-xs font-medium text-left flex justify-between items-center"
               >
-                <option value="true">True (Active)</option>
-                <option value="false">False (Inactive)</option>
-              </select>
+                {formData.isActive === "true"
+                  ? "True (Active)"
+                  : "False (Inactive)"}
+                <span>▾</span>
+              </button>
+
+              {openStatus && (
+                <div className="absolute z-50 mt-2 w-full bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden">
+                  {statusOptions.map((item) => (
+                    <div
+                      key={item}
+                      onClick={() => {
+                        setFormData({ ...formData, isActive: item });
+                        setOpenStatus(false);
+                      }}
+                      className="px-4 py-2 text-xs hover:bg-indigo-50 cursor-pointer"
+                    >
+                      {item === "true" ? "True (Active)" : "False (Inactive)"}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 

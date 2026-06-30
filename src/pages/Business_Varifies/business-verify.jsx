@@ -128,6 +128,7 @@ const PendingBusinessTable = () => {
     {
       title: "Action",
       key: "action",
+      align: "center",
       className: "text-center",
       render: (_, record) => (
         <Space size="small" className="justify-center">
@@ -181,7 +182,7 @@ const PendingBusinessTable = () => {
         <h2 className="text-xl font-bold text-slate-800 tracking-tight">
           Pending Verifications
         </h2>
-        <p className="text-slate-400 text-xs mt-1">
+        <p className="text-slate-700 text-xs mt-1 mb-15">
           Review, approve, or reject pending business registration applications
         </p>
       </div>
@@ -202,9 +203,9 @@ const PendingBusinessTable = () => {
       </div>
 
       <style>{`
-                .ant-table-custom .ant-table-thead > tr > th {
-                    background-color: #f8fafc/75 !important;
-                    color: #94a3b8 !important;
+               .ant-table-custom .ant-table-thead > tr > th {
+    background-color: #f8fafc !important;
+                    color: #334155 !important;
                     font-size: 10px !important;
                     font-weight: 700 !important;
                     text-transform: uppercase !important;

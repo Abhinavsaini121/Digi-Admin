@@ -47,9 +47,9 @@ const Credits = () => {
     price: "",
     credits: "",
     category: "SUBSCRIPTION",
+    dropdownOpen: false,
     description: "",
   });
-
   useEffect(() => {
     fetchPlans(1);
   }, []);
@@ -351,7 +351,8 @@ const Credits = () => {
       {modalConfig.isOpen && modalConfig.type === "edit" && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-md transition-all duration-300 animate-fadeIn">
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto transform transition-all duration-300 scale-100 animate-scaleUp border border-slate-100">
-            <div className="sticky top-0 bg-white/95 backdrop-blur z-10 flex items-center justify-between px-6 py-4 border-b border-slate-100">
+            <div className="sticky top-0 bg-gradient-to-r from-purple-400 via-indigo-300 to-purple-500 text-white z-10 flex items-center justify-between px-6 py-4 border-b border-indigo-500 shadow-lg">
+              {" "}
               <h2 className="text-lg font-bold text-slate-800">
                 Edit Credit Plan
               </h2>
@@ -471,13 +472,12 @@ const Credits = () => {
       {modalConfig.isOpen && modalConfig.type === "view" && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-md transition-all duration-300 animate-fadeIn">
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto transform transition-all duration-300 scale-100 animate-scaleUp border border-slate-100">
-            <div className="sticky top-0 bg-white/95 backdrop-blur z-10 flex items-center justify-between px-6 py-4 border-b border-slate-100">
-              <h2 className="text-lg font-bold text-slate-800">
-                Plan Overview
-              </h2>
+            <div className="sticky top-0 bg-gradient-to-r from-indigo-600 via-purple-400 to-pink-100 text-white z-10 flex items-center justify-between px-6 py-4 border-b border-indigo-500 shadow-lg">
+              {" "}
+              <h2 className="text-lg font-bold text-white"> Plan Overview</h2>
               <button
                 onClick={closeModal}
-                className="p-2 hover:bg-slate-100 text-slate-400 hover:text-slate-600 rounded-full transition-all duration-200"
+                className="p-2 hover:bg-white/20 text-white rounded-full transition-all duration-200"
               >
                 <X size={18} />
               </button>
@@ -567,7 +567,7 @@ const Credits = () => {
       {modalConfig.isOpen && modalConfig.type === "create" && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-md transition-all duration-300 animate-fadeIn">
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all duration-300 scale-100 animate-scaleUp border border-slate-100">
-            <div className="sticky top-0 bg-white/95 backdrop-blur z-10 flex items-center justify-between px-6 py-4 border-b border-slate-100">
+            <div className="sticky top-0 bg-gradient-to-r from-purple-400 via-indigo-300 to-purple-500 text-white z-10 flex items-center justify-between px-6 py-4 border-b border-indigo-500 shadow-lg">
               <h2 className="text-lg font-bold text-slate-800">
                 Create Premium Plan
               </h2>
@@ -622,16 +622,53 @@ const Credits = () => {
                 />
               </div>
 
-              <select
-                value={createForm.category}
-                onChange={(e) =>
-                  setCreateForm({ ...createForm, category: e.target.value })
-                }
-                className="w-full bg-slate-50 border border-slate-200 text-slate-600 rounded-xl px-4 py-3 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-200"
-              >
-                <option value="SUBSCRIPTION">SUBSCRIPTION</option>
-                <option value="CREDIT">CREDIT</option>
-              </select>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setCreateForm({
+                      ...createForm,
+                      dropdownOpen: !createForm.dropdownOpen,
+                    })
+                  }
+                  className="w-full bg-slate-50 border border-slate-200 text-slate-600 rounded-xl px-4 py-3 text-xs font-medium flex justify-between items-center"
+                >
+                  {createForm.category}
+                  <span>▼</span>
+                </button>
+
+                {createForm.dropdownOpen && (
+                  <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg z-50 overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setCreateForm({
+                          ...createForm,
+                          category: "SUBSCRIPTION",
+                          dropdownOpen: false,
+                        })
+                      }
+                      className="w-full text-left px-4 py-3 text-xs hover:bg-indigo-50"
+                    >
+                      SUBSCRIPTION
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setCreateForm({
+                          ...createForm,
+                          category: "CREDIT",
+                          dropdownOpen: false,
+                        })
+                      }
+                      className="w-full text-left px-4 py-3 text-xs hover:bg-indigo-50"
+                    >
+                      CREDIT
+                    </button>
+                  </div>
+                )}
+              </div>
 
               <textarea
                 placeholder="Plan description details..."

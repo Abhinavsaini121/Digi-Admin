@@ -67,3 +67,25 @@ export const createItemCategory = async (formData) => {
     );
   }
 };
+
+
+export const updateItemCategory = async (id, formData) => {
+  try {
+    const response = await apiClient.put(
+      `/admin/itemCategories/update-category/${id}`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    throw (
+      error.response?.data?.message ||
+      "Failed to update item category"
+    );
+  }
+};

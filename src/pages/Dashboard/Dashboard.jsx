@@ -23,7 +23,7 @@ import {
   TrendingUp,
   Loader2, // Loading icon ke liye
 } from "lucide-react";
-import { getDashboardStats } from "../../auth/adminLogin"
+import { getDashboardStats } from "../../auth/adminLogin";
 
 const OTHER_STATIC_STATS = {
   shops: "184",
@@ -108,7 +108,6 @@ function Dashboard() {
       </div>
     );
   }
-
 
   return (
     <div className="p-8 bg-[#F8FAFC] min-h-screen font-sans">
@@ -239,7 +238,9 @@ function Dashboard() {
       <div className="mt-10 grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-gray-800">User Growth Trends</h2>
+            <h2 className="text-xl font-bold text-gray-800">
+              User Growth Trends
+            </h2>
             <select className="text-sm border border-gray-100 bg-gray-50 rounded-md px-2 py-1 outline-none">
               <option>Last 30 Days</option>
             </select>
@@ -254,11 +255,31 @@ function Dashboard() {
                     <stop offset="95%" stopColor="#FE702E" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: "#94a3b8", fontSize: 12 }} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: "#94a3b8", fontSize: 12 }} />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  vertical={false}
+                  stroke="#f0f0f0"
+                />
+                <XAxis
+                  dataKey="date"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: "#94a3b8", fontSize: 12 }}
+                  dy={10}
+                />
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: "#94a3b8", fontSize: 12 }}
+                />
                 <Tooltip />
-                <Area type="monotone" dataKey="users" stroke="#FE702E" strokeWidth={3} fill="url(#colorUsers)" />
+                <Area
+                  type="monotone"
+                  dataKey="users"
+                  stroke="#FE702E"
+                  strokeWidth={3}
+                  fill="url(#colorUsers)"
+                />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -276,20 +297,27 @@ function Dashboard() {
                   <div className="w-2 h-2 rounded-full bg-orange-500"></div>
                   <span className="text-slate-300">New Registrations</span>
                 </div>
-                <span className="font-bold text-lg">{stats?.newToday || 0}</span>
+                <span className="font-bold text-lg">
+                  {stats?.newToday || 0}
+                </span>
               </div>
               <div className="flex items-center justify-between border-b border-slate-700 pb-4">
                 <div className="flex items-center gap-3">
                   <div className="w-2 h-2 rounded-full bg-blue-500"></div>
                   <span className="text-slate-300">Active (Monthly)</span>
                 </div>
-                <span className="font-bold text-lg">{stats?.monthlyActive || 0}</span>
+                <span className="font-bold text-lg">
+                  {stats?.monthlyActive || 0}
+                </span>
               </div>
             </div>
           </div>
           <div className="mt-8 p-4 bg-slate-700/50 rounded-xl border border-slate-600 text-sm">
-            <p className="text-slate-400 uppercase font-bold text-[10px] mb-1">Status</p>
-            System is running smoothly. Total of {stats?.totalUsers || 0} users onboarded.
+            <p className="text-slate-400 uppercase font-bold text-[10px] mb-1">
+              Status
+            </p>
+            System is running smoothly. Total of {stats?.totalUsers || 0} users
+            onboarded.
           </div>
         </div>
       </div>

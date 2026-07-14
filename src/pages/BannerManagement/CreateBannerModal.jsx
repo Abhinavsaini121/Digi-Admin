@@ -7,16 +7,10 @@ const CreateBannerModal = ({ isOpen, onClose, onSave }) => {
   const fileInputRef = useRef(null);
   const [imageFile, setImageFile] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [openPosition, setOpenPosition] = useState(false);
-  const [openStatus, setOpenStatus] = useState(false);
-  const statusOptions = ["true", "false"];
-  const positions = ["TOP", "MIDDLE", "BOTTOM"];
 
   const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    isActive: "true",
-    position: "TOP",
+    name: "",
+    bannerType: "",
   });
   if (!isOpen) return null;
   const handleImageChange = (e) => {
@@ -28,34 +22,29 @@ const CreateBannerModal = ({ isOpen, onClose, onSave }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.title.trim()) {
-      toast.error("Title is required");
+    if (!formData.name.trim()) {
+      toast.error("Name is required");
       return;
     }
-    if (!imageFile) {
-      toast.error("Please upload an image");
-      return;
-    }
-    if (!formData.description.trim()) {
-      toast.error("Description is required");
+
+    if (!formData.bannerType) {
+      toast.error("Banner Type is required");
       return;
     }
 
     try {
       setLoading(true);
-      const data = await createBanner({
-        title: formData.title,
-        image: imageFile,
-        description: formData.description,
-        isActive: formData.isActive,
-        position: formData.position,
-      });
+      const bannerData = new FormData();
+
+      bannerData.append("name", formData.name);
+      bannerData.append("bannerType", formData.bannerType);
+      bannerData.append("image", imageFile);
+
+      const data = await createBanner(bannerData);
       toast.success("Banner created successfully");
       setFormData({
-        title: "",
-        description: "",
-        isActive: "true",
-        position: "TOP",
+        name: "",
+        bannerType: "",
       });
       setImageFile(null);
       if (onSave) onSave(data);
@@ -132,101 +121,49 @@ const CreateBannerModal = ({ isOpen, onClose, onSave }) => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="w-full">
-              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2.5">
-                Title*
-              </label>
+              <label>Name*</label>
+
               <input
                 type="text"
-                value={formData.title}
+                value={formData.name}
                 onChange={(e) =>
-                  setFormData({ ...formData, title: e.target.value })
+                  setFormData({
+                    ...formData,
+                    name: e.target.value,
+                  })
                 }
-                placeholder="Enter title"
-                className="w-full bg-slate-50 border border-slate-200 text-slate-600 rounded-xl px-4 py-3 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-200"
+                className="w-full bg-slate-50 border border-slate-200 text-slate-600 rounded-xl px-4 py-3 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500"
               />
             </div>
 
-            <div className="w-full">
-              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2.5">
-                Description*
-              </label>
-              <input
-                type="text"
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
-                placeholder="Enter description"
-                className="w-full bg-slate-50 border border-slate-200 text-slate-600 rounded-xl px-4 py-3 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-200"
-              />
-            </div>
+            <div className="w-full"></div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="relative">
-              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2.5">
-                Position (position)*
-              </label>
+              <div className="w-full">
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2.5">
+                  Banner Type*
+                </label>
 
-              <button
-                type="button"
-                onClick={() => setOpenPosition(!openPosition)}
-                className="w-full bg-slate-50 border border-slate-200 text-slate-600 rounded-xl px-4 py-3 text-xs font-medium text-left flex justify-between items-center"
-              >
-                {formData.position}
-                <span>▾</span>
-              </button>
-
-              {openPosition && (
-                <div className="absolute z-50 mt-2 w-full bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden">
-                  {positions.map((item) => (
-                    <div
-                      key={item}
-                      onClick={() => {
-                        setFormData({ ...formData, position: item });
-                        setOpenPosition(false);
-                      }}
-                      className="px-4 py-2 text-xs hover:bg-indigo-50 cursor-pointer"
-                    >
-                      {item}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="relative">
-              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2.5">
-                Status (is Active)
-              </label>
-
-              <button
-                type="button"
-                onClick={() => setOpenStatus(!openStatus)}
-                className="w-full bg-slate-50 border border-slate-200 text-slate-600 rounded-xl px-4 py-3 text-xs font-medium text-left flex justify-between items-center"
-              >
-                {formData.isActive === "true"
-                  ? "True (Active)"
-                  : "False (Inactive)"}
-                <span>▾</span>
-              </button>
-
-              {openStatus && (
-                <div className="absolute z-50 mt-2 w-full bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden">
-                  {statusOptions.map((item) => (
-                    <div
-                      key={item}
-                      onClick={() => {
-                        setFormData({ ...formData, isActive: item });
-                        setOpenStatus(false);
-                      }}
-                      className="px-4 py-2 text-xs hover:bg-indigo-50 cursor-pointer"
-                    >
-                      {item === "true" ? "True (Active)" : "False (Inactive)"}
-                    </div>
-                  ))}
-                </div>
-              )}
+                <select
+                  value={formData.bannerType}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      bannerType: e.target.value,
+                    })
+                  }
+                  className="w-full bg-slate-50 border border-slate-200 text-slate-600 rounded-xl px-4 py-3 text-xs"
+                >
+                  <option value="">Select Banner Type</option>
+                  <option value="FIRST">FIRST</option>
+                  <option value="SECOND">SECOND</option>
+                  <option value="THIRD">THIRD</option>
+                  <option value="FOURTH">FOURTH</option>
+                  <option value="FIFTH">FIFTH</option>
+                </select>
+              </div>
             </div>
           </div>
 

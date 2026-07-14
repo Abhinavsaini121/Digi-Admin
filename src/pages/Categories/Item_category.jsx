@@ -6,6 +6,7 @@ import {
   searchItemCategory,
   deleteItemCategory,
   createItemCategory,
+  updateItemCategory,
 } from "../../auth/Item";
 import { FaEye, FaEdit, FaTrash } from "react-icons/fa";
 const ItemCategory = () => {
@@ -411,10 +412,25 @@ const ItemCategory = () => {
               </button>
               <button
                 onClick={async () => {
-                  // Yahan apna update function call karein (e.g., updateItemCategory)
-                  toast.success("Updated successfully");
-                  setShowEditModal(false);
-                  fetchCategories();
+                  try {
+                    const formData = new FormData();
+
+                    formData.append("name", editCategory.name);
+                    formData.append("status", editCategory.status);
+
+                    if (editCategory.image instanceof File) {
+                      formData.append("image", editCategory.image);
+                    }
+
+                    await updateItemCategory(editCategory.id, formData);
+
+                    toast.success("Category updated successfully");
+
+                    setShowEditModal(false);
+                    fetchCategories();
+                  } catch (error) {
+                    toast.error(error);
+                  }
                 }}
                 className="px-6 py-2 bg-yellow-500 text-white rounded-xl"
               >

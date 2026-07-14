@@ -44,7 +44,7 @@ const BannerViewModal = ({ isOpen, onClose, banner }) => {
           <div className="aspect-video w-full rounded-2xl overflow-hidden border border-slate-100 bg-slate-50">
             <img
               src={banner.imageUrl || "https://placehold.co/600x300"}
-              alt={banner.title}
+              alt={banner.name}
               className="w-full h-full object-cover"
             />
           </div>
@@ -55,7 +55,7 @@ const BannerViewModal = ({ isOpen, onClose, banner }) => {
                 Position: {banner.position}
               </span>
               <h1 className="text-xl font-bold text-slate-800 tracking-tight mt-2">
-                {banner.title}
+                {banner.name}
               </h1>
             </div>
 
@@ -145,7 +145,7 @@ const BannerManagement = () => {
     setLoading(true);
     try {
       const response = await searchBanners(query);
-      setBanners(response.data?.banners || []);
+      setBanners(response.data || []);
     } catch (error) {
       toast.error(error.message || "Failed to search banners");
     } finally {
@@ -189,17 +189,15 @@ const BannerManagement = () => {
   };
 
   const handleUpdateBanner = async () => {
-    if (!selectedBanner.title.trim())
+    if (!selectedBanner.name.trim())
       return toast.error("Banner Title is required");
 
     setSaveLoading(true);
     try {
       await updateBanner(selectedBanner._id, {
-        title: selectedBanner.title,
-        image: selectedBanner.newImageFile || null,
-        description: selectedBanner.description,
-        isActive: String(selectedBanner.isActive),
-        position: selectedBanner.position,
+        image: selectedBanner.newImageFile,
+        name: selectedBanner.name,
+        bannerType: selectedBanner.bannerType,
       });
       toast.success("Banner updated successfully");
       setIsEditModalOpen(false);
@@ -272,12 +270,7 @@ const BannerManagement = () => {
                 <th className="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                   Banner Info
                 </th>
-                <th className="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  Description
-                </th>
-                <th className="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  Position
-                </th>
+
                 <th className="p-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">
                   Status
                 </th>
@@ -328,18 +321,11 @@ const BannerManagement = () => {
                           alt="banner"
                         />
                         <div className="font-semibold text-slate-700 text-sm leading-tight">
-                          {banner.title}
+                          {banner.name}
                         </div>
                       </div>
                     </td>
-                    <td className="p-4 text-xs font-semibold text-slate-500">
-                      {banner.description}
-                    </td>
-                    <td className="p-4 text-xs">
-                      <span className="font-bold text-indigo-500">
-                        {banner.position}
-                      </span>
-                    </td>
+
                     <td className="p-4 text-center">
                       <span
                         className={`inline-block px-2 py-0.5 rounded-md font-bold text-[9px] uppercase ${
@@ -438,32 +424,15 @@ const BannerManagement = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="w-full">
                   <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2.5">
-                    Banner Title
+                    Name{" "}
                   </label>
                   <input
                     type="text"
-                    value={selectedBanner.title}
+                    value={selectedBanner.name}
                     onChange={(e) =>
                       setSelectedBanner({
                         ...selectedBanner,
-                        title: e.target.value,
-                      })
-                    }
-                    className="w-full bg-slate-50 border border-slate-200 text-slate-600 rounded-xl px-4 py-3 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-200"
-                  />
-                </div>
-
-                <div className="w-full">
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2.5">
-                    Description
-                  </label>
-                  <input
-                    type="text"
-                    value={selectedBanner.description}
-                    onChange={(e) =>
-                      setSelectedBanner({
-                        ...selectedBanner,
-                        description: e.target.value,
+                        name: e.target.value,
                       })
                     }
                     className="w-full bg-slate-50 border border-slate-200 text-slate-600 rounded-xl px-4 py-3 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-200"
@@ -471,90 +440,7 @@ const BannerManagement = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2.5">
-                    Position (position)*
-                  </label>
-                  <div className="relative">
-                    <button
-                      type="button"
-                      className="w-full bg-slate-50 border border-slate-200 text-slate-600 rounded-xl px-4 py-3 text-xs font-medium text-left"
-                      onClick={() =>
-                        setSelectedBanner({
-                          ...selectedBanner,
-                          _openPosition: !selectedBanner._openPosition,
-                        })
-                      }
-                    >
-                      {selectedBanner.position}
-                    </button>
-
-                    {selectedBanner._openPosition && (
-                      <div className="absolute z-10 w-full mt-1 bg-white border rounded-xl shadow-lg overflow-hidden">
-                        {["TOP", "MIDDLE", "BOTTOM"].map((pos) => (
-                          <div
-                            key={pos}
-                            onClick={() =>
-                              setSelectedBanner({
-                                ...selectedBanner,
-                                position: pos,
-                                _openPosition: false,
-                              })
-                            }
-                            className="px-4 py-2 text-xs hover:bg-slate-100 cursor-pointer"
-                          >
-                            {pos}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2.5">
-                    Status (isActive)*
-                  </label>
-                  <div className="relative">
-                    <button
-                      type="button"
-                      className="w-full bg-slate-50 border border-slate-200 text-slate-600 rounded-xl px-4 py-3 text-xs font-medium text-left"
-                      onClick={() =>
-                        setSelectedBanner({
-                          ...selectedBanner,
-                          _openStatus: !selectedBanner._openStatus,
-                        })
-                      }
-                    >
-                      {selectedBanner.isActive ? "Active" : "Inactive"}
-                    </button>
-
-                    {selectedBanner._openStatus && (
-                      <div className="absolute z-10 w-full mt-1 bg-white border rounded-xl shadow-lg overflow-hidden">
-                        {[
-                          { label: "Active", value: true },
-                          { label: "Inactive", value: false },
-                        ].map((item) => (
-                          <div
-                            key={item.label}
-                            onClick={() =>
-                              setSelectedBanner({
-                                ...selectedBanner,
-                                isActive: item.value,
-                                _openStatus: false,
-                              })
-                            }
-                            className="px-4 py-2 text-xs hover:bg-slate-100 cursor-pointer"
-                          >
-                            {item.label}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
 
               <div className="sticky bottom-0 bg-white/95 backdrop-blur pt-4 pb-2 flex justify-end gap-2.5 border-t border-slate-100">
                 <button

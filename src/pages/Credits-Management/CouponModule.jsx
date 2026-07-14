@@ -22,7 +22,7 @@ import {
   X,
   CheckCircle,
   AlertCircle,
-  Info
+  Info,
 } from "lucide-react";
 
 export default function Coupon() {
@@ -169,8 +169,8 @@ export default function Coupon() {
           prev.map((coupon) =>
             coupon.id === editCouponData.id
               ? { ...coupon, code: payload.code }
-              : coupon
-          )
+              : coupon,
+          ),
         );
         toast.success(response.message || "Coupon updated successfully!");
         setIsEditModalOpen(false);
@@ -184,7 +184,9 @@ export default function Coupon() {
   return (
     <div className="min-h-screen bg-[#fafbfe] p-4 md:p-8 text-slate-800 font-sans">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Admin Coupon Dashboard</h1>
+        <h1 className="text-2xl font-bold text-slate-800 tracking-tight">
+          Admin Coupon Dashboard
+        </h1>
         <p className="text-slate-400 text-xs mt-1">
           Manage, search, and distribute promotional coupon campaigns
         </p>
@@ -203,7 +205,10 @@ export default function Coupon() {
                   Coupon Code *
                 </label>
                 <div className="relative">
-                  <Tag className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                  <Tag
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                    size={14}
+                  />
                   <input
                     type="text"
                     placeholder="e.g. SUMMER30"
@@ -223,7 +228,10 @@ export default function Coupon() {
                     Credits Amount *
                   </label>
                   <div className="relative">
-                    <Percent className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                    <Percent
+                      className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                      size={14}
+                    />
                     <input
                       type="number"
                       placeholder="e.g. 50"
@@ -242,7 +250,10 @@ export default function Coupon() {
                     Usage Limit
                   </label>
                   <div className="relative">
-                    <Users className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                    <Users
+                      className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                      size={14}
+                    />
                     <input
                       type="number"
                       placeholder="e.g. 100"
@@ -261,7 +272,10 @@ export default function Coupon() {
                   Expiry Date
                 </label>
                 <div className="relative">
-                  <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                  <Calendar
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                    size={14}
+                  />
                   <input
                     type="date"
                     value={newCoupon.expiry}
@@ -291,7 +305,10 @@ export default function Coupon() {
                 Available Offers
               </h2>
               <div className="relative w-full sm:w-72">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                <Search
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                  size={14}
+                />
                 <input
                   type="text"
                   placeholder="Search code..."
@@ -325,7 +342,7 @@ export default function Coupon() {
                             toast.error("Failed to copy code");
                           }
                         }}
-                        className="p-2 bg-white hover:bg-indigo-600 hover:text-white rounded-lg text-slate-400 border border-slate-200/50 shadow-sm transition-all duration-150"
+                        className="p-2 bg-white text-indigo-600 hover:bg-indigo-600 hover:text-white rounded-lg border border-slate-200/50 shadow-sm transition-all duration-150"
                       >
                         <Copy size={11} />
                       </button>
@@ -334,7 +351,7 @@ export default function Coupon() {
                           e.stopPropagation();
                           openEditModal(coupon);
                         }}
-                        className="p-2 bg-white hover:bg-slate-800 hover:text-white rounded-lg text-slate-400 border border-slate-200/50 shadow-sm transition-all duration-150"
+                        className="p-2 bg-white text-slate-800 hover:bg-slate-800 hover:text-white rounded-lg border border-slate-200/50 shadow-sm transition-all duration-150"
                       >
                         <Edit size={11} />
                       </button>
@@ -343,7 +360,7 @@ export default function Coupon() {
                           e.stopPropagation();
                           openDeleteModal(coupon);
                         }}
-                        className="p-2 bg-white hover:bg-rose-600 hover:text-white rounded-lg text-slate-400 border border-slate-200/50 shadow-sm transition-all duration-150"
+                        className="p-2 bg-white text-rose-600 hover:bg-rose-600 hover:text-white rounded-lg border border-slate-200/50 shadow-sm transition-all duration-150"
                       >
                         <Trash2 size={11} />
                       </button>
@@ -352,17 +369,25 @@ export default function Coupon() {
 
                   <div className="space-y-2 border-t border-dashed border-slate-200/80 pt-3.5 text-xs text-slate-500 z-10">
                     <div className="flex justify-between items-center">
-                      <span className="font-semibold text-slate-400">Allocated Credits</span>
-                      <span className="font-bold text-slate-700">{coupon.credits} Credits</span>
+                      <span className="font-semibold text-slate-400">
+                        Allocated Credits
+                      </span>
+                      <span className="font-bold text-slate-700">
+                        {coupon.credits} Credits
+                      </span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="font-semibold text-slate-400">Total Usage</span>
+                      <span className="font-semibold text-slate-400">
+                        Total Usage
+                      </span>
                       <span className="font-bold text-slate-700">
                         {coupon.totalUsed || 0} / {coupon.limit}
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="font-semibold text-slate-400">Validity Limit</span>
+                      <span className="font-semibold text-slate-400">
+                        Validity Limit
+                      </span>
                       <span className="font-bold text-slate-700">
                         {new Date(coupon.expiry).toLocaleDateString()}
                       </span>
@@ -388,9 +413,12 @@ export default function Coupon() {
             <div className="w-14 h-14 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <AlertCircle size={24} />
             </div>
-            <h3 className="text-base font-bold text-slate-800 mb-1">Delete Coupon Posting</h3>
+            <h3 className="text-base font-bold text-slate-800 mb-1">
+              Delete Coupon Posting
+            </h3>
             <p className="text-slate-400 text-xs mb-6">
-              Are you sure you want to delete campaign <strong>{couponToDelete?.code}</strong>?
+              Are you sure you want to delete campaign{" "}
+              <strong>{couponToDelete?.code}</strong>?
             </p>
             <div className="flex gap-2">
               <button
@@ -414,7 +442,9 @@ export default function Coupon() {
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-md transition-all duration-300 animate-fadeIn">
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 transform transition-all duration-300 scale-100 animate-scaleUp border border-slate-100">
             <div className="flex justify-between items-center mb-5 pb-3 border-b border-slate-100">
-              <h3 className="text-base font-bold text-slate-850">Edit Active Coupon</h3>
+              <h3 className="text-base font-bold text-slate-850">
+                Edit Active Coupon
+              </h3>
               <button
                 onClick={() => setIsEditModalOpen(false)}
                 className="p-1 hover:bg-slate-100 text-slate-400 hover:text-slate-600 rounded-full transition-colors"

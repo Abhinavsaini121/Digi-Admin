@@ -401,7 +401,7 @@ const ShopListManagement = () => {
                 <div className="flex flex-wrap items-center gap-3">
                     <button
                         onClick={() => { setModalType('add'); setIsModalOpen(true); }}
-                        className="flex items-center gap-2 px-6 py-3.5 bg-indigo-600 text-white rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200"
+                        className="flex items-center gap-2 px-6 py-3.5 bg-blue-600 text-white rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg shadow-blue-200"
                     >
                         <Plus size={18} /> Register New Shop
                     </button>

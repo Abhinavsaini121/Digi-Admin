@@ -93,17 +93,7 @@ const PendingBusinessTable = () => {
         </span>
       ),
     },
-    {
-      title: "Category",
-      dataIndex: "category",
-      key: "category",
-      className: "text-xs font-semibold text-slate-600",
-      render: (text) => (
-        <span className="bg-indigo-50/50 text-indigo-600 border border-indigo-100/30 px-2.5 py-1 rounded-lg text-[10px] font-bold tracking-wider uppercase">
-          {text || "N/A"}
-        </span>
-      ),
-    },
+   
     {
       title: "Location",
       key: "location",
@@ -121,7 +111,7 @@ const PendingBusinessTable = () => {
       className: "text-center",
       render: (status) => (
         <span className="bg-amber-50 text-amber-600 border border-amber-100 px-2.5 py-1 rounded-lg text-[10px] font-bold tracking-wider uppercase inline-block">
-          {status ? status.toUpperCase() : "PENDING"}
+          {typeof status === "string" ? status.toUpperCase() : "PENDING"}
         </span>
       ),
     },
@@ -177,7 +167,7 @@ const PendingBusinessTable = () => {
   ];
 
   return (
-    <div className="p-6 bg-white rounded-2xl shadow-sm border border-slate-100 font-sans">
+    <div className="p-6 m-5 bg-white rounded-2xl shadow-sm border border-slate-100 font-sans">
       <div className="mb-6">
         <h2 className="text-xl font-bold text-slate-800 tracking-tight">
           Pending Verifications

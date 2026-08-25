@@ -1,4 +1,4 @@
-import apiClient from "./apiClient";
+import apiClient from "./axiosInstance/Base_url";
 
 export const getAllCategoriesAPI = async () => {
   try {

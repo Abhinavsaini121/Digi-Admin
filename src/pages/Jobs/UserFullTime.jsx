@@ -14,7 +14,8 @@ const UserFullJobs = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const [pagination, setPagination] = useState({});
-
+const [selectedJob, setSelectedJob] = useState(null);
+const [isViewModalOpen, setIsViewModalOpen] = useState(false);
     const navigate = useNavigate();
     useEffect(() => {
         const fetchJobs = async () => {
@@ -271,7 +272,18 @@ const UserFullJobs = () => {
           cursor: pointer;
           border: none;
         }
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
 
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #e2e8f0;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
         .c-cancel { background: #f1f5f9; color: #64748b; }
         .c-delete { background: #dc2626; color: white; }
       `}</style>
@@ -363,7 +375,15 @@ const UserFullJobs = () => {
                                     </td>
                                     <td>
                                         <div className="action-flex">
-                                            <button className="btn btn-view"><Eye size={12} /> View</button>
+                                        <button
+    className="btn btn-view"
+    onClick={() => {
+        setSelectedJob(job);
+        setIsViewModalOpen(true);
+    }}
+>
+    <Eye size={12} /> View
+</button>
                                             <button
                                                 className="btn btn-del"
                                                 onClick={() => { setJobIdToDelete(job._id); setIsDeleteModalOpen(true); }}
@@ -401,6 +421,318 @@ const UserFullJobs = () => {
                     Next
                 </button>
             </div>
+
+
+{/* VIEW JOB MODAL */}
+{isViewModalOpen && selectedJob && (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/70 backdrop-blur-sm p-4">
+
+<div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto custom-scrollbar rounded-2xl bg-white shadow-2xl">
+            {/* Header */}
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b bg-white px-6 py-4">
+
+                <div>
+                    <h2 className="text-xl font-bold text-slate-800">
+                        Job Details
+                    </h2>
+
+                    <p className="text-sm text-slate-500">
+                        Complete job information
+                    </p>
+                </div>
+
+                <button
+                    onClick={() => setIsViewModalOpen(false)}
+                    className="rounded-full p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+                >
+                    <X size={20} />
+                </button>
+
+            </div>
+
+            {/* Content */}
+            <div className="space-y-6 p-6">
+
+                {/* Job Information */}
+                <div>
+                    <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-blue-600">
+                        Job Information
+                    </h3>
+
+                    <div className="grid grid-cols-1 gap-4 rounded-xl bg-slate-50 p-4 md:grid-cols-2">
+
+                       
+
+                        <div>
+                            <p className="text-xs text-slate-500">Title</p>
+                            <p className="font-semibold text-slate-800">
+                                {selectedJob.title}
+                            </p>
+                        </div>
+
+                       
+                        
+
+                        <div>
+                            <p className="text-xs text-slate-500">Sub Category</p>
+                            <p className="font-semibold text-slate-800">
+                                {selectedJob.subCategory}
+                            </p>
+                        </div>
+
+                        <div>
+                            <p className="text-xs text-slate-500">Work Type</p>
+                            <p className="font-semibold text-slate-800">
+                                {selectedJob.workType}
+                            </p>
+                        </div>
+
+                        <div>
+                            <p className="text-xs text-slate-500">Status</p>
+                            <span className="inline-flex rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-700">
+                                {selectedJob.status}
+                            </span>
+                        </div>
+
+                        <div>
+                            <p className="text-xs text-slate-500">Featured</p>
+                            <p className="font-semibold text-slate-800">
+                                {selectedJob.isFeatured ? "Yes" : "No"}
+                            </p>
+                        </div>
+
+                    </div>
+                </div>
+
+                {/* Description */}
+                <div>
+                    <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-blue-600">
+                        Description
+                    </h3>
+
+                    <div className="rounded-xl bg-slate-50 p-4">
+                        <p className="text-sm leading-6 text-slate-700">
+                            {selectedJob.details || "No details available"}
+                        </p>
+                    </div>
+                </div>
+
+                {/* Location & Budget */}
+                <div>
+                    <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-blue-600">
+                        Location & Budget
+                    </h3>
+
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+
+                        <div className="rounded-xl border border-slate-200 p-4">
+                            <p className="text-xs text-slate-500">
+                                Location
+                            </p>
+
+                            <p className="mt-1 font-semibold text-slate-800">
+                                {selectedJob.location?.address || "N/A"}
+                            </p>
+                        </div>
+
+                        <div className="rounded-xl border border-slate-200 p-4">
+                            <p className="text-xs text-slate-500">
+                                Coordinates
+                            </p>
+
+                            <p className="mt-1 font-semibold text-slate-800">
+                                {selectedJob.location?.coordinates?.join(", ") || "N/A"}
+                            </p>
+                        </div>
+
+                        <div className="rounded-xl border border-slate-200 p-4">
+                            <p className="text-xs text-slate-500">
+                                Minimum Budget
+                            </p>
+
+                            <p className="mt-1 text-lg font-bold text-slate-800">
+                                ₹{selectedJob.budget?.min ?? 0}
+                            </p>
+                        </div>
+
+                        <div className="rounded-xl border border-slate-200 p-4">
+                            <p className="text-xs text-slate-500">
+                                Maximum Budget
+                            </p>
+
+                            <p className="mt-1 text-lg font-bold text-slate-800">
+                                ₹{selectedJob.budget?.max ?? 0}
+                            </p>
+                        </div>
+
+                    </div>
+                </div>
+
+                {/* User Information */}
+                <div>
+                    <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-blue-600">
+                        User Information
+                    </h3>
+
+                    <div className="flex flex-col gap-4 rounded-xl bg-slate-50 p-4 sm:flex-row sm:items-center">
+
+                        {selectedJob.userId?.profilePhoto ? (
+                            <img
+                                src={selectedJob.userId.profilePhoto}
+                                alt="Profile"
+                                className="h-16 w-16 rounded-full object-cover"
+                            />
+                        ) : (
+                            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-600">
+                                {selectedJob.userId?.fullName?.charAt(0) || "U"}
+                            </div>
+                        )}
+
+                        <div className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-2">
+
+                            <div>
+                                <p className="text-xs text-slate-500">
+                                    Full Name
+                                </p>
+                                <p className="font-semibold text-slate-800">
+                                    {selectedJob.userId?.fullName || "N/A"}
+                                </p>
+                            </div>
+
+                           <div>
+    <p className="text-xs text-slate-500">
+        Mobile
+    </p>
+    <p className="font-semibold text-slate-800">
+        {selectedJob.userId?.mobile || "N/A"}
+    </p>
+</div>
+
+<div>
+    <p className="text-xs text-slate-500">
+        Role
+    </p>
+    <p className="font-semibold text-slate-800">
+        {selectedJob.userId?.role || "N/A"}
+    </p>
+</div>
+
+                          
+
+                        </div>
+
+                    </div>
+                </div>
+
+                {/* Communication */}
+                <div>
+                    <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-blue-600">
+                        Communication
+                    </h3>
+
+                    <div className="rounded-xl border border-slate-200 p-4">
+                        <div className="flex flex-wrap gap-2">
+                            {selectedJob.preferredCommunication?.map(
+                                (method, index) => (
+                                    <span
+                                        key={index}
+                                        className="rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-700"
+                                    >
+                                        {method}
+                                    </span>
+                                )
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Images */}
+                <div>
+                    <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-blue-600">
+                        Job Images
+                    </h3>
+
+                    {selectedJob.images?.length > 0 ? (
+                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+
+                            {selectedJob.images.map((image, index) => (
+                                <img
+                                    key={index}
+                                    src={image}
+                                    alt={`Job ${index + 1}`}
+                                    className="h-32 w-full rounded-xl object-cover"
+                                />
+                            ))}
+
+                        </div>
+                    ) : (
+                        <div className="rounded-xl bg-slate-50 p-5 text-center text-sm text-slate-500">
+                            No images available
+                        </div>
+                    )}
+                </div>
+
+                {/* Dates */}
+                <div>
+                    <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-blue-600">
+                        Dates
+                    </h3>
+
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+
+                        <div className="rounded-xl bg-slate-50 p-4">
+                            <p className="text-xs text-slate-500">
+                                Created At
+                            </p>
+                            <p className="mt-1 text-sm font-semibold text-slate-800">
+                                {selectedJob.createdAt
+                                    ? new Date(selectedJob.createdAt).toLocaleString()
+                                    : "N/A"}
+                            </p>
+                        </div>
+
+                        <div className="rounded-xl bg-slate-50 p-4">
+                            <p className="text-xs text-slate-500">
+                                Updated At
+                            </p>
+                            <p className="mt-1 text-sm font-semibold text-slate-800">
+                                {selectedJob.updatedAt
+                                    ? new Date(selectedJob.updatedAt).toLocaleString()
+                                    : "N/A"}
+                            </p>
+                        </div>
+
+                        <div className="rounded-xl bg-slate-50 p-4">
+                            <p className="text-xs text-slate-500">
+                                Expires At
+                            </p>
+                            <p className="mt-1 text-sm font-semibold text-slate-800">
+                                {selectedJob.expiresAt
+                                    ? new Date(selectedJob.expiresAt).toLocaleString()
+                                    : "N/A"}
+                            </p>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+            {/* Footer */}
+            <div className="sticky bottom-0 border-t bg-white px-6 py-4 text-right">
+
+                <button
+                    onClick={() => setIsViewModalOpen(false)}
+                    className="rounded-xl bg-slate-800 px-6 py-2.5 text-sm font-bold text-white transition hover:bg-slate-700"
+                >
+                    Close
+                </button>
+
+            </div>
+
+        </div>
+    </div>
+)}
 
             {/* DELETE MODAL */}
             {isDeleteModalOpen && (

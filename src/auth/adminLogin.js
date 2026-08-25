@@ -1,26 +1,76 @@
-import apiClient from "./apiClient";
 
-// --- Login ---
-export const adminLogin = async (email, password) => {
+import apiClient from "./axiosInstance/Base_url";
+
+export const sendAdminOtp = async (mobile) => {
+
   try {
-    const response = await apiClient.post("/admin/login", { email, password });
+    const response = await apiClient.post(
 
-    console.log("login success", response);
-
-    if (response.data.token) {
-      localStorage.setItem("token", response.data.token);
-      if (response.data.userId) {
-        localStorage.setItem("userId", response.data.userId);
+      "/otp/admin/send-otp",
+      {
+        mobile,
       }
-    }
+    );
+
     return response.data;
+
   } catch (error) {
-    throw error.response ? error.response.data : new Error("Network Error");
+
+    throw (
+      error.response?.data?.message ||
+
+      "Failed to send admin OTP"
+    );
+  }
+};
+
+
+export const verifyAdminOtp = async (mobile, otp) => {
+
+  try {
+
+    const { data } = await apiClient.post("/otp/admin/verify-otp", {
+
+      mobile,
+      otp,
+    });
+
+    return data;
+
+  } catch (error) {
+
+    throw (
+
+      error.response?.data?.message ||
+
+      "Failed to verify admin OTP"
+    );
   }
 };
 
 
 
+
+export const resendAdminOtp = async (mobile) => {
+  try
+   {
+    const response = await apiClient.post(
+
+      "/otp/resend-otp",
+      { mobile }
+    );
+
+    return response.data;
+
+  } catch (error) {
+
+    throw (
+      error.response?.data?.message ||
+
+      "Failed to resend admin OTP"
+    );
+  }
+};
 
 // --- Dashboard Stats ---
 export const getDashboardStats = async () => {

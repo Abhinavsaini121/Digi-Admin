@@ -1,4 +1,4 @@
-import apiClient from "./apiClient";
+import apiClient from "./axiosInstance/Base_url";
 
 export const getAllPlans = async (page = 1, limit = 10) => {
   try {

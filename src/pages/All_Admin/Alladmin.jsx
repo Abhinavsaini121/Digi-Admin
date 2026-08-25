@@ -150,7 +150,7 @@ const UserTable = () => {
   const indexOfFirstItem = (currentPage - 1) * itemsPerPage;
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen font-sans">
+    <div className="p-8 bg-gray-50 min-h-screen font-sans m-4">
       {toast.visible && (
         <div className="fixed top-5 right-5 z-[2000] bg-emerald-600 text-white px-6 py-3 rounded-xl shadow-2xl font-bold border border-emerald-400 animate-in fade-in slide-in-from-top-4 duration-300">
           ✅ {toast.message}
@@ -164,7 +164,7 @@ const UserTable = () => {
       </div>
 
       <div className="flex gap-4 mb-6">
-        <button className="px-6 py-2 bg-indigo-600 text-white rounded-full font-medium">
+        <button className="px-6 py-2 bg-blue-600 text-white rounded-full font-medium">
           All Admin
         </button>
       </div>
@@ -179,7 +179,7 @@ const UserTable = () => {
             placeholder="Search Admin..."
             value={searchQuery}
             onChange={(e) => handleSearch(e.target.value)}
-            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white focus:outline-none focus:ring-1 focus:ring-blue-700"
           />
         </div>
         <button
@@ -193,7 +193,7 @@ const UserTable = () => {
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
         {" "}
         {loading && (
-          <div className="p-6 text-center text-indigo-600">
+          <div className="p-6 text-center text-blue-600">
             Loading Admin...
           </div>
         )}
@@ -210,7 +210,7 @@ const UserTable = () => {
                 <th className="px-6 py-4">S.NO</th>
                 <th className="px-6 py-4">ADMIN NAME</th>
                 <th className="px-6 py-4">EMAIL</th>
-                <th className="px-6 py-4">ADMIN TYPE</th>
+                <th className="px-6 py-4">ROLE</th>
                 <th className="px-6 py-4">STATUS</th>
                 <th className="px-6 py-4 text-center">ACTIONS</th>
               </tr>
@@ -239,9 +239,7 @@ const UserTable = () => {
                           <p className="text-sm font-semibold text-gray-800">
                             {user.name}
                           </p>
-                          <p className="text-xs text-gray-400">
-                            {user.phone || "N/A"}
-                          </p>
+                         
                         </div>
                       </div>
                     </td>
@@ -249,7 +247,7 @@ const UserTable = () => {
                       {user.email || "N/A"}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600 font-medium">
-                      {user.type || "UNKNOWN"}
+                      {user.role || "UNKNOWN"}
                     </td>
                     <td className="px-6 py-4">
                       <span
@@ -263,23 +261,13 @@ const UserTable = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex justify-center gap-4 text-gray-400">
+                      <div className="flex justify-center gap-4 ">
                         <Edit2
                           size={18}
                           className="cursor-pointer hover:text-blue-500"
                           onClick={() => openUpdateModal(user)}
                         />
-                        {user.status === "BLOCKED" ? (
-                          <Unlock
-                            size={18}
-                            className="cursor-pointer text-green-500"
-                          />
-                        ) : (
-                          <Lock
-                            size={18}
-                            className="cursor-pointer text-yellow-500"
-                          />
-                        )}
+                      
                         <Trash2
                           size={18}
                           className="cursor-pointer hover:text-red-500"
@@ -324,7 +312,7 @@ const UserTable = () => {
               <button
                 key={i}
                 onClick={() => setCurrentPage(i + 1)}
-                className={`w-8 h-8 rounded-lg text-sm font-bold transition-colors ${currentPage === i + 1 ? "bg-indigo-600 text-white" : "hover:bg-gray-100 text-gray-600"}`}
+                className={`w-8 h-8 rounded-lg text-sm font-bold transition-colors ${currentPage === i + 1 ? "bg-blue-600 text-white" : "hover:bg-gray-100 text-gray-600"}`}
               >
                 {i + 1}
               </button>
@@ -333,7 +321,7 @@ const UserTable = () => {
           <button
             disabled={currentPage === totalPages || loading}
             onClick={() => setCurrentPage((prev) => prev + 1)}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-bold hover:bg-indigo-700 disabled:opacity-50 transition"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 disabled:opacity-50 transition"
           >
             Next
           </button>

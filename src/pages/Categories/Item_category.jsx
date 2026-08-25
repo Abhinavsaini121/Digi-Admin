@@ -21,6 +21,7 @@ const ItemCategory = () => {
   const [newCategory, setNewCategory] = useState({ name: "", image: null });
   const [previewImage, setPreviewImage] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [categoryDropdown, setCategoryDropdown] = useState(false);
   const [editCategory, setEditCategory] = useState({
     id: "",
     name: "",
@@ -71,18 +72,51 @@ const ItemCategory = () => {
           availability status.
         </p>
         <div className="flex justify-end">
-          <select
-            className="w-48 border border-gray-300 rounded-lg px-4 py-2 bg-white outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-            defaultValue="itemcategory"
-            onChange={(e) => {
-              const value = e.target.value;
-              if (value === "itemcategory") navigate("/cat-item");
-              if (value === "subcategory") navigate("/subcat-item");
-            }}
-          >
-            <option value="itemcategory">Category</option>
-            <option value="subcategory">Subcategory</option>
-          </select>
+        <div className="flex justify-end relative w-full">
+  <div className="relative w-full sm:w-48">
+    <button
+      type="button"
+      onClick={() => setCategoryDropdown(!categoryDropdown)}
+      className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-white text-left flex items-center justify-between outline-none hover:border-blue-500 transition"
+    >
+      <span>Category</span>
+
+      <span
+        className={`transition-transform ${
+          categoryDropdown ? "rotate-180" : ""
+        }`}
+      >
+        ▾
+      </span>
+    </button>
+
+    {categoryDropdown && (
+      <div className="absolute top-full left-0 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 overflow-hidden">
+        <button
+          type="button"
+          onClick={() => {
+            navigate("/cat-item");
+            setCategoryDropdown(false);
+          }}
+          className="w-full text-left px-4 py-2 hover:bg-blue-100 transition"
+        >
+          Category
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            navigate("/subcat-item");
+            setCategoryDropdown(false);
+          }}
+          className="w-full text-left px-4 py-2 hover:bg-blue-100 transition"
+        >
+          Subcategory
+        </button>
+      </div>
+    )}
+  </div>
+</div>
         </div>
         <div className="flex justify-between items-center mb-15">
           <input

@@ -23,11 +23,11 @@ const menuItems = [
     icon: Home,
     route: "/",
   },
-  {
-    label: "Manage Users",
-    icon: Users,
-    route: "/usersmanagement",
-  },
+  // {
+  //   label: "Manage Users",
+  //   icon: Users,
+  //   route: "/usersmanagement",
+  // },
   {
     label: "Local Needs",
     icon: MapPin,
@@ -160,7 +160,7 @@ export default function Sidebar({ sidebarOpen, closeSidebar }) {
 
       <aside
         className={`fixed top-21 left-0 z-40 w-68 h-[calc(100vh-64px)]
-        bg-white border-r shadow-lg p-4 overflow-y-auto
+        bg-white  shadow-lg p-4 overflow-y-auto
         transition-transform duration-300 lg:translate-x-0
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
         scrollbar-hide`}
@@ -175,7 +175,7 @@ export default function Sidebar({ sidebarOpen, closeSidebar }) {
           }
         `}</style>
 
-        <nav className="space-y-2">
+        <nav className="space-y-2 m-1">
           {menuItems.map((item, index) => {
             const isActive = isMenuItemActive(item.route);
             const isParentMenuActive = isParentActive(item.children);

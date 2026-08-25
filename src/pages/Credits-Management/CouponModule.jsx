@@ -182,7 +182,7 @@ export default function Coupon() {
   };
 
   return (
-    <div className="min-h-screen bg-[#fafbfe] p-4 md:p-8 text-slate-800 font-sans">
+    <div className="min-h-screen bg-[#fffcfc] p-4 md:p-8 text-slate-800 font-sans m-4">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-slate-800 tracking-tight">
           Admin Coupon Dashboard

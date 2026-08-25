@@ -302,7 +302,7 @@ const MarketplaceManager = () => {
 
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-10 gap-6">
         <div>
-          <span className="bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border border-indigo-100/50 inline-flex items-center gap-1.5 mb-2">
+          <span className="bg-indigo-50 text-blue-600 px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border border-indigo-100/50 inline-flex items-center gap-1.5 mb-2">
             System Administrator
           </span>
           <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight sm:text-4xl">
@@ -349,7 +349,7 @@ const MarketplaceManager = () => {
 
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="flex items-center justify-center gap-2 px-5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-2xl shadow-md hover:shadow-indigo-500/25 transition-all duration-200 active:scale-95 flex-1 sm:flex-initial"
+            className="flex items-center justify-center gap-2 px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-2xl shadow-md hover:shadow-indigo-500/25 transition-all duration-200 active:scale-95 flex-1 sm:flex-initial"
           >
             <Plus size={14} />
             Create Listing
@@ -957,9 +957,9 @@ const MarketplaceManager = () => {
                   </label>
                   <select
                     value={
-                      currentItem.preferredCommunication?.call
+                      currentItem?.preferredCommunication?.call
                         ? "call"
-                        : currentItem.preferredCommunication?.chat
+                        : currentItem?.preferredCommunication?.chat
                           ? "chat"
                           : ""
                     }

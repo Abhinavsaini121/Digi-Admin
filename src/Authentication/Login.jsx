@@ -1,224 +1,120 @@
-// import React, { useState } from "react";
-// import { FiMail, FiLock, FiEye, FiEyeOff } from "react-icons/fi";
-// import toast, { Toaster } from "react-hot-toast";
-// import { useNavigate } from "react-router-dom";
-// import defaulting from "../assets/logo(1).png";
-// import { adminLogin } from "../auth/adminLogin"; // Import service
 
-// const Login = () => {
-//   const [showPassword, setShowPassword] = useState(false);
-//   const [email, setEmail] = useState("");
-//   const [password, setPassword] = useState("");
-//   const [loading, setLoading] = useState(false);
-
-//   const navigate = useNavigate();
-
-//   const handleLogin = async (e) => {
-//     e.preventDefault();
-
-//     if (!email || !password) {
-//       toast.error("Please fill in all fields");
-//       return;
-//     }
-
-//     setLoading(true);
-//     try {
-//       // API Call
-//       const data = await adminLogin(email, password);
-
-//       // Save to localStorage (Token and Role)
-//       localStorage.setItem("token", data.token);
-//       localStorage.setItem("role", data.admin.role);
-//       localStorage.setItem("isLoggedIn", "true");
-//       localStorage.setItem("id", data.admin.id);
-
-//       toast.success("Login successful!");
-
-//       setTimeout(() => {
-//         navigate("/");
-//       }, 1000);
-//     } catch (err) {
-//       // Backend error message handle karega
-//       toast.error(err.message || "Invalid credentials");
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   return (
-//     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 via-white to-orange-100 px-4">
-//       <Toaster position="top-center" />
-
-//       <div className="w-full max-w-md">
-//         <div className="text-center mb-6">
-//           <div className="w-20 h-20 mx-auto rounded-2xl bg-orange-100 flex items-center justify-center shadow-lg mb-4">
-//             <img src={defaulting} alt="logo" className="w-12 h-12" />
-//           </div>
-//           <h1 className="text-3xl font-extrabold text-gray-800">
-//             Time2Cash Admin Panel Login
-//           </h1>
-//           <p className="text-gray-500 text-sm mt-1">Sign in to continue</p>
-//         </div>
-
-//         <div className="bg-white rounded-3xl shadow-xl border border-orange-100 p-8">
-//           <form onSubmit={handleLogin}>
-//             {/* Email */}
-//             <div className="mb-5">
-//               <label className="text-sm font-medium text-gray-600 mb-1 block">
-//                 Email
-//               </label>
-//               <div className="relative">
-//                 <FiMail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-//                 <input
-//                   type="email"
-//                   placeholder="example@gmail.com"
-//                   value={email}
-//                   onChange={(e) => setEmail(e.target.value)}
-//                   className="w-full pl-11 pr-4 py-3 rounded-xl border border-orange-200 bg-orange-50 focus:ring-2 focus:ring-orange-200 outline-none"
-//                   required
-//                 />
-//               </div>
-//             </div>
-
-//             {/* Password */}
-//             <div className="mb-6">
-//               <label className="text-sm font-medium text-gray-600 mb-1 block">
-//                 Password
-//               </label>
-//               <div className="relative">
-//                 <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-//                 <input
-//                   type={showPassword ? "text" : "password"}
-//                   placeholder="••••••••"
-//                   value={password}
-//                   onChange={(e) => {
-//                     if (e.target.value.length <= 6) {
-//                       setPassword(e.target.value);
-//                     }
-//                   }}
-//                   className="w-full pl-11 pr-12 py-3 rounded-xl border border-orange-200 bg-orange-50 focus:ring-2 focus:ring-orange-200 outline-none"
-//                   required
-//                 />
-//                 <button
-//                   type="button"
-//                   onClick={() => setShowPassword(!showPassword)}
-//                   className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400"
-//                 >
-//                   {showPassword ? <FiEyeOff /> : <FiEye />}
-//                 </button>
-//               </div>
-//             </div>
-
-//             {/* Button */}
-//             <button
-//               type="submit"
-//               disabled={loading}
-//               className={`w-full py-3 rounded-2xl bg-[#FE702E] hover:bg-orange-600 text-white font-semibold text-lg transition ${
-//                 loading ? "opacity-70 cursor-not-allowed" : ""
-//               }`}
-//             >
-//               {loading ? "Logging in..." : "Login"}
-//             </button>
-//           </form>
-//         </div>
-//         <p className="text-center text-xs text-gray-400 mt-6">
-//           © Time2Cash App Admin Panel
-//         </p>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default Login;
 import React, { useState, useRef, useEffect } from "react";
 import { FiPhone, FiX } from "react-icons/fi";
 import toast, { Toaster } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import defaulting from "../assets/logo(1).png";
-
-const OTP_LENGTH = 6;
-const RESEND_SECONDS = 30;
+import { sendAdminOtp, verifyAdminOtp , resendAdminOtp } from "../auth/adminLogin";
 
 const Login = () => {
-  const [phone, setPhone] = useState("");
-  const [loading, setLoading] = useState(false);
+  const OTP_LENGTH = 6;
+const RESEND_SECONDS = 60;
 
-  const [showOtpModal, setShowOtpModal] = useState(false);
-  const [otp, setOtp] = useState(Array(OTP_LENGTH).fill(""));
-  const [verifying, setVerifying] = useState(false);
-  const [resendTimer, setResendTimer] = useState(RESEND_SECONDS);
+const [phone, setPhone] = useState("");
+const [loading, setLoading] = useState(false);
+const [showOtpModal, setShowOtpModal] = useState(false);
+const [otp, setOtp] = useState(Array(OTP_LENGTH).fill(""));
+const [verifying, setVerifying] = useState(false);
+const [resendTimer, setResendTimer] = useState(0);
+const [resending, setResending] = useState(false);
 
   const otpRefs = useRef([]);
   const navigate = useNavigate();
 
-  // Countdown for resend button
-  useEffect(() => {
-    if (!showOtpModal) return;
-    if (resendTimer <= 0) return;
-    const t = setTimeout(() => setResendTimer((s) => s - 1), 1000);
-    return () => clearTimeout(t);
-  }, [showOtpModal, resendTimer]);
 
-  const isValidPhone = (value) => /^[6-9]\d{9}$/.test(value); // 10-digit Indian mobile format, adjust as needed
 
-  // Step 1: "Send" OTP (dummy — no real API call)
-  const handleSendOtp = async (e) => {
-    e.preventDefault();
+const isValidPhone = (value) => /^\d{10}$/.test(value); 
 
-    if (!phone) {
-      toast.error("Please enter your phone number");
-      return;
-    }
-    if (!isValidPhone(phone)) {
-      toast.error("Please enter a valid 10-digit phone number");
-      return;
-    }
+const handleSendOtp = async (e) => {
+  e.preventDefault();
 
-    setLoading(true);
-    // Fake network delay
-    setTimeout(() => {
-      toast.success("OTP sent to your phone (dummy mode)");
-      setOtp(Array(OTP_LENGTH).fill(""));
-      setResendTimer(RESEND_SECONDS);
-      setShowOtpModal(true);
-      setLoading(false);
-      setTimeout(() => otpRefs.current[0]?.focus(), 200);
-    }, 800);
-  };
+  if (!phone) {
+    toast.error("Please enter your phone number");
+    return;
+  }
 
-  // Step 2: "Verify" OTP — DUMMY: any 6 digits entered logs in successfully
-  const handleVerifyOtp = () => {
-    const code = otp.join("");
-    if (code.length !== OTP_LENGTH) {
-      toast.error("Please enter the complete OTP");
-      return;
-    }
+  if (!isValidPhone(phone)) {
+    toast.error("Please enter a valid 10-digit phone number");
+    return;
+  }
 
-    setVerifying(true);
-    setTimeout(() => {
-      // ---- DUMMY LOGIN: no backend check, always succeeds ----
-      localStorage.setItem("token", "dummy-token-123");
-      localStorage.setItem("role", "admin");
-      localStorage.setItem("isLoggedIn", "true");
-      localStorage.setItem("id", "dummy-id-001");
+  setLoading(true);
 
-      toast.success("Login successful!");
-      setVerifying(false);
-      setShowOtpModal(false);
+  try {
+    const response = await sendAdminOtp(phone);
 
-      setTimeout(() => {
-        navigate("/");
-      }, 800);
-    }, 600);
-  };
+    toast.success(response?.message || "OTP sent to your phone");
 
-  const handleResendOtp = () => {
-    if (resendTimer > 0) return;
-    toast.success("OTP resent (dummy mode)");
     setOtp(Array(OTP_LENGTH).fill(""));
     setResendTimer(RESEND_SECONDS);
-    otpRefs.current[0]?.focus();
-  };
+    setShowOtpModal(true);
+
+    setTimeout(() => otpRefs.current[0]?.focus(), 200);
+  } catch (error) {
+    toast.error(
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to send OTP"
+    );
+  } finally {
+    setLoading(false);
+  }
+};
+ const handleVerifyOtp = async () => {
+  const code = otp.join("");
+  if (code.length !== OTP_LENGTH) {
+    toast.error("Please enter the complete OTP");
+    return;
+  }
+
+  setVerifying(true);
+  try {
+
+  const response = await verifyAdminOtp(phone, code);
+
+localStorage.setItem("token", response.token);
+localStorage.setItem("isLoggedIn", "true");
+
+    toast.success("Login successful!");
+    setShowOtpModal(false);
+
+    setTimeout(() => {
+      navigate("/");
+    }, 800);
+  } catch (error) {
+    toast.error(error.message || "Invalid OTP");
+  } finally {
+    setVerifying(false);
+  }
+};
+
+useEffect(() => {
+  if (resendTimer <= 0) return;
+  const interval = setInterval(() => {
+    setResendTimer((prev) => prev - 1);
+  }, 1000);
+  return () => clearInterval(interval);
+}, [resendTimer]);
+
+const handleResendOtp = async () => {
+  if (resendTimer > 0) return;
+
+  setResending(true);
+  try {
+    const response = await resendAdminOtp(phone);
+    toast.success(response?.message || "OTP resent to your phone");
+
+    setOtp(Array(OTP_LENGTH).fill(""));
+    setResendTimer(RESEND_SECONDS);
+    setTimeout(() => otpRefs.current[0]?.focus(), 200);
+  } catch (error) {
+    toast.error(error?.message || "Failed to resend OTP");
+  } finally {
+    setResending(false);
+  }
+};
+
+
 
   const handleOtpChange = (index, value) => {
     if (!/^\d*$/.test(value)) return; // digits only
@@ -250,15 +146,16 @@ const Login = () => {
   };
 
   return (
+    
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 via-white to-orange-100 px-4">
       <Toaster position="top-center" />
 
-      <div className="w-full max-w-md">
+     <div className="w-full max-w-md bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-200/50 p-2">
         <div className="text-center mb-6">
           <div className="w-20 h-20 mx-auto rounded-2xl bg-orange-100 flex items-center justify-center shadow-lg mb-4">
             <img src={defaulting} alt="logo" className="w-12 h-12" />
           </div>
-          <h1 className="text-3xl font-extrabold text-gray-800">
+          <h1 className="text-2xl font-extrabold text-gray-800">
             Time2Cash Admin Panel Login
           </h1>
           <p className="text-gray-500 text-sm mt-1">
@@ -266,7 +163,7 @@ const Login = () => {
           </p>
         </div>
 
-        <div className="bg-white rounded-3xl shadow-xl border border-orange-100 p-8">
+<div className="bg-white w-[80%] max-w-md mx-auto rounded-3xl shadow-xl border border-orange-100 p-8">
           <form onSubmit={handleSendOtp}>
             {/* Phone */}
             <div className="mb-6">
@@ -336,9 +233,7 @@ const Login = () => {
                 Code sent to{" "}
                 <span className="font-medium text-gray-700">+91 {phone}</span>
               </p>
-              <p className="text-xs text-orange-400 mt-1">
-                (Dummy mode: enter any {OTP_LENGTH} digits)
-              </p>
+            
             </div>
 
             {/* OTP Boxes */}
@@ -370,19 +265,24 @@ const Login = () => {
             >
               {verifying ? "Verifying..." : "Verify & Login"}
             </button>
-
-            <div className="text-center text-sm text-gray-500">
-              {resendTimer > 0 ? (
-                <span>Resend OTP in {resendTimer}s</span>
-              ) : (
-                <button
-                  onClick={handleResendOtp}
-                  className="text-[#FE702E] font-medium hover:underline"
-                >
-                  Resend OTP
-                </button>
-              )}
-            </div>
+<p className="text-center text-sm text-gray-500">
+  {resendTimer > 0 ? (
+    <>
+      Resend OTP in{" "}
+      <span className="font-semibold text-[#FE702E]">{resendTimer}s</span>
+    </>
+  ) : (
+    <button
+      onClick={handleResendOtp}
+      disabled={resending}
+      className={`text-[#FE702E] font-semibold hover:underline ${
+        resending ? "opacity-60 cursor-not-allowed" : ""
+      }`}
+    >
+      {resending ? "Resending..." : "Resend OTP"}
+    </button>
+  )}
+</p>
           </div>
         </div>
       )}

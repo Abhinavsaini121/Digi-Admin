@@ -365,7 +365,6 @@ const BloodRequests = () => {
         item.bloodGroup.toLowerCase().includes(searchText.toLowerCase())),
   );
 
-  // --- Table Columns ---
   const columns = [
     {
       title: "REQUESTER INFO",
@@ -538,7 +537,16 @@ const BloodRequests = () => {
     fontSize: "12px",
   };
   return (
-    <div className="p-6 bg-white rounded-lg shadow-sm max-w-7xl mx-auto mb-8 mt-2 overflow-x-hidden">
+      <>
+    <style>
+      {`
+        .ant-table-thead > tr > th {
+         background: #f3f4f6 !important;
+          color: #111827 !important;
+        }
+      `}
+    </style>
+    <div className="p-6 bg-white rounded-lg shadow-sm max-w-8xl  m-4 overflow-x-hidden">
       {" "}
       <div className="flex justify-between items-start mb-6">
         <div className="flex flex-col gap-4">
@@ -1115,6 +1123,7 @@ const BloodRequests = () => {
         )}
       </Modal>
     </div>
+    </>
   );
 };
 

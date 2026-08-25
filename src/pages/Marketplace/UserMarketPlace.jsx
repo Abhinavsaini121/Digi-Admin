@@ -39,7 +39,8 @@ const UserMarketPlace = () => {
     message: "",
     type: "success",
   });
-
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editItem, setEditItem] = useState(null);
   const showToast = (message, type = "success") => {
     setToast({ visible: true, message, type });
     setTimeout(
@@ -97,18 +98,16 @@ const UserMarketPlace = () => {
       {toast.visible && (
         <div className="fixed top-6 right-6 z-[1100] animate-bounce-short">
           <div
-            className={`flex items-center gap-3.5 px-6 py-4 rounded-2xl shadow-xl backdrop-blur-md border text-white font-medium text-xs tracking-wide transition-all duration-300 ${
-              toast.type === "success"
-                ? "bg-slate-900/95 border-emerald-500/30 shadow-emerald-950/10"
-                : "bg-slate-900/95 border-rose-500/30 shadow-rose-950/10"
-            }`}
+            className={`flex items-center gap-3.5 px-6 py-4 rounded-2xl shadow-xl backdrop-blur-md border text-white font-medium text-xs tracking-wide transition-all duration-300 ${toast.type === "success"
+              ? "bg-slate-900/95 border-emerald-500/30 shadow-emerald-950/10"
+              : "bg-slate-900/95 border-rose-500/30 shadow-rose-950/10"
+              }`}
           >
             <div
-              className={`p-1.5 rounded-lg ${
-                toast.type === "success"
-                  ? "bg-emerald-500/20 text-emerald-400"
-                  : "bg-rose-500/20 text-rose-400"
-              }`}
+              className={`p-1.5 rounded-lg ${toast.type === "success"
+                ? "bg-emerald-500/20 text-emerald-400"
+                : "bg-rose-500/20 text-rose-400"
+                }`}
             >
               {toast.type === "success" ? (
                 <CheckCircle size={15} />
@@ -245,13 +244,13 @@ const UserMarketPlace = () => {
               <thead>
                 <tr className="bg-slate-50/70 border-b border-slate-100">
                   <th className="p-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest w-16 text-center">
-                    #
+                    S.No.
                   </th>
                   <th className="p-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                     Listing Item Detail
                   </th>
                   <th className="p-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                    Category Tag
+                    Sub Category
                   </th>
                   <th className="p-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                     Asking Price
@@ -303,7 +302,7 @@ const UserMarketPlace = () => {
                     </td>
                     <td className="p-5">
                       <span className="bg-indigo-50/70 text-indigo-600 px-3 py-1.5 rounded-xl text-[10px] font-extrabold tracking-wider uppercase border border-indigo-100/50">
-                        {item.category}
+                        {item.subCategory}
                       </span>
                     </td>
                     <td className="p-5 text-xs font-extrabold text-slate-800">
@@ -323,18 +322,23 @@ const UserMarketPlace = () => {
                     </td>
                     <td className="p-5 text-center">
                       <span
-                        className={`text-[9px] font-bold px-3 py-1.5 rounded-xl tracking-widest inline-block uppercase ${
-                          item.isActive
-                            ? "bg-emerald-50 text-emerald-600 border border-emerald-100"
-                            : "bg-rose-50 text-rose-600 border border-rose-100"
-                        }`}
+                        className={`text-[9px] font-bold px-3 py-1.5 rounded-xl tracking-widest inline-block uppercase ${item.isActive
+                          ? "bg-emerald-50 text-emerald-600 border border-emerald-100"
+                          : "bg-rose-50 text-rose-600 border border-rose-100"
+                          }`}
                       >
                         {item.isActive ? "Active" : "Inactive"}
                       </span>
                     </td>
                     <td className="p-5">
                       <div className="flex justify-center items-center gap-2">
-                        <button className="flex items-center gap-1.5 px-3.5 py-2 text-[10px] font-bold rounded-xl border border-slate-200/80 bg-white text-slate-600 hover:bg-indigo-600 hover:text-white hover:border-transparent transition-all duration-200 shadow-sm">
+                        <button
+                          onClick={() => {
+                            setEditItem(item);
+                            setIsEditModalOpen(true);
+                          }}
+                          className="flex items-center gap-1.5 px-3.5 py-2 text-[10px] font-bold rounded-xl border border-slate-200/80 bg-white text-slate-600 hover:bg-blue-600 hover:text-white hover:border-transparent transition-all duration-200 shadow-sm"
+                        >
                           <Edit size={12} /> Edit
                         </button>
                         <button
@@ -414,6 +418,65 @@ const UserMarketPlace = () => {
                 Confirm Delete
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {isEditModalOpen && editItem && (
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-md">
+          <div className="bg-white rounded-[32px] shadow-2xl w-full max-w-md p-8">
+
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-extrabold text-slate-900">
+                Edit Listing
+              </h3>
+
+              <button
+                onClick={() => setIsEditModalOpen(false)}
+                className="p-2 rounded-xl hover:bg-slate-100"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="mb-4">
+              <label className="block text-xs font-bold text-slate-600 mb-2">
+                Title
+              </label>
+              <input
+                type="text"
+                defaultValue={editItem.title}
+                className="w-full border border-slate-200 rounded-xl px-4 py-3"
+              />
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-xs font-bold text-slate-600 mb-2">
+                Sub Category
+              </label>
+              <input
+                type="text"
+                defaultValue={editItem.subCategory}
+                className="w-full border border-slate-200 rounded-xl px-4 py-3"
+              />
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-xs font-bold text-slate-600 mb-2">
+                Price
+              </label>
+              <input
+                type="number"
+                defaultValue={editItem.price}
+                className="w-full border border-slate-200 rounded-xl px-4 py-3"
+              />
+            </div>
+            <button
+              onClick={() => setIsEditModalOpen(false)}
+              className="w-full bg-blue-600 text-white rounded-xl py-3 font-bold"
+            >
+              Save Changes
+            </button>
+
           </div>
         </div>
       )}

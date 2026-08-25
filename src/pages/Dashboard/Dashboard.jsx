@@ -47,37 +47,51 @@ const STATIC_CHART_DATA = [
   { date: "Oct 30", users: 9200 },
 ];
 
-/* -------------------- STAT CARD COMPONENT -------------------- */
-const StatCard = ({ title, value, icon: Icon, color, isLoading }) => (
-  <div className="group p-5 bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1">
-    <div className="flex items-center justify-between mb-3">
-      <div className={`p-2 rounded-lg ${color} bg-opacity-10 text-orange-600`}>
-        <Icon size={22} strokeWidth={2.5} />
-      </div>
-      <span className="text-xs font-medium text-green-500 bg-green-50 px-2 py-1 rounded-full">
-        +Live
-      </span>
-    </div>
-    <div>
-      <p className="text-sm font-medium text-gray-500 uppercase tracking-wider">
-        {title}
-      </p>
-      {isLoading ? (
-        <div className="h-8 w-16 bg-gray-100 animate-pulse rounded mt-1"></div>
-      ) : (
-        <p className="text-2xl font-bold mt-1 text-gray-800 tracking-tight">
-          {value.toLocaleString()}
-        </p>
-      )}
-    </div>
-  </div>
-);
+const StatCard = ({ title, value, icon: Icon, color, isLoading }) => {
+  const isComingSoon = value === "Coming soon";
 
+  return (
+    <div className="group p-5 bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1">
+      <div className="flex items-center justify-between mb-3">
+        <div className={`p-2 rounded-lg ${color} bg-opacity-10 text-orange-600`}>
+          <Icon size={22} strokeWidth={2.5} />
+        </div>
+        {isComingSoon ? (
+          <span className="text-xs font-medium text-gray-400 bg-gray-50 px-2 py-1 rounded-full">
+            Soon
+          </span>
+        ) : (
+          <span className="text-xs font-medium text-green-500 bg-green-50 px-2 py-1 rounded-full">
+            +Live
+          </span>
+        )}
+      </div>
+      <div>
+        <p className="text-sm font-medium text-gray-500 uppercase tracking-wider">
+          {title}
+        </p>
+        {isLoading ? (
+          <div className="h-8 w-16 bg-gray-100 animate-pulse rounded mt-1"></div>
+        ) : isComingSoon ? (
+          <p className="text-lg font-medium text-gray-400  mt-1 blur-[0.9px] select-none">
+            {value}
+          </p>
+        ) : (
+          <p className="text-2xl font-bold">
+            {typeof value === "string" ? value : value.toLocaleString()}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+};
 const SectionTitle = ({ title }) => (
   <h2 className="text-sm font-bold text-gray-400 uppercase tracking-[0.2em] mb-4 mt-8">
     {title}
   </h2>
 );
+
+
 
 function Dashboard() {
   const [stats, setStats] = useState(null);
@@ -110,9 +124,9 @@ function Dashboard() {
   }
 
   return (
-    <div className="p-8 bg-[#F8FAFC] min-h-screen font-sans">
+    <div className="p-8 bg-[#F8FAFC] min-h-screen font-sans m-5">
       {/* -------------------- HEADER -------------------- */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between m-5 gap-4 ">
         <div>
           <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">
             Admin <span className="text-[#FE702E]">Dashboard</span>
@@ -219,12 +233,12 @@ function Dashboard() {
           icon={CreditCard}
           color="bg-orange-600"
         />
-        <StatCard
-          title="SOS Alerts"
-          value={OTHER_STATIC_STATS.sosAlertsToday}
-          icon={AlertCircle}
-          color="bg-red-500"
-        />
+       <StatCard
+  title="SOS Alerts"
+  value="Coming soon"
+  icon={AlertCircle}
+  color="bg-red-500"
+/>
         <StatCard
           title="Blood Requests"
           value={stats?.totalBloodRequests || 0} // Map from API

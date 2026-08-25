@@ -123,7 +123,7 @@ const Credits = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#fafbfe] p-4 md:p-8 text-slate-800 font-sans">
+    <div className="min-h-screen bg-[#fafbfe] p-4 md:p-8 text-slate-800 font-sans m-5">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-17 gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-800 tracking-tight">
@@ -351,14 +351,14 @@ const Credits = () => {
       {modalConfig.isOpen && modalConfig.type === "edit" && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-md transition-all duration-300 animate-fadeIn">
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto transform transition-all duration-300 scale-100 animate-scaleUp border border-slate-100">
-            <div className="sticky top-0 bg-gradient-to-r from-purple-400 via-indigo-300 to-purple-500 text-white z-10 flex items-center justify-between px-6 py-4 border-b border-indigo-500 shadow-lg">
+            <div className="sticky top-0 bg- via-gray-600 text-white z-10 flex items-center justify-between px-6 py-4 border-b border-indigo-500 shadow-lg">
               {" "}
               <h2 className="text-lg font-bold text-slate-800">
                 Edit Credit Plan
               </h2>
               <button
                 onClick={closeModal}
-                className="p-2 hover:bg-slate-100 text-slate-400 hover:text-slate-600 rounded-full transition-all duration-200"
+                className="p-2 hover:bg-slate-100 text-slate-400 hover:text-red-800 rounded-full transition-all duration-200"
               >
                 <X size={18} />
               </button>
@@ -472,12 +472,12 @@ const Credits = () => {
       {modalConfig.isOpen && modalConfig.type === "view" && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-md transition-all duration-300 animate-fadeIn">
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto transform transition-all duration-300 scale-100 animate-scaleUp border border-slate-100">
-            <div className="sticky top-0 bg-gradient-to-r from-indigo-600 via-purple-400 to-pink-100 text-white z-10 flex items-center justify-between px-6 py-4 border-b border-indigo-500 shadow-lg">
+            <div className="sticky top-0 bg-gray-200 text-black z-10 flex items-center justify-between px-6 py-4 border-b border-indigo-500 shadow-lg">
               {" "}
-              <h2 className="text-lg font-bold text-white"> Plan Overview</h2>
+              <h2 className="text-lg font-bold text-black"> Plan Overview</h2>
               <button
                 onClick={closeModal}
-                className="p-2 hover:bg-white/20 text-white rounded-full transition-all duration-200"
+                className="p-2 hover:bg-gray text-red rounded-full transition-all duration-200"
               >
                 <X size={18} />
               </button>
@@ -567,13 +567,13 @@ const Credits = () => {
       {modalConfig.isOpen && modalConfig.type === "create" && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-md transition-all duration-300 animate-fadeIn">
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all duration-300 scale-100 animate-scaleUp border border-slate-100">
-            <div className="sticky top-0 bg-gradient-to-r from-purple-400 via-indigo-300 to-purple-500 text-white z-10 flex items-center justify-between px-6 py-4 border-b border-indigo-500 shadow-lg">
+            <div className="sticky top-0 bg-gray-200 text-white z-10 flex items-center justify-between px-6 py-4 border-b border-gray-500 shadow-lg">
               <h2 className="text-lg font-bold text-slate-800">
                 Create Premium Plan
               </h2>
               <button
                 onClick={closeModal}
-                className="p-2 hover:bg-slate-100 text-slate-400 hover:text-slate-600 rounded-full transition-all duration-200"
+                className="p-2 hover:bg-slate-100 text-slate-400 hover:text-red-600 rounded-full transition-all duration-200"
               >
                 <X size={18} />
               </button>

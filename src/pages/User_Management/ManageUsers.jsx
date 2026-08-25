@@ -173,7 +173,7 @@ export default function UserMasterProfile() {
   };
 
   return (
-    <div className="p-6 bg-neutral-50 min-h-screen font-sans">
+    <div className="p-6 bg-neutral-50 min-h-screen font-sans m-5">
       <Toaster position="top-right" reverseOrder={false} />
 
       <div className="mb-6 flex justify-between items-center">

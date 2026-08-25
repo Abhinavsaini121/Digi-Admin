@@ -265,178 +265,188 @@ const AllUsersContent = () => {
   ];
 
   return (
-    <div className="p-6 bg-white rounded-lg shadow-md w-full mx-auto mb-8 mt-1.5 min-h-screen">
-      <h1 className="text-2xl font-bold mb-1">All Users</h1>
-      <p className="text-gray-500 mb-4">
-        Manage all registered users on the platform.
-      </p>
-
-      <Space style={{ marginBottom: 20 }}>
-        <Button
-          type={roleFilter === null ? "primary" : "default"}
-          onClick={() => setRoleFilter(null)}
-          style={{
-            borderRadius: 20,
-            background: roleFilter === null ? "#4a69bd" : "",
-          }}
-        >
-          All Users
-        </Button>
-        <Button
-          type={roleFilter === "SERVICE_PROVIDER" ? "primary" : "default"}
-          onClick={() => setRoleFilter("SERVICE_PROVIDER")}
-          style={{
-            borderRadius: 20,
-            background: roleFilter === "SERVICE_PROVIDER" ? "#4a69bd" : "",
-          }}
-        >
-          Service Providers
-        </Button>
-        <Button
-          type={roleFilter === "GENERAL_USER" ? "primary" : "default"}
-          onClick={() => setRoleFilter("GENERAL_USER")}
-          style={{
-            borderRadius: 20,
-            background: roleFilter === "GENERAL_USER" ? "#4a69bd" : "",
-          }}
-        >
-          Customers
-        </Button>
-      </Space>
-
-      <div className="flex justify-between items-center mb-4 pb-3 border-b border-gray-200">
-        <Space>
-          <Input
-            placeholder="Search Users by name..."
-            prefix={<SearchOutlined />}
-            value={searchText}
-            onChange={(e) => handleSearch(e.target.value)}
-            style={{ width: 250, borderRadius: 6 }}
-            allowClear
-          />
-        </Space>
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleAddNew}>
-          Add User
-        </Button>
-      </div>
-
-      <Table
-        columns={columns}
-        dataSource={
-          roleFilter ? data.filter((user) => user.role === roleFilter) : data
+     <>
+      <style>
+        {`
+        .ant-table-thead > tr > th {
+        background: #e5e7eb !important;
         }
-        loading={loading}
-        rowKey="_id"
-        scroll={{ x: 1200 }}
-        pagination={{
-          current: pagination.current,
-          pageSize: pagination.pageSize,
-          onChange: (page) => {
-            fetchData(page);
-          },
-        }}
-      />
+      `}
+      </style>
+      <div className="p-6 bg-white rounded-lg shadow-md w-full   m-4 min-h-screen ">
+        <h1 className="text-2xl font-bold mb-2">All Users</h1>
+        <p className="text-gray-500 mb-8">
+          Manage all registered users on the platform.
+        </p>
 
-      <AddUserFormModal
-        visible={isAddModalVisible}
-        onClose={() => setIsAddModalVisible(false)}
-        onSuccess={fetchData}
-      />
-
-      <EditUserFormModal
-        visible={isEditModalVisible}
-        onClose={() => {
-          setIsEditModalVisible(false);
-          setSelectedUser(null);
-        }}
-        onSuccess={fetchData}
-        user={selectedUser}
-      />
-
-      <Modal
-        title="User Details"
-        visible={isViewModalVisible}
-        onCancel={() => {
-          setIsViewModalVisible(false);
-          setViewingUser(null);
-        }}
-        footer={[
+        <Space style={{ marginBottom: 30,marginTop: 10 }}>
           <Button
-            key="close"
-            type="primary"
-            onClick={() => {
-              setIsViewModalVisible(false);
-              setViewingUser(null);
+            type={roleFilter === null ? "primary" : "default"}
+            onClick={() => setRoleFilter(null)}
+            style={{
+              borderRadius: 20,
+              background: roleFilter === null ? "#4a69bd" : "",
             }}
           >
-            Close
-          </Button>,
-        ]}
-        width={700}
-        centered
-      >
-        {viewingUser && (
-          <div className="flex flex-col items-center gap-6 mt-4">
-            <Avatar
-              size={100}
-              src={viewingUser.profilePhoto || viewingUser.profilePic || defaultUserImage}
-              icon={<UserOutlined />}
+            All Users
+          </Button>
+          <Button
+            type={roleFilter === "SERVICE_PROVIDER" ? "primary" : "default"}
+            onClick={() => setRoleFilter("SERVICE_PROVIDER")}
+            style={{
+              borderRadius: 20,
+              background: roleFilter === "SERVICE_PROVIDER" ? "#4a69bd" : "",
+            }}
+          >
+            Service Providers
+          </Button>
+          <Button
+            type={roleFilter === "GENERAL_USER" ? "primary" : "default"}
+            onClick={() => setRoleFilter("GENERAL_USER")}
+            style={{
+              borderRadius: 20,
+              background: roleFilter === "GENERAL_USER" ? "#4a69bd" : "",
+            }}
+          >
+            Customers
+          </Button>
+        </Space>
+
+        <div className="flex justify-between items-center mb-4 pb-3 border-b border-gray-200">
+          <Space>
+            <Input
+              placeholder="Search Users by name..."
+              prefix={<SearchOutlined />}
+              value={searchText}
+              onChange={(e) => handleSearch(e.target.value)}
+              style={{ width: 250, borderRadius: 6 }}
+              allowClear
             />
-            <Descriptions bordered column={2} className="w-full" size="small">
-              <Descriptions.Item label="Full Name" span={2}>
-                {viewingUser.fullName || "N/A"}
-              </Descriptions.Item>
-              <Descriptions.Item label="Email">
-                {viewingUser.email || "N/A"}
-              </Descriptions.Item>
-              <Descriptions.Item label="Mobile">
-                {viewingUser.mobile || "N/A"}
-              </Descriptions.Item>
-              <Descriptions.Item label="Role">
-                {viewingUser.role || "N/A"}
-              </Descriptions.Item>
-              <Descriptions.Item label="Gender">
-                {viewingUser.gender || "N/A"}
-              </Descriptions.Item>
-              <Descriptions.Item label="Blood Group">
-                {viewingUser.bloodGroup || "N/A"}
-              </Descriptions.Item>
-              <Descriptions.Item label="Credits">
-                {viewingUser.credits !== undefined ? viewingUser.credits : "0"}
-              </Descriptions.Item>
-              <Descriptions.Item label="Status">
-                <Tag color={viewingUser.status === "Blocked" ? "red" : "green"}>
-                  {(viewingUser.status || "UNKNOWN").toUpperCase()}
-                </Tag>
-              </Descriptions.Item>
-              <Descriptions.Item label="Verified">
-                <Tag color={viewingUser.isVerified ? "blue" : "orange"}>
-                  {viewingUser.isVerified ? "YES" : "NO"}
-                </Tag>
-              </Descriptions.Item>
-              <Descriptions.Item label="City">
-                {viewingUser.city || "N/A"}
-              </Descriptions.Item>
-              <Descriptions.Item label="State">
-                {viewingUser.state || "N/A"}
-              </Descriptions.Item>
-              <Descriptions.Item label="Country">
-                {viewingUser.country || "N/A"}
-              </Descriptions.Item>
-              <Descriptions.Item label="Registered On">
-                {viewingUser.createdAt
-                  ? new Date(viewingUser.createdAt).toLocaleDateString()
-                  : "N/A"}
-              </Descriptions.Item>
-              <Descriptions.Item label="Location / Address" span={2}>
-                {renderLocation(viewingUser)}
-              </Descriptions.Item>
-            </Descriptions>
-          </div>
-        )}
-      </Modal>
-    </div>
-  );
+          </Space>
+          <Button type="primary" icon={<PlusOutlined />} onClick={handleAddNew} >
+            Add User
+          </Button>
+        </div>
+
+        <Table
+          columns={columns}
+          dataSource={
+            roleFilter ? data.filter((user) => user.role === roleFilter) : data
+          }
+          loading={loading}
+          rowKey="_id"
+          scroll={{ x: 1200 }}
+          pagination={{
+            current: pagination.current,
+            pageSize: pagination.pageSize,
+            onChange: (page) => {
+              fetchData(page);
+            },
+          }}
+        />
+
+        <AddUserFormModal
+          visible={isAddModalVisible}
+          onClose={() => setIsAddModalVisible(false)}
+          onSuccess={fetchData}
+        />
+
+        <EditUserFormModal
+          visible={isEditModalVisible}
+          onClose={() => {
+            setIsEditModalVisible(false);
+            setSelectedUser(null);
+          }}
+          onSuccess={fetchData}
+          user={selectedUser}
+        />
+
+      <Modal
+  title="User Details"
+  open={isViewModalVisible}
+  styles={{ content: { borderRadius: 50 } }}
+  onCancel={() => {
+            setIsViewModalVisible(false);
+            setViewingUser(null);
+          }}
+          footer={[
+            <Button
+              key="close"
+              type="primary"
+              onClick={() => {
+                setIsViewModalVisible(false);
+                setViewingUser(null);
+              }}
+            >
+              Close
+            </Button>,
+          ]}
+          width={700}
+          centered
+        >
+          {viewingUser && (
+            <div className="flex flex-col items-center gap-6 mt-4">
+              <Avatar
+                size={100}
+                src={viewingUser.profilePhoto || viewingUser.profilePic || defaultUserImage}
+                icon={<UserOutlined />}
+              />
+              <Descriptions bordered column={2} className="w-full" size="small">
+                <Descriptions.Item label="Full Name" span={2}>
+                  {viewingUser.fullName || "N/A"}
+                </Descriptions.Item>
+                <Descriptions.Item label="Email">
+                  {viewingUser.email || "N/A"}
+                </Descriptions.Item>
+                <Descriptions.Item label="Mobile">
+                  {viewingUser.mobile || "N/A"}
+                </Descriptions.Item>
+                <Descriptions.Item label="Role">
+                  {viewingUser.role || "N/A"}
+                </Descriptions.Item>
+                <Descriptions.Item label="Gender">
+                  {viewingUser.gender || "N/A"}
+                </Descriptions.Item>
+                <Descriptions.Item label="Blood Group">
+                  {viewingUser.bloodGroup || "N/A"}
+                </Descriptions.Item>
+                <Descriptions.Item label="Credits">
+                  {viewingUser.credits !== undefined ? viewingUser.credits : "0"}
+                </Descriptions.Item>
+                <Descriptions.Item label="Status">
+                  <Tag color={viewingUser.status === "Blocked" ? "red" : "green"}>
+                    {(viewingUser.status || "UNKNOWN").toUpperCase()}
+                  </Tag>
+                </Descriptions.Item>
+                <Descriptions.Item label="Verified">
+                  <Tag color={viewingUser.isVerified ? "blue" : "orange"}>
+                    {viewingUser.isVerified ? "YES" : "NO"}
+                  </Tag>
+                </Descriptions.Item>
+                <Descriptions.Item label="City">
+                  {viewingUser.city || "N/A"}
+                </Descriptions.Item>
+                <Descriptions.Item label="State">
+                  {viewingUser.state || "N/A"}
+                </Descriptions.Item>
+                <Descriptions.Item label="Country">
+                  {viewingUser.country || "N/A"}
+                </Descriptions.Item>
+                <Descriptions.Item label="Registered On">
+                  {viewingUser.createdAt
+                    ? new Date(viewingUser.createdAt).toLocaleDateString()
+                    : "N/A"}
+                </Descriptions.Item>
+                <Descriptions.Item label="Location / Address" span={2}>
+                  {renderLocation(viewingUser)}
+                </Descriptions.Item>
+              </Descriptions>
+            </div>
+          )}
+        </Modal>
+      </div></>
+      );
+    
 };
 
-export default AllUsersContent;
+      export default AllUsersContent;

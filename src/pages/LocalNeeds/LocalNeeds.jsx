@@ -103,7 +103,7 @@ const LocalNeeds = () => {
   };
 
   return (
-    <div className="p-4 md:p-6 bg-slate-50 min-h-screen font-sans selection:bg-indigo-500 selection:text-white w-full">
+    <div className="p-4 md:p-6  min-h-screen font-sans selection:bg-indigo-500 selection:text-white w-full m-4">
       <div className="w-full space-y-6">
         
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm transition-all duration-300 w-full">
@@ -148,7 +148,7 @@ const LocalNeeds = () => {
                 setIsViewMode(false);
                 setIsPostModalOpen(true);
               }}
-              className="flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl shadow-lg shadow-indigo-100 hover:shadow-indigo-200 transition-all duration-250 transform hover:-translate-y-0.5 active:translate-y-0 w-full sm:w-auto text-sm cursor-pointer"
+              className="flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl shadow-lg shadow-indigo-100 hover:shadow-indigo-200 transition-all duration-250 transform hover:-translate-y-0.5 active:translate-y-0 w-full sm:w-auto text-sm cursor-pointer"
             >
               <Plus size={18} strokeWidth={3} />
               Post New Need
@@ -158,7 +158,7 @@ const LocalNeeds = () => {
 
         <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden transition-all duration-300 w-full">
           <div className="overflow-x-auto w-full">
-            <table className="w-full min-w-[1200px] text-left border-collapse table-fixed">
+            <table className="w-full text-left border-collapse table-fixed">
               <thead>
                 <tr className="bg-slate-50/75 border-b border-slate-100 text-slate-500 text-xs font-bold uppercase tracking-wider">
                   <th className="py-4.5 px-6 text-center w-16">#</th>

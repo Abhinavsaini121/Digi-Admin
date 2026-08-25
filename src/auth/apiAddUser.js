@@ -1,4 +1,4 @@
-import apiClient from './apiClient';
+import apiClient from "./axiosInstance/Base_url";
 
 // --- Create Admin User ---
 export const createAdminUser = async (formData) => {

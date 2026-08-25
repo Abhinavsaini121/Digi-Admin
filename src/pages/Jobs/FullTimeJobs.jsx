@@ -413,7 +413,7 @@ const FullTimeJobManagement = () => {
               setNewJobForm(initialNewJobForm);
               setIsAddModalOpen(true);
             }}
-            className="bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98] text-white px-5 py-2.5 rounded-xl text-xs font-semibold shadow-sm transition-all duration-200 flex items-center gap-2"
+            className="bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white px-5 py-2.5 rounded-xl text-xs font-semibold shadow-sm transition-all duration-200 flex items-center gap-2"
           >
             <Plus size={15} /> Post New Job
           </button>

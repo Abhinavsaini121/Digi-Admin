@@ -876,6 +876,25 @@ export const getUsersForDropdownAPI = async () => {
   }
 };
 
+export const getUserGraphStats = async (filter) =>
+   {
+  try 
+  {
+    const { data } = await apiClient.get("/user/graph-stats", {
+
+      params: { filter },
+
+    });
+
+    return data;
+
+  }
+   catch (error) {
+    throw error;
+  }
+};
+
+
 export const updateCategoryAPI = async (id, payload) => {
   try {
     const token = localStorage.getItem("token");

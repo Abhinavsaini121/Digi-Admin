@@ -23,7 +23,7 @@ import {
   TrendingUp,
   Loader2, // Loading icon ke liye
 } from "lucide-react";
-import { getDashboardStats } from "../../auth/adminLogin";
+import { getDashboardStats, getUserGraphStats, } from "../../auth/adminLogin";
 
 const OTHER_STATIC_STATS = {
   shops: "184",
@@ -47,12 +47,14 @@ const STATIC_CHART_DATA = [
   { date: "Oct 30", users: 9200 },
 ];
 
-const StatCard = ({ title, value, icon: Icon, color, isLoading }) => {
+const StatCard = ({ title, value, icon: Icon, color, isLoading, popupData }) => {
   const isComingSoon = value === "Coming soon";
 
+
+
+
   return (
-    <div className="group p-5 bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1">
-      <div className="flex items-center justify-between mb-3">
+<div className="group relative p-5 bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1">      <div className="flex items-center justify-between mb-3">
         <div className={`p-2 rounded-lg ${color} bg-opacity-10 text-orange-600`}>
           <Icon size={22} strokeWidth={2.5} />
         </div>
@@ -82,6 +84,25 @@ const StatCard = ({ title, value, icon: Icon, color, isLoading }) => {
           </p>
         )}
       </div>
+    {popupData && (
+<div className="absolute top-1/2 left-[70%] -translate-x-1/2 -translate-y-1/2 w-48 bg-white border border-gray-200 rounded-xl shadow-lg p-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">  <p className="text-sm font-bold text-gray-700 mb-3">Shop Details</p>
+
+    <div className="flex justify-between text-sm mb-2">
+      <span className="text-gray-500">Lite</span>
+      <span className="font-bold">{popupData.Lite}</span>
+    </div>
+
+    <div className="flex justify-between text-sm mb-2">
+      <span className="text-gray-500">Pro Plus</span>
+      <span className="font-bold">{popupData["Pro Plus"]}</span>
+    </div>
+
+    <div className="flex justify-between text-sm">
+      <span className="text-gray-500">Free</span>
+      <span className="font-bold">{popupData.Trial}</span>
+    </div>
+  </div>
+)}
     </div>
   );
 };
@@ -97,7 +118,8 @@ function Dashboard() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
+const [filter, setFilter] = useState("yearly");
+const [chartData, setChartData] = useState([]);
   useEffect(() => {
     const fetchStats = async () => {
       try {
@@ -114,7 +136,24 @@ function Dashboard() {
 
     fetchStats();
   }, []);
+useEffect(() => {
+  const fetchGraphStats = async () => {
+    try {
+   const response = await getUserGraphStats(filter);
 
+const formattedData = response.labels.map((label, index) => ({
+  date: label,
+  users: response.data[index],
+}));
+
+setChartData(formattedData);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  fetchGraphStats();
+}, [filter]);
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-screen text-red-500">
@@ -189,10 +228,23 @@ function Dashboard() {
       <SectionTitle title="Business & Marketplace" />
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
         <StatCard
-          title="Shops (Lite+Pro)"
-          value={stats?.totalBusinesses || 0} // Map from API
+          title="Shops "
+          value={stats?.totalBusinesses || 0}
           icon={Store}
           color="bg-pink-500"
+          isLoading={loading}
+          popupData={{
+            Lite: stats?.liteBusinesses || 0,
+            "Pro Plus": stats?.proPlusBusinesses || 0,
+            Trial: stats?.trialBusinesses || 0,
+          }}
+        />
+
+        <StatCard
+          title="Active Local Jobs"
+          value={stats?.activeLocalJobs || 0}
+          icon={Briefcase}
+          color="bg-green-500"
           isLoading={loading}
         />
         <StatCard
@@ -233,12 +285,12 @@ function Dashboard() {
           icon={CreditCard}
           color="bg-orange-600"
         />
-       <StatCard
-  title="SOS Alerts"
-  value="Coming soon"
-  icon={AlertCircle}
-  color="bg-red-500"
-/>
+        <StatCard
+          title="SOS Alerts"
+          value="Coming soon"
+          icon={AlertCircle}
+          color="bg-red-500"
+        />
         <StatCard
           title="Blood Requests"
           value={stats?.totalBloodRequests || 0} // Map from API
@@ -255,14 +307,25 @@ function Dashboard() {
             <h2 className="text-xl font-bold text-gray-800">
               User Growth Trends
             </h2>
-            <select className="text-sm border border-gray-100 bg-gray-50 rounded-md px-2 py-1 outline-none">
-              <option>Last 30 Days</option>
-            </select>
+        <select
+  value={filter}
+  onChange={(e) => setFilter(e.target.value)}
+  className="appearance-none cursor-pointer text-sm font-semibold text-gray-700 
+             bg-white border border-orange-200 rounded-xl 
+             px-4 py-2.5 pr-9 shadow-sm
+             hover:border-[#FE702E] hover:shadow-md
+             focus:outline-none focus:ring-2 focus:ring-orange-200 
+             focus:border-[#FE702E] transition-all duration-200"
+>
+  <option value="weekly">Weekly</option>
+  <option value="monthly">Monthly</option>
+  <option value="yearly">Yearly</option>
+</select>
           </div>
 
           <div className="h-[350px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={STATIC_CHART_DATA}>
+              <AreaChart data={chartData}>
                 <defs>
                   <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#FE702E" stopOpacity={0.3} />

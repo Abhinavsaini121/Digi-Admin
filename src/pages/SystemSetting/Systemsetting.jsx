@@ -2,7 +2,7 @@ import React from 'react';
 
 const SystemSettings = () => {
   return (
-    <div className="w-full bg-[#F8F9FC] p-4 md:p-8 font-sans text-gray-800">
+    <div className="w-full bg-[#F8F9FC] p-4 md:p-8 font-sans text-gray-800 m-4">
       
       {/* 14 SYSTEM SETTINGS SECTION */}
       <div className="mb-2">

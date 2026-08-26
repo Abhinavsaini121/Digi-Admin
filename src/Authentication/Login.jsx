@@ -60,8 +60,10 @@ const handleSendOtp = async (e) => {
     setLoading(false);
   }
 };
- const handleVerifyOtp = async () => {
-  const code = otp.join("");
+
+
+const handleVerifyOtp = async (otpValue) => {
+  const code = otpValue || otp.join("");
   if (code.length !== OTP_LENGTH) {
     toast.error("Please enter the complete OTP");
     return;
@@ -69,11 +71,10 @@ const handleSendOtp = async (e) => {
 
   setVerifying(true);
   try {
+    const response = await verifyAdminOtp(phone, code);
 
-  const response = await verifyAdminOtp(phone, code);
-
-localStorage.setItem("token", response.token);
-localStorage.setItem("isLoggedIn", "true");
+    localStorage.setItem("token", response.token);
+    localStorage.setItem("isLoggedIn", "true");
 
     toast.success("Login successful!");
     setShowOtpModal(false);
@@ -116,16 +117,24 @@ const handleResendOtp = async () => {
 
 
 
-  const handleOtpChange = (index, value) => {
-    if (!/^\d*$/.test(value)) return; // digits only
-    const newOtp = [...otp];
-    newOtp[index] = value.slice(-1);
-    setOtp(newOtp);
+ const handleOtpChange = (index, value) => {
+  if (!/^\d*$/.test(value)) return; // digits only
+  const newOtp = [...otp];
+  newOtp[index] = value.slice(-1);
+  setOtp(newOtp);
 
-    if (value && index < OTP_LENGTH - 1) {
-      otpRefs.current[index + 1]?.focus();
+  if (value && index < OTP_LENGTH - 1) {
+    otpRefs.current[index + 1]?.focus();
+  }
+
+  // 👇 Auto-submit jab sabhi digits fill ho jayein
+  if (value && index === OTP_LENGTH - 1) {
+    const completeOtp = newOtp.join("");
+    if (completeOtp.length === OTP_LENGTH) {
+      handleVerifyOtp(completeOtp); // pass directly, state update async hota hai
     }
-  };
+  }
+};
 
   const handleOtpKeyDown = (index, e) => {
     if (e.key === "Backspace" && !otp[index] && index > 0) {
@@ -133,18 +142,22 @@ const handleResendOtp = async () => {
     }
   };
 
-  const handleOtpPaste = (e) => {
-    const pasted = e.clipboardData
-      .getData("text")
-      .replace(/\D/g, "")
-      .slice(0, OTP_LENGTH);
-    if (!pasted) return;
-    const newOtp = Array(OTP_LENGTH).fill("");
-    pasted.split("").forEach((digit, i) => (newOtp[i] = digit));
-    setOtp(newOtp);
-    otpRefs.current[Math.min(pasted.length, OTP_LENGTH - 1)]?.focus();
-  };
+ const handleOtpPaste = (e) => {
+  const pasted = e.clipboardData
+    .getData("text")
+    .replace(/\D/g, "")
+    .slice(0, OTP_LENGTH);
+  if (!pasted) return;
+  const newOtp = Array(OTP_LENGTH).fill("");
+  pasted.split("").forEach((digit, i) => (newOtp[i] = digit));
+  setOtp(newOtp);
+  otpRefs.current[Math.min(pasted.length, OTP_LENGTH - 1)]?.focus();
 
+  // 👇 agar paste se poora OTP aa gaya to auto-verify
+  if (pasted.length === OTP_LENGTH) {
+    handleVerifyOtp(pasted);
+  }
+};
   return (
     
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 via-white to-orange-100 px-4">
